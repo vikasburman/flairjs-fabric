@@ -156,5 +156,8 @@ Class('(auto)', function() {
         await start();
         await ready();
         console.log('ready!'); // eslint-disable-line no-console
+        
+        // return success
+        return true;
     };
 });
