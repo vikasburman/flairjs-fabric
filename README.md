@@ -1,7 +1,7 @@
 [FlairJS Fabric](https://flairjs.com/fabric)
 ---
 
-FlairJS Fabric is a development framework built using [FlairJS](https://flairjs.com) for building apps using true object orientated approach in plain vanilla JavaScript. 
+FlairJS Fabric is a development framework built using [FlairJS](https://flairjs.com) for building apps using true object orientated features in plain vanilla JavaScript. 
 
 It provides the necessary building blocks to develop fullstack JavaScript apps for web, mobile, and serverless platforms. Find more about this [here](https://flairjs.com/fabric).
 
