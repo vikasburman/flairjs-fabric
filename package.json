@@ -1,18 +1,15 @@
 {
-    "name": "flairjs-app",
-    "title": "Flair.js",
-    "description": "True Object Oriented JavaScript",
+    "name": "flairjs-fabric",
+    "title": "Flair.js Fabric",
+    "description": "Foundation for True Object Oriented JavaScript Apps",
     "copyright": "(c) 2017-2019 Vikas Burman",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "author": "Vikas Burman <vikasburman@gmail.com>",
     "keywords": [
         "javascript",
         "oops",
-        "js",
-        "object oriented",
-        "es6",
-        "es5",
-        "es7"
+        "javascript-framework",
+        "isomorphic-javascript"
     ],
     "engines": {
         "node": ">=10.0.0"
@@ -22,7 +19,7 @@
     "homepage": "https://flairjs.com",
     "repository": {
         "type": "git",
-        "url": "https://github.com/vikasburman/flairjs-app.git"
+        "url": "https://github.com/vikasburman/flairjs-fabric.git"
     },
     "main": "./preamble.js",
     "scripts": {
