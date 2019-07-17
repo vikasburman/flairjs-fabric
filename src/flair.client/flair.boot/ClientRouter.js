@@ -1,4 +1,4 @@
-const { Bootware } = ns('flair.app');
+const Bootware = await include('flair.app.Bootware');
 
 /**
  * @name ClientRouter
@@ -64,7 +64,7 @@ Class('(auto)', Bootware, function () {
                 // each interceptor is derived from ViewInterceptor and
                 // async run method of it takes ctx, can update it
                 // each item is: "InterceptorTypeQualifiedName"
-                let mountInterceptors = settings.client.routing[`${route.mount}-interceptors`] || [];
+                let mountInterceptors = settings.routing[`${route.mount}-interceptors`] || [];
                 for(let interceptor of mountInterceptors) {
                     await runInterceptor(interceptor, ctx);
                     if (ctx.$stop) { break; }
@@ -81,7 +81,7 @@ Class('(auto)', Bootware, function () {
         let app = mount.app;
         for (let route of routes) {
             if (route.mount === mount.name) { // add route-handler
-                if (route.name !== settings.client.routes.notfound) { // add all except the 404 route
+                if (route.name !== settings.routes.notfound) { // add all except the 404 route
                     app.add(route, getHandler(route));
                 } 
             }
@@ -92,7 +92,7 @@ Class('(auto)', Bootware, function () {
             // 404 handler does not run interceptors
             // and instead of running the route (for which this ctx was setup)
             // it will pick the handler of notfound route and show that view with this ctx
-            let route404 = settings.client.routes.notfound;
+            let route404 = settings.routes.notfound;
             if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
             if (!route404) { // nothing else can be done
                 setTimeout(() => { window.history.back(); }, 0);

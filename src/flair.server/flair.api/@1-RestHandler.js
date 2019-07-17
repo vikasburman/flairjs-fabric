@@ -1,4 +1,4 @@
-const { Handler } = ns('flair.app');
+const Handler = await include('flair.app.Handler');
 
 /**
  * @name RestHandler

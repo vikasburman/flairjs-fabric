@@ -1,4 +1,4 @@
-const { Handler } = ns('flair.app');
+const Handler = await include('flair.app.Handler');
 
 /**
  * @name ViewHandler
@@ -13,9 +13,9 @@ Class('(auto)', Handler, function() {
         base();
 
         // read from setting which are not specified
-        el = el || settings.client.view.el || 'main';
-        title = title || settings.client.view.title || '';
-        transition = transition || settings.client.view.transition || '';
+        el = el || settings.view.el || 'main';
+        title = title || settings.view.title || '';
+        transition = transition || settings.view.transition || '';
 
         mainEl = el;
         this.viewTransition = transition;

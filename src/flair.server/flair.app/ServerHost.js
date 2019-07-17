@@ -1,4 +1,4 @@
-const { Host } = ns('flair.app');
+const Host = await include('flair.app.Host');
 
 /**
  * @name ServerHost
@@ -10,8 +10,8 @@ Class('(auto)', Host, function() {
     let mountedApps = {},
         httpServer = null,
         httpsServer = null,
-        httpSettings = settings.server.express['server-http'],
-        httpsSettings = settings.server.express['server-https'];         
+        httpSettings = settings.express['server-http'],
+        httpsSettings = settings.express['server-https'];         
     
     $$('override');
     this.construct = (base) => {
@@ -38,7 +38,7 @@ Class('(auto)', Host, function() {
             // each item is: { name: '', value:  }
             // name: as in above link (as-is)
             // value: as defined in above link
-            let appSettings = settings.server.routing[`${mountName}-settings`];
+            let appSettings = settings.routing[`${mountName}-settings`];
             if (appSettings && appSettings.length > 0) {
                 for(let appSetting of appSettings) {
                     mount.set(appSetting.name, appSetting.value);
@@ -53,12 +53,12 @@ Class('(auto)', Host, function() {
         // create one instance of express app for each mounted path
         let mountPath = '',
             mount = null;
-        for(let mountName of Object.keys(settings.server.routing.mounts)) {
+        for(let mountName of Object.keys(settings.routing.mounts)) {
             if (mountName === 'main') {
                 mountPath = '/';
                 mount = mainApp;
             } else {
-                mountPath = settings.server.routing.mounts[mountName];
+                mountPath = settings.routing.mounts[mountName];
                 mount = express(); // create a sub-app
             }
 

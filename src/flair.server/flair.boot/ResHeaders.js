@@ -1,4 +1,4 @@
-const { Bootware } = ns('flair.app');
+const Bootware = await include('flair.app.Bootware');
 
 /**
  * @name ResHeaders

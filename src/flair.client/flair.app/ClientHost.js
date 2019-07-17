@@ -1,4 +1,4 @@
-const { Host } = ns('flair.app');
+const Host = await include('flair.app.Host');
 const { ViewHandler, Page } = ns('flair.ui');
 
 /**
@@ -28,14 +28,14 @@ Class('(auto)', Host, function() {
     // localization support (start)
     $$('state');
     $$('private');
-    this.currentLocale = settings.client.i18n.lang.default;
+    this.currentLocale = settings.i18n.lang.default;
 
     this.defaultLocale = {
-        get: () => { return settings.client.i18n.lang.default; },
+        get: () => { return settings.i18n.lang.default; },
         set: noop
     };
     this.supportedLocales = {
-        get: () => { return settings.client.i18n.lang.locales.slice(); },
+        get: () => { return settings.i18n.lang.locales.slice(); },
         set: noop
     };
     this.locale = (newLocale, isRefresh) => {
@@ -148,7 +148,7 @@ Class('(auto)', Host, function() {
             mount = null;
         const getSettings = (mountName) => {
             // each item is: { name: '', value:  }
-            let pageSettings = settings.client.routing[`${mountName}-settings`];
+            let pageSettings = settings.routing[`${mountName}-settings`];
             if (pageSettings && pageSettings.length > 0) {
                 for(let pageSetting of pageSettings) {
                     appSettings[pageSetting.name] = pageSetting.value;
@@ -156,7 +156,7 @@ Class('(auto)', Host, function() {
             }   
 
             // special settings
-            appSettings.base = settings.client.routing.mounts[mountName];
+            appSettings.base = settings.routing.mounts[mountName];
 
             return appSettings;         
         };
@@ -166,7 +166,7 @@ Class('(auto)', Host, function() {
         let mainApp = new Page(appSettings);
 
         // create one instance of page app for each mounted path
-        for(let mountName of Object.keys(settings.client.routing.mounts)) {
+        for(let mountName of Object.keys(settings.routing.mounts)) {
             if (mountName === 'main') {
                 mount = mainApp;
             } else {
@@ -207,8 +207,8 @@ Class('(auto)', Host, function() {
         window.addEventListener('hashchange', hashChangeHandler);
 
         // redirect to home
-        if (settings.client.routes.home) {
-            await this.redirect(settings.client.routes.home, {}, true); // force refresh but don't let history entry added for first page
+        if (settings.routes.home) {
+            await this.redirect(settings.routes.home, {}, true); // force refresh but don't let history entry added for first page
         }
 
         // ready
