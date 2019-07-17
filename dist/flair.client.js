@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.9.8
- *  Wed, 17 Jul 2019 00:48:26 GMT
+ *  Version: 0.9.11
+ *  Wed, 17 Jul 2019 21:52:59 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -1124,6 +1124,114 @@
         });
         
     })();    
+    await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
+        const Bootware = await include('flair.app.Bootware');
+        
+        /**
+         * @name ClientRouter
+         * @description Client Router Configuration Setup
+         */
+        $$('sealed');
+        $$('ns', 'flair.boot');
+        Class('ClientRouter', Bootware, function () {
+            const { ViewHandler, ViewInterceptor } = ns('flair.ui');
+        
+            let routes = null;
+            
+            $$('override');
+            this.construct = (base) => {
+                base('Client Router', true); // mount specific 
+            };
+        
+            $$('override');
+            this.boot = async (base, mount) => {
+                base();
+                
+                // get all registered routes, and sort by index, if was not already done in previous call
+                if (!routes) {
+                    routes = AppDomain.context.current().allRoutes(true);
+                    routes.sort((a, b) => {
+                        if (a.index < b.index) {
+                            return -1;
+                        }
+                        if (a.index > b.index) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                }
+        
+                const runInterceptor = async (interceptor, ctx) => {
+                    let ICType = as(await include(interceptor), ViewInterceptor);
+                    if (ICType) {
+                        let ic = new ICType();
+                        await ic.run(ctx);
+                    } else {
+                        throw Exception.InvalidDefinition(`Invalid interceptor type. (${interceptor})`);
+                    }                    
+        
+                };
+                const runHandler = async (routeHandler, ctx) => {
+                    let RouteHandler = as(await include(routeHandler), ViewHandler);
+                    if (RouteHandler) {
+                        let rh = new RouteHandler();
+                        await rh.view(ctx);
+                    } else {
+                        throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
+                    }
+                };
+                const getHandler = function(route) {
+                    return async (ctx) => {
+                        // ctx.params has all the route parameters.
+                        // e.g., for route "/users/:userId/books/:bookId" ctx.params will 
+                        // have "ctx.params: { "userId": "34", "bookId": "8989" }"
+                        // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
+        
+                        // run mount specific interceptors
+                        // each interceptor is derived from ViewInterceptor and
+                        // async run method of it takes ctx, can update it
+                        // each item is: "InterceptorTypeQualifiedName"
+                        let mountInterceptors = settings.routing[`${route.mount}-interceptors`] || [];
+                        for(let interceptor of mountInterceptors) {
+                            await runInterceptor(interceptor, ctx);
+                            if (ctx.$stop) { break; }
+                        }
+        
+                        // handle route
+                        if (!ctx.$stop) {
+                            await runHandler(route.handler, ctx);
+                        }
+                    };
+                };
+        
+                // add routes related to current mount
+                let app = mount.app;
+                for (let route of routes) {
+                    if (route.mount === mount.name) { // add route-handler
+                        if (route.name !== settings.routes.notfound) { // add all except the 404 route
+                            app.add(route, getHandler(route));
+                        } 
+                    }
+                }
+        
+                // catch 404 for this mount
+                app.add404(async (ctx) => {
+                    // 404 handler does not run interceptors
+                    // and instead of running the route (for which this ctx was setup)
+                    // it will pick the handler of notfound route and show that view with this ctx
+                    let route404 = settings.routes.notfound;
+                    if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
+                    if (!route404) { // nothing else can be done
+                        setTimeout(() => { window.history.back(); }, 0);
+                        return;
+                    }
+        
+                    // use route404 handler
+                    await runHandler(route404.handler, ctx);
+                });
+            };
+        });
+    })();    
     await (async () => { // type: ./src/flair.client/flair.boot.vue/VueSetup.js
         const Bootware = await include('flair.app.Bootware');
         
@@ -1261,114 +1369,6 @@
             this.leave = noop;
         });
         
-    })();    
-    await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const Bootware = await include('flair.app.Bootware');
-        
-        /**
-         * @name ClientRouter
-         * @description Client Router Configuration Setup
-         */
-        $$('sealed');
-        $$('ns', 'flair.boot');
-        Class('ClientRouter', Bootware, function () {
-            const { ViewHandler, ViewInterceptor } = ns('flair.ui');
-        
-            let routes = null;
-            
-            $$('override');
-            this.construct = (base) => {
-                base('Client Router', true); // mount specific 
-            };
-        
-            $$('override');
-            this.boot = async (base, mount) => {
-                base();
-                
-                // get all registered routes, and sort by index, if was not already done in previous call
-                if (!routes) {
-                    routes = AppDomain.context.current().allRoutes(true);
-                    routes.sort((a, b) => {
-                        if (a.index < b.index) {
-                            return -1;
-                        }
-                        if (a.index > b.index) {
-                            return 1;
-                        }
-                        return 0;
-                    });
-                }
-        
-                const runInterceptor = async (interceptor, ctx) => {
-                    let ICType = as(await include(interceptor), ViewInterceptor);
-                    if (ICType) {
-                        let ic = new ICType();
-                        await ic.run(ctx);
-                    } else {
-                        throw Exception.InvalidDefinition(`Invalid interceptor type. (${interceptor})`);
-                    }                    
-        
-                };
-                const runHandler = async (routeHandler, ctx) => {
-                    let RouteHandler = as(await include(routeHandler), ViewHandler);
-                    if (RouteHandler) {
-                        let rh = new RouteHandler();
-                        await rh.view(ctx);
-                    } else {
-                        throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
-                    }
-                };
-                const getHandler = function(route) {
-                    return async (ctx) => {
-                        // ctx.params has all the route parameters.
-                        // e.g., for route "/users/:userId/books/:bookId" ctx.params will 
-                        // have "ctx.params: { "userId": "34", "bookId": "8989" }"
-                        // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
-        
-                        // run mount specific interceptors
-                        // each interceptor is derived from ViewInterceptor and
-                        // async run method of it takes ctx, can update it
-                        // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = settings.routing[`${route.mount}-interceptors`] || [];
-                        for(let interceptor of mountInterceptors) {
-                            await runInterceptor(interceptor, ctx);
-                            if (ctx.$stop) { break; }
-                        }
-        
-                        // handle route
-                        if (!ctx.$stop) {
-                            await runHandler(route.handler, ctx);
-                        }
-                    };
-                };
-        
-                // add routes related to current mount
-                let app = mount.app;
-                for (let route of routes) {
-                    if (route.mount === mount.name) { // add route-handler
-                        if (route.name !== settings.routes.notfound) { // add all except the 404 route
-                            app.add(route, getHandler(route));
-                        } 
-                    }
-                }
-        
-                // catch 404 for this mount
-                app.add404(async (ctx) => {
-                    // 404 handler does not run interceptors
-                    // and instead of running the route (for which this ctx was setup)
-                    // it will pick the handler of notfound route and show that view with this ctx
-                    let route404 = settings.routes.notfound;
-                    if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
-                    if (!route404) { // nothing else can be done
-                        setTimeout(() => { window.history.back(); }, 0);
-                        return;
-                    }
-        
-                    // use route404 handler
-                    await runHandler(route404.handler, ctx);
-                });
-            };
-        });
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui.vue/VueComponent.js
         const { VueComponentMembers } = ns('flair.ui.vue');
@@ -1687,7 +1687,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","mainAssembly":"","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.8","lupdate":"Wed, 17 Jul 2019 00:48:26 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","mainAssembly":"","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.11","lupdate":"Wed, 17 Jul 2019 21:52:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.ClientRouter","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
