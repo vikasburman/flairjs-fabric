@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FlairJS Debug</title>
+  </head>
+  <body>
+    <script type="text/javascript">
+      import * as flair from '../node_modules/flairjs/flair.js';
+      import * as preamble from '../dist/preamble.js';
+      preamble(flair).then(() => {
+          document.body.innerText = 'Assembly preamble loaded!'
+          debugger;
+      }).catch((err) => {
+          console.log(err);
+          debugger;
+      })
+    </script>
+  </body>
+</html>
