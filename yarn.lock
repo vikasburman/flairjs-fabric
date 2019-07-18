@@ -1516,10 +1516,10 @@ flagged-respawn@^1.0.0:
   resolved "https://registry.yarnpkg.com/flagged-respawn/-/flagged-respawn-1.0.1.tgz#e7de6f1279ddd9ca9aac8a5971d618606b3aab41"
   integrity sha512-lNaHNVymajmk0OJMBn8fVUAU1BtDeKIqKoVhk4xAALB57aALg6b4W0MfJ/cUE0g9YBXy5XhSlPIpYIJ7HaY/3Q==
 
-flairjs@^0.9.31:
-  version "0.9.31"
-  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.9.31.tgz#747cf3c3b6f515ba7f61c88261c71c93f25af5ad"
-  integrity sha512-SOUCnyGc/E5i7QAEXUjpzcQUJQKGmENkdEeJ/ZAiSoY+2vzpKxKm3/Dc+AHCUdGkM/d/Oicij2K37PQzMKsniw==
+flairjs@^0.9.35:
+  version "0.9.35"
+  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.9.35.tgz#c45119e203510221fbac7fc64bdeb810219b789c"
+  integrity sha512-4inOxnT1uDcGhVvjrp5q+Bj+lzWytvh02oUFEYHTb74rJ3YBjsY7bLfRqBewof/xXDD7R65m35Bsm5n2vmy04g==
 
 flat-cache@^2.0.1:
   version "2.0.1"

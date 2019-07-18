@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Client Mode",
-            "url": "http://localhost:8088/debug/www",
+            "url": "http://localhost:8088/debug/client.html",
             "webRoot": "${workspaceFolder}"
         },
         {

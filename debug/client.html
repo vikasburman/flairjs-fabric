@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>FlairJS Debug</title>
+    <title>FlairJS Fabric Debug</title>
   </head>
   <body>
-    <script type="text/javascript">
-      import * as flair from '../node_modules/flairjs/flair.js';
-      import * as preamble from '../dist/preamble.js';
+    <script type="module">
+      import * as m1 from '../node_modules/flairjs/flair.js';
+      import * as m2 from '../dist/preamble.js';
       preamble(flair).then(() => {
           document.body.innerText = 'Assembly preamble loaded!'
           debugger;

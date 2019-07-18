@@ -6,7 +6,6 @@
     "customBuildConfig": "./config/custom.json",
 
     "packaged": true,
-    "copyAfterBuild": true,    
 
     "fullBuild": false,
     "clean": true,
