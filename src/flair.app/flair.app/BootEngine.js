@@ -27,6 +27,10 @@ Class('(auto)', function() {
                 // get simple script file
                 item = which(item); // server/client specific version (although this will not be the case, generally)
                 if (item) { // in case no item is set for either server/client
+                    // suffix preamble.js
+                    if (!item.endsWith('/')) { item += '/'; }
+                    item += 'preamble.js';
+
                     // this loads it as a function which is called here
                     preambleLoader = await include(item);
                     await preambleLoader(flair);
