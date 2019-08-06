@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.9.22
- *  Sun, 04 Aug 2019 04:22:04 GMT
+ *  Version: 0.9.25
+ *  Tue, 06 Aug 2019 19:19:31 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -139,15 +139,15 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.server/flair.api/RESTfulService.js
+    await (async () => { // type: ./src/flair.server/flair.api/RESTEndPoint.js
         const { RestHandler } = ns('flair.api');
         
         /**
-         * @name RESTfulService
-         * @description RESTful Service
+         * @name RESTEndPoint
+         * @description RESTful Service Endpoint
          */
         $$('ns', 'flair.api');
-        Class('RESTfulService', RestHandler, function() {
+        Class('RESTEndPoint', RestHandler, function() {
             // nothing specific as of now    
         });
         
@@ -488,7 +488,7 @@
             this.boot = async (base, mount) => {
                 base();
                 
-                let resHeaders = settings[`${mount.name}-resHeaders`];
+                let resHeaders = settings.routing[`${mount.name}-resHeaders`];
                 if (resHeaders && resHeaders.length > 0) {
                     mount.app.use((req, res, next) => {
                         // each item is: { name: '', value:  }
@@ -574,7 +574,8 @@
                
                 // add routes related to current mount
                 for (let route of routes) {
-                    if (route.mount === mount.name) { // add route-handler
+                    // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
+                    if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                         route.verbs.forEach(verb => {
                             mount.app[verb](route.path, (req, res, next) => { // verb could be get/set/delete/put/, etc.
                                 const onError = (err) => {
@@ -690,7 +691,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.22","lupdate":"Sun, 04 Aug 2019 04:22:04 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTfulService","flair.api.RestInterceptor","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.25","lupdate":"Tue, 06 Aug 2019 19:19:31 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

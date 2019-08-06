@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.9.22
- *  Sun, 04 Aug 2019 04:22:03 GMT
+ *  Version: 0.9.25
+ *  Tue, 06 Aug 2019 19:19:31 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -1329,7 +1329,7 @@
                         // each interceptor is derived from ViewInterceptor and
                         // async run method of it takes ctx, can update it
                         // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = settings.routing[`${route.mount}-interceptors`] || [];
+                        let mountInterceptors = settings.routing[`${mount.name}-interceptors`] || [];
                         for(let interceptor of mountInterceptors) {
                             await runInterceptor(interceptor, ctx);
                             if (ctx.$stop) { break; }
@@ -1345,7 +1345,8 @@
                 // add routes related to current mount
                 let app = mount.app;
                 for (let route of routes) {
-                    if (route.mount === mount.name) { // add route-handler
+                    // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
+                    if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                         if (route.name !== settings.routes.notfound) { // add all except the 404 route
                             app.add(route, getHandler(route));
                         } 
@@ -1687,7 +1688,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.22","lupdate":"Sun, 04 Aug 2019 04:22:03 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.25","lupdate":"Tue, 06 Aug 2019 19:19:31 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
