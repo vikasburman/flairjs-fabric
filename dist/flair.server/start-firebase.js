@@ -34,41 +34,28 @@
     
     // define functions
     let defined = {};
-    
-    const initializeFlairAppMode = (done) => {
-        if (!flair.env.isAppMode()) {
-            flair(entryPoint).then((app) => { 
-                console.log('*'); 
-                if (typeof callback === 'function') { callback(flair, app); }
-                done();
-            });
-        } else {
-            done();
-        }
-    };
-    const initializeFlairAppModeASync = async () => {
+    const initializeFlairAppMode = async () => {
         if (!flair.env.isAppMode()) {
             let app = await flair(entryPoint);
             console.log('*'); 
         }
         if (typeof callback === 'function') { callback(flair, app); }
     };
-    const callHandler = async (handlerType, handlerMethod, handlerMethodArgs) => {
+    
+    const executeHandler = async (handlerType, handlerMethod, args) => {
         try {
             let TheClass = await flair.include(handlerType),
                 theObject = new TheClass();
-            return theObject[handlerMethod](...handlerMethodArgs);
+            return theObject[handlerMethod].apply(theObject, args);
         } catch (err) {
             return new functions.https.HttpsError('failed', err.message);
         }
     };
 
     const httpFunction = (f) => { // http 
-        const handler = (req, res) => {
-            initializeFlairAppMode(() => {
-                // let express app handle it
-                flair.AppDomain.host().app(req, res); 
-            })
+        const handler = async (req, res) => {
+            await initializeFlairAppMode();
+            return await flair.AppDomain.host().app(req, res); // express app takes it from here
         };
 
         if (f.config && f.config.region && f.config.runtimeOpts) {
@@ -83,22 +70,18 @@
         defined[f.name] = true;
     };
     const directFunction = (f) => { // callable
-        const handler = async (data, context) => {
-            await initializeFlairAppModeASync();
-            
-            // let configured handler handle it
-            return await callHandler(f.handler, 'onCall', [data, context]);
+        const handler = async (...args) => {
+            await initializeFlairAppMode();
+            return await executeHandler(f.handler, 'onCall', args);
         };
 
         exports[f.name] = functions.https.onCall(handler);
         defined[f.name] = true;
     };
     const cronFunction = (f) => { // scheduled 
-        const handler = async (context) => {
-            await initializeFlairAppModeASync();
-            
-            // let configured handler handle it
-            return await callHandler(f.handler, 'onRun', [context]);
+        const handler = async (...args) => {
+            await initializeFlairAppMode();
+            return await executeHandler(f.handler, 'onRun', args);
         };
 
         if (f.config && f.config.timeZone) {
@@ -109,11 +92,9 @@
         defined[f.name] = true;
     };
     const triggerFunction = (f) => { // trigger
-        const handler = async (data, context) => {
-            await initializeFlairAppModeASync();
-            
-            // let configured handler handle it
-            return await callHandler(f.handler, f.trigger, [data, context]);
+        const handler = async (...args) => {
+            await initializeFlairAppMode();
+            return await executeHandler(f.handler, f.trigger, args);
         };
 
         defined[f.name] = true;
