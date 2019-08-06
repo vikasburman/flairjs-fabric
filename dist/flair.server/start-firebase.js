@@ -22,7 +22,7 @@
     const functions = require('firebase-functions');
     const firebaseConfig = require('./firebaseConfig.json');
     const functionsConfig = require('./functionsConfig.json');
-    const serviceAccount = require('./serviceAccountKey.json');
+    const serviceAccount = require('./private/serviceAccountKey.json');
     
     // define credentials, if serviceAccount is configured
     if (typeof serviceAccount.project_id !== 'undefined') {
