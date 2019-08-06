@@ -16,7 +16,7 @@ Class('(auto)', Bootware, function() {
     this.boot = async (base, mount) => {
         base();
         
-        let resHeaders = settings[`${mount.name}-resHeaders`];
+        let resHeaders = settings.routing[`${mount.name}-resHeaders`];
         if (resHeaders && resHeaders.length > 0) {
             mount.app.use((req, res, next) => {
                 // each item is: { name: '', value:  }

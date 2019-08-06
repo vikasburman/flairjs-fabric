@@ -64,7 +64,7 @@ Class('(auto)', Bootware, function () {
                 // each interceptor is derived from ViewInterceptor and
                 // async run method of it takes ctx, can update it
                 // each item is: "InterceptorTypeQualifiedName"
-                let mountInterceptors = settings.routing[`${route.mount}-interceptors`] || [];
+                let mountInterceptors = settings.routing[`${mount.name}-interceptors`] || [];
                 for(let interceptor of mountInterceptors) {
                     await runInterceptor(interceptor, ctx);
                     if (ctx.$stop) { break; }
@@ -80,7 +80,8 @@ Class('(auto)', Bootware, function () {
         // add routes related to current mount
         let app = mount.app;
         for (let route of routes) {
-            if (route.mount === mount.name) { // add route-handler
+            // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
+            if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                 if (route.name !== settings.routes.notfound) { // add all except the 404 route
                     app.add(route, getHandler(route));
                 } 

@@ -67,7 +67,8 @@ Class('(auto)', Bootware, function () {
        
         // add routes related to current mount
         for (let route of routes) {
-            if (route.mount === mount.name) { // add route-handler
+            // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
+            if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                 route.verbs.forEach(verb => {
                     mount.app[verb](route.path, (req, res, next) => { // verb could be get/set/delete/put/, etc.
                         const onError = (err) => {

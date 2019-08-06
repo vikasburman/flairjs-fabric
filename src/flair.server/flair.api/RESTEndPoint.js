@@ -1,8 +1,8 @@
 const { RestHandler } = ns('flair.api');
 
 /**
- * @name RESTfulService
- * @description RESTful Service
+ * @name RESTEndPoint
+ * @description RESTful Service Endpoint
  */
 $$('ns', '(auto)');
 Class('(auto)', RestHandler, function() {
