@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.9.28
- *  Tue, 06 Aug 2019 22:50:54 GMT
+ *  Version: 0.9.31
+ *  Wed, 07 Aug 2019 00:44:39 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -15,7 +15,7 @@
     'use strict';
 
     if (typeof define === 'function' && define.amd) { // AMD support
-        define(factory);
+        define(() => { return factory; });
     } else if (typeof exports === 'object') { // CommonJS and Node.js module support
         if (typeof module !== 'undefined' && module.exports) {
             exports = module.exports = factory; // Node.js specific module.exports
@@ -475,7 +475,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.28","lupdate":"Tue, 06 Aug 2019 22:50:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.31","lupdate":"Wed, 07 Aug 2019 00:44:39 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
