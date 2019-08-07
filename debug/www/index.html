@@ -72,13 +72,7 @@
         preamble(flair).then(() => {
           const fabricInfo = flair.AppDomain.getAdo('./flair.app.js');
           
-          // NOTE: If there is any change in assemblies of this package, 
-          // update them here manually
-          const fabric_asms = [
-          './flair.app.js',
-          './flair.server.js',
-          './flair.client.js'
-          ];
+          const fabric_asms = flair.AppDomain.allAdos();
           const fabric_members = {
             asmNames: '',
             asmCount: 0,
@@ -89,6 +83,7 @@
           };
           for(let asm of fabric_asms) {
             let asmInfo = flair.AppDomain.getAdo(asm);
+            if (asmInfo.name === 'flair') { continue; }
             fabric_members.asmNames += asmInfo.name + ', ';
             fabric_members.typeCount += asmInfo.types.length;
             fabric_members.resCount += asmInfo.resources.length;
