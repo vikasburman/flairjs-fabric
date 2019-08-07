@@ -14,15 +14,15 @@
     } else { // expose as global on root
         root['flair_server_start'] = factory;
     }
-})(this, function(entryPoint, callback) {
+})(this, function(rootDir, entryPoint, callback) {
     'use strict';
     
     const flair = require('flairjs');
     const admin = require('firebase-admin');
     const functions = require('firebase-functions');
-    const firebaseConfig = require('./firebaseConfig.json');
-    const functionsConfig = require('./functionsConfig.json');
-    const serviceAccount = require('./private/serviceAccountKey.json');
+    const firebaseConfig = require(rootDir + '/firebaseConfig.json');
+    const functionsConfig = require(rootDir + '/functionsConfig.json');
+    const serviceAccount = require(rootDir + '/private/serviceAccountKey.json');
     
     // define credentials, if serviceAccount is configured
     if (typeof serviceAccount.project_id !== 'undefined') {
