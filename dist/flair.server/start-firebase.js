@@ -23,6 +23,8 @@
     const firebaseConfig = require(rootDir + '/firebaseConfig.json');
     const functionsConfig = require(rootDir + '/functionsConfig.json');
     const serviceAccount = require(rootDir + '/private/serviceAccountKey.json');
+
+    let _functions = {};
     
     // define credentials, if serviceAccount is configured
     if (typeof serviceAccount.project_id !== 'undefined') {
@@ -38,8 +40,8 @@
         if (!flair.env.isAppMode()) {
             let app = await flair(entryPoint);
             console.log('*'); 
+            if (typeof callback === 'function') { callback(flair, app); }
         }
-        if (typeof callback === 'function') { callback(flair, app); }
     };
     
     const executeHandler = async (handlerType, handlerMethod, args) => {
@@ -59,13 +61,13 @@
         };
 
         if (f.config && f.config.region && f.config.runtimeOpts) {
-            exports[f.name] = functions.region(f.config.region).runWith(f.config.runtimeOpts).https.onRequest(handler);
+            _functions[f.name] = functions.region(f.config.region).runWith(f.config.runtimeOpts).https.onRequest(handler);
         } else if (f.config && f.config.region) {
-            exports[f.name] = functions.region(f.config.region).https.onRequest(handler);
+            _functions[f.name] = functions.region(f.config.region).https.onRequest(handler);
         } else if (f.config && f.config.runtimeOpts) {
-            exports[f.name] = functions.runWith(f.config.runtimeOpts).https.onRequest(handler);
+            _functions[f.name] = functions.runWith(f.config.runtimeOpts).https.onRequest(handler);
         } else {
-            exports[f.name] = functions.https.onRequest(handler);
+            _functions[f.name] = functions.https.onRequest(handler);
         }
         defined[f.name] = true;
     };
@@ -75,7 +77,7 @@
             return await executeHandler(f.handler, 'onCall', args);
         };
 
-        exports[f.name] = functions.https.onCall(handler);
+        _functions[f.name] = functions.https.onCall(handler);
         defined[f.name] = true;
     };
     const cronFunction = (f) => { // scheduled 
@@ -85,9 +87,9 @@
         };
 
         if (f.config && f.config.timeZone) {
-            exports[f.name] = functions.pubsub.schedule(f.config.when).timeZone(f.config.timeZone).onRun(handler);
+            _functions[f.name] = functions.pubsub.schedule(f.config.when).timeZone(f.config.timeZone).onRun(handler);
         } else {
-            exports[f.name] = functions.pubsub.schedule(f.config.when).onRun(handler);
+            _functions[f.name] = functions.pubsub.schedule(f.config.when).onRun(handler);
         }
         defined[f.name] = true;
     };
@@ -100,33 +102,33 @@
         defined[f.name] = true;
         switch(f.source) {
             case 'firestore': // f.trigger --> onCreate, onUpdate, onDelete, onWrite
-                exports[f.name] = functions.firestore.document(f.config.document)[f.trigger](handler); 
+                _functions[f.name] = functions.firestore.document(f.config.document)[f.trigger](handler); 
                 break;
             case 'database': // f.trigger --> onCreate, onUpdate, onDelete, onWrite
                 if (f.config.instance && f.config.ref) {
-                    exports[f.name] = functions.database.instance(f.config.instance).ref(f.config.ref)[f.trigger](handler);
+                    _functions[f.name] = functions.database.instance(f.config.instance).ref(f.config.ref)[f.trigger](handler);
                 } else {
-                    exports[f.name] = functions.database.ref(f.config.ref)[f.trigger](handler);
+                    _functions[f.name] = functions.database.ref(f.config.ref)[f.trigger](handler);
                 }
                 break;
             case 'storage': // f.trigger --> onFinalize, onDelete, onArchive, onMetadataUpdate
                 if (f.config.bucket) {
-                    exports[f.name] = functions.storage.bucket(f.config.bucket).object()[f.trigger](handler);
+                    _functions[f.name] = functions.storage.bucket(f.config.bucket).object()[f.trigger](handler);
                 } else {
-                    exports[f.name] = functions.storage.object()[f.trigger](handler);
+                    _functions[f.name] = functions.storage.object()[f.trigger](handler);
                 }
                 break;
             case 'pubsub': // f.trigger --> onPublish
-                exports[f.name] = functions.pubsub.topic(f.config.topic)[f.trigger](handler);
+                _functions[f.name] = functions.pubsub.topic(f.config.topic)[f.trigger](handler);
                 break;
             case 'auth': // f.trigger --> onCreate, onDelete
-                exports[f.name] = functions.auth.user()[f.trigger](handler);
+                _functions[f.name] = functions.auth.user()[f.trigger](handler);
                 break;
             case 'ga': // f.trigger --> onLog
-                exports[f.name] = functions.analytics.event(f.config.event)[f.trigger](handler);
+                _functions[f.name] = functions.analytics.event(f.config.event)[f.trigger](handler);
                 break;
             case 'crash': // f.trigger --> onNew, onRegressed, onVelocityAlert
-                exports[f.name] = functions.crashlytics.issue()[f.trigger](handler);
+                _functions[f.name] = functions.crashlytics.issue()[f.trigger](handler);
                 break;
             default: // could not be defined
                 delete defined[f.name];
@@ -144,4 +146,7 @@
             }
         }
     }
+
+    // return
+    return _functions;
 });
