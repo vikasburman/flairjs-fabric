@@ -20,9 +20,9 @@
     const flair = require('flairjs');
     const admin = require('firebase-admin');
     const functions = require('firebase-functions');
-    const firebaseConfig = require(rootDir + '/firebaseConfig.json');
-    const functionsConfig = require(rootDir + '/functionsConfig.json');
-    const serviceAccount = require(rootDir + '/private/serviceAccountKey.json');
+    const firebaseConfig = require(rootDir + '/firebase/firebaseConfig.json');
+    const functionsConfig = require(rootDir + '/firebase/functionsConfig.json');
+    const serviceAccount = require(rootDir + '/firebase/serviceAccountKey.json');
 
     let _functions = {};
     
