@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>FlairJS Fabric Debug</title>
+    <title>Client</title>
     <link rel="shortcut icon" href="./favicon.png">
     <link rel="stylesheet" type="text/css" href="./styles.css">
   </head>
@@ -11,22 +11,22 @@
           <div class="additional">
             <div class="user-card">
               <div class="level center none">
-                {{ fabric_title }}
+                {{ title }}
               </div>
               <div class="points center small">
-                v{{ fabric_version }}
+                v{{ version }}
               </div>
               <img class="center" width="50" height="50" src="./favicon.png"/>
             </div>
             <div class="more-info">
-              <h1>{{ fabric_name }}</h1>
+              <h1>{{ name }}</h1>
               <div class="coords">
                 <span>License</span>
                 <span>Released</span>
               </div>
               <div class="coords"><small>
-                <span><a target="_blank" href="{{ fabric_licenseLink }}">{{ fabric_license }}</a></span>
-                <span>{{ fabric_lupdate }}</span></small>
+                <span><a target="_blank" href="{{ licenseLink }}">{{ license }}</a></span>
+                <span>{{ lupdate }}</span></small>
               </div>
               <p></p>
               <div class="coords">
@@ -34,33 +34,33 @@
                   <span>Depends</span>
               </div>
               <div class="coords"><small>
-                  <span><a target="_blank" href="{{ fabric_folderLink }}">{{ fabric_assemblies }}</a></span>
-                  <span>flairjs - ^{{ fabric_depends_on }}</span></small>
+                  <span><a target="_blank" href="{{ folderLink }}">{{ assemblies }}</a></span>
+                  <span>flairjs - ^{{ depends_on }}</span></small>
               </div>
               <p></p>
               <div class="coords">
                   <span>Members</span>
               </div>
               <div class="coords"><small>
-                  <span>{{ fabric_assemblies_members }}</span></small>
+                  <span>{{ assemblies_members }}</span></small>
               </div>
 
               <div class="stats">
                 <div>
-                    <div class="title none"><a target="_blank" href="{{ fabric_web }}">Website</a></div>
+                    <div class="title none"><a target="_blank" href="{{ web }}">Website</a></div>
                   </div>
                   <div>
-                    <div class="title none"><a target="_blank" href="{{ fabric_git }}">GitHub</a></div>
+                    <div class="title none"><a target="_blank" href="{{ git }}">GitHub</a></div>
                   </div>
                   <div>
-                      <div class="title none"><a target="_blank" href="{{ fabric_npm }}">NPM</a></div>
+                      <div class="title none"><a target="_blank" href="{{ npm }}">NPM</a></div>
                   </div>
               </div>
             </div>
           </div>
           <div class="general">
-            <h1>{{ fabric_name }}</h1>
-            <p class="center-text">{{ fabric_desc }}</p>
+            <h1>{{ name }}</h1>
+            <p class="center-text">{{ desc }}</p>
             <span class="more">more info</span>
           </div>
         </div>
@@ -70,10 +70,10 @@
         import * as m1 from '../../node_modules/flairjs/flair.js';
         import * as m2 from '../../dist/preamble.js';
         preamble(flair).then(() => {
-          const fabricInfo = flair.AppDomain.getAdo('./flair.app.js');
+          let info = null;
           
-          const fabric_asms = flair.AppDomain.allAdos();
-          const fabric_members = {
+          const asms = flair.AppDomain.allAdos();
+          const members = {
             asmNames: '',
             asmCount: 0,
             typeCount: 0,
@@ -81,37 +81,39 @@
             astCount: 0,
             routeCount: 0
           };
-          for(let asm of fabric_asms) {
+          for(let asm of asms) {
             let asmInfo = flair.AppDomain.getAdo(asm);
             if (asmInfo.name === 'flair') { continue; }
-            fabric_members.asmNames += asmInfo.name + ', ';
-            fabric_members.typeCount += asmInfo.types.length;
-            fabric_members.resCount += asmInfo.resources.length;
-            fabric_members.astCount += asmInfo.assets.length;
-            fabric_members.routeCount += asmInfo.routes.length;
+            if (info === null) { info = asmInfo; } // pick first
+            members.asmNames += asmInfo.name + ', ';
+            members.typeCount += asmInfo.types.length;
+            members.resCount += asmInfo.resources.length;
+            members.astCount += asmInfo.assets.length;
+            members.routeCount += asmInfo.routes.length;
           }
-          fabric_members.asmNames = fabric_members.asmNames.substr(0, fabric_members.asmNames.length - 2); // remove last ','
+          members.asmNames = members.asmNames.substr(0, members.asmNames.length - 2); // remove last ','
 
           const data = { 
-            fabric_depends_on: flair.info.version, 
-            fabric_name: fabricInfo.package,
-            fabric_title: fabricInfo.title,
-            fabric_version: fabricInfo.version,
-            fabric_desc: fabricInfo.desc,
-            fabric_license: fabricInfo.license,
-            fabric_lupdate: new Date(fabricInfo.lupdate).toDateString(),
-            fabric_licenseLink: 'https://raw.githubusercontent.com/vikasburman/flairjs-fabric/master/LICENSE',
-            fabric_web: 'https://flairjs.com/fabric/',
-            fabric_git: 'https://github.com/vikasburman/flairjs-fabric',
-            fabric_npm: 'https://www.npmjs.com/package/flairjs-fabric',
-            fabric_folderLink: '../../dist/',
-            fabric_assemblies: fabric_members.asmNames,
-            fabric_assemblies_members: `Types: ${fabric_members.typeCount}, Resources: ${fabric_members.resCount}, Assets: ${fabric_members.astCount}, Routes: ${fabric_members.routeCount}`
+            depends_on: flair.info.version, 
+            name: info.package,
+            title: info.title,
+            version: info.version,
+            desc: info.desc,
+            license: info.license,
+            lupdate: new Date(info.lupdate).toDateString(),
+            licenseLink: 'https://raw.githubusercontent.com/vikasburman/flairjs-fabric/master/LICENSE',
+            web: 'https://flairjs.com/fabric/',
+            git: 'https://github.com/vikasburman/flairjs-fabric',
+            npm: 'https://www.npmjs.com/package/flairjs-fabric',
+            folderLink: '../../dist/',
+            assemblies: members.asmNames,
+            assemblies_members: `Types: ${members.typeCount}, Resources: ${members.resCount}, Assets: ${members.astCount}, Routes: ${members.routeCount}`
           };
 
           document.body.innerHTML = document.body.innerHTML.replace(/\{\{\s?(\w+)\s?\}\}/g, (match, variable) => {
             return data[variable] || ''
           });
+          document.title = info.title + ' Debug';
         }).catch((err) => {
             console.log(err);
         })

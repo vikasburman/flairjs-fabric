@@ -1,8 +1,8 @@
 const flair = require('flairjs');
 const preamble = require('../../dist/preamble.js');
 preamble(flair).then(() => {
-    const fabric = flair.AppDomain.getAdo('./flair.app.js');
-    console.log(`${fabric.package} - v${fabric.version}`);
+    const info = flair.AppDomain.getAdo(flair.AppDomain.allAdos()[1]); // first one - after flair (flair is always first)
+    console.log(`${info.package} - v${info.version}`);
     debugger;
 }).catch((err) => {
     console.log(err);
