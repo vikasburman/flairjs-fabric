@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FlairJS Fabric Debug</title>
+    <link rel="shortcut icon" href="./favicon.png">
+    <link rel="stylesheet" type="text/css" href="./styles.css">
+  </head>
+  <body>
+      <div class="center">
+        <div class="card">
+          <div class="additional">
+            <div class="user-card">
+              <div class="level center none">
+                {{ flair_title }}
+              </div>
+              <div class="points center small">
+                v{{ flair_version }}
+              </div>
+              <img class="center" width="50" height="50" src="./favicon.png"/>
+            </div>
+            <div class="more-info">
+              <h1>{{ flair_name }}</h1>
+              <div class="coords">
+                <span>License</span>
+                <span>Released</span>
+              </div>
+              <div class="coords"><small>
+                <span><a target="_blank" href="{{ flair_licenseLink }}">{{ flair_license }}</a></span>
+                <span>{{ flair_lupdate }}</span></small>
+              </div>
+              <p></p>
+              <div class="coords">
+                  <span>Assembly</span>
+                  <span>File</span>
+              </div>
+              <div class="coords"><small>
+                  <span>{{ flair_asm }}</span>
+                  <span><a target="_blank" href="{{ flair_fileLink }}">{{ flair_file }}</a></span></small>
+              </div>
+              <p></p>
+              <div class="coords">
+                  <span>Environment</span>
+                  <span>Mode</span>
+              </div>
+              <div class="coords"><small>
+                  <span>{{ flair_env }}</span>
+                  <span>{{ flair_mode }}</span></small>
+              </div>
+
+              <div class="stats">
+                <div>
+                  <div class="title none"><a target="_blank" href="{{ flair_web }}">Website</a></div>
+                </div>
+                <div>
+                  <div class="title none"><a target="_blank" href="{{ flair_git }}">GitHub</a></div>
+                </div>
+                <div>
+                    <div class="title none"><a target="_blank" href="{{ flair_npm }}">NPM</a></div>
+                </div>
+                <div>
+                    <div class="title none"><a target="_blank" href="{{ flair_cdn }}">CDN</a></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="general">
+            <h1>{{ flair_name }}</h1>
+            <p class="center-text">{{ flair_desc }}</p>
+            <span class="more">more info</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="additional">
+            <div class="user-card">
+              <div class="level center none">
+                {{ fabric_title }}
+              </div>
+              <div class="points center small">
+                v{{ fabric_version }}
+              </div>
+              <img class="center" width="50" height="50" src="./favicon.png"/>
+            </div>
+            <div class="more-info">
+              <h1>{{ fabric_name }}</h1>
+              <div class="coords">
+                <span>License</span>
+                <span>Released</span>
+              </div>
+              <div class="coords"><small>
+                <span><a target="_blank" href="{{ fabric_licenseLink }}">{{ fabric_license }}</a></span>
+                <span>{{ fabric_lupdate }}</span></small>
+              </div>
+              <p></p>
+              <div class="coords">
+                <span>Assemblies</span>
+              </div>
+              <div class="coords"><small>
+                <span><a target="_blank" href="{{ fabric_folderLink }}">{{ fabric_assemblies }}</a></span></small>
+              </div>
+              <p></p>
+              <div class="coords">
+                <span>Members</span>
+              </div>
+              <div class="coords"><small>
+                <span>{{ fabric_assemblies_members }}</span></small>
+              </div>               
+              
+              <div class="stats">
+                <div>
+                  <div class="title none"><a target="_blank" href="{{ fabric_web }}">Website</a></div>
+                </div>
+                <div>
+                  <div class="title none"><a target="_blank" href="{{ fabric_git }}">GitHub</a></div>
+                </div>
+                <div>
+                    <div class="title none"><a target="_blank" href="{{ fabric_npm }}">NPM</a></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="general">
+            <h1>{{ fabric_name }}</h1>
+            <p class="center-text">{{ fabric_desc }}</p>
+            <span class="more">more info</span>
+          </div>
+        </div>
+      </div>
+      
+      <script type="module">
+        import * as m1 from '../../node_modules/flairjs/flair.js';
+        import * as m2 from '../../dist/preamble.js';
+        preamble(flair).then(() => {
+          const flairInfo = flair.AppDomain.getAdo('./flair.js');
+          const fabricInfo = flair.AppDomain.getAdo('./flair.app.js');
+          
+          // NOTE: If there is any change in assemblies of this package, 
+          // update them here manually
+          const fabric_asms = [
+          './flair.app.js',
+          './flair.server.js',
+          './flair.client.js'
+          ];
+          const fabric_members = {
+            asmNames: '',
+            asmCount: 0,
+            typeCount: 0,
+            resCount: 0,
+            astCount: 0,
+            routeCount: 0
+          };
+          for(let asm of fabric_asms) {
+            let asmInfo = flair.AppDomain.getAdo(asm);
+            fabric_members.asmNames += asmInfo.name + ', ';
+            fabric_members.typeCount += asmInfo.types.length;
+            fabric_members.resCount += asmInfo.resources.length;
+            fabric_members.astCount += asmInfo.assets.length;
+            fabric_members.routeCount += asmInfo.routes.length;
+          }
+          fabric_members.asmNames = fabric_members.asmNames.substr(0, fabric_members.asmNames.length - 2); // remove last ','
+
+          const data = {  
+            flair_name: flairInfo.package,
+            flair_title: flairInfo.title,
+            flair_version: flairInfo.version,
+            flair_desc: flairInfo.desc,
+            flair_license: flairInfo.license,
+            flair_lupdate: new Date(flairInfo.lupdate).toDateString(),
+            flair_asm: flairInfo.name,
+            flair_file: flairInfo.file,
+            flair_env: flair.env.type + ': ' + (flair.env.isTesting ? 'testing/' : '') + (flair.env.isProd ? 'prod' : 'debug'),
+            flair_mode: flair.env.isAppMode() ? 'framework' : 'library',
+            flair_fileLink: '../../dist/flair.js',
+            flair_licenseLink: 'https://raw.githubusercontent.com/vikasburman/flairjs/master/LICENSE',
+            flair_web: 'https://flairjs.com',
+            flair_git: 'https://github.com/vikasburman/flairjs',
+            flair_npm: 'https://www.npmjs.com/package/flairjs',
+            flair_cdn: 'https://cdn.jsdelivr.net/npm/flairjs',  
+            fabric_name: fabricInfo.package,
+            fabric_title: fabricInfo.title,
+            fabric_version: fabricInfo.version,
+            fabric_desc: fabricInfo.desc,
+            fabric_license: fabricInfo.license,
+            fabric_lupdate: new Date(fabricInfo.lupdate).toDateString(),
+            fabric_licenseLink: 'https://raw.githubusercontent.com/vikasburman/flairjs-fabric/master/LICENSE',
+            fabric_web: 'https://flairjs.com/fabric/',
+            fabric_git: 'https://github.com/vikasburman/flairjs-fabric',
+            fabric_npm: 'https://www.npmjs.com/package/flairjs-fabric',
+            fabric_folderLink: '../../dist/',
+            fabric_assemblies: fabric_members.asmNames,
+            fabric_assemblies_members: `Types: ${fabric_members.typeCount}, Resources: ${fabric_members.resCount}, Assets: ${fabric_members.astCount}, Routes: ${fabric_members.routeCount}`
+          };
+
+          document.body.innerHTML = document.body.innerHTML.replace(/\{\{\s?(\w+)\s?\}\}/g, (match, variable) => {
+            return data[variable] || ''
+          });
+        }).catch((err) => {
+            console.log(err);
+        })
+      </script>      
+  </body>
+</html>
