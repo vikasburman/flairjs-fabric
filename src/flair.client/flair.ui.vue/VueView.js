@@ -7,8 +7,6 @@ const { VueComponentMembers } = ns('flair.ui.vue');
  */
 $$('ns', '(auto)');
 Class('(auto)', ViewHandler, [VueComponentMembers], function() {
-    let isLoaded = false;
-
     $$('private');
     this.factory = async () => {
         // merge layout's components
@@ -57,43 +55,24 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('override');
     $$('sealed');
     this.onView = async (base, ctx, el) => {
-        if (!isLoaded) {
-            isLoaded = true;
-            base();
+        base();
 
-            const Vue = await include('vue/vue{.min}.js');
+        const Vue = await include('vue/vue{.min}.js');
 
-            // custom load op
-            await this.beforeLoad(ctx, el);            
+        // get component
+        let component = await this.factory();
 
-            // get component
-            let component = await this.factory();
+        // set view Html
+        let viewHtml = this.html || '';
+        if (this.layout) {
+            el.innerHTML = await this.layout.merge(viewHtml);
+        } else {
+            el.innerHTML = viewHtml;
+        }            
 
-            // set view Html
-            let viewHtml = this.html || '';
-            if (this.layout) {
-                el.innerHTML = await this.layout.merge(viewHtml);
-            } else {
-                el.innerHTML = viewHtml;
-            }            
-
-            // custom load op
-            await this.afterLoad(ctx, el);
-
-            // setup Vue view instance
-            new Vue(component);
-        }
+        // setup Vue view instance
+        new Vue(component);
     };
-
-    $$('protected');
-    $$('virtual');
-    $$('async');
-    this.beforeLoad = noop;
-
-    $$('protected');
-    $$('virtual');
-    $$('async');
-    this.afterLoad = noop;
 
     $$('protected');
     this.el = null;

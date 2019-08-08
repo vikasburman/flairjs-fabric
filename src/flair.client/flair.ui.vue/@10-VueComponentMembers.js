@@ -1,10 +1,13 @@
+const { ViewHandler } = ns('flair.ui');
+
 /**
  * @name VueComponentMembers
  * @description Vue Component Members
  */
 $$('ns', '(auto)');
 Mixin('(auto)', function() {
-    var _this = this;
+    var _this = this,
+        _thisId = guid();
 
     $$('private');
     this.define = async () => {
@@ -14,32 +17,32 @@ Mixin('(auto)', function() {
 
         let viewState = new ViewState(),
             component = {};
-            // scopedStyleId = guid(); // TODO: Sort out scoped style issue
 
         // get port
         let clientFileLoader = Port('clientFile');  
 
         // load style content in property
-        if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>');
+        if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>'); OR directly name is written
             // pick file from assets folder
             this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
             // load file content
             this.style = await clientFileLoader(this.style);
+            // load styles in dom - as scoped style
+            if (this.style) {
+                this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+                ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
+            }
         }
 
         // load html content in property
-        if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');
+        if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');  OR directly name is written
             // pick file from assets folder
             this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
             // load file content
             this.html = await clientFileLoader(this.html);
-        }
-
-        // merge html and style // TODO: Sort out scoped style issue
-        if (this.html && this.style) { // merge style as scoped style
-            this.html = '<div><style scoped>' + this.style.trim() +'</style>' + this.html.trim() + '</div>';
-        } else if (this.style) {
-            this.html = '<div><style scoped>' + this.style.trim() +'</style></div>';
+            // put entire html into a unique id div
+            // even empty html will become an empty div here with ID - so it ensures that all components have a div
+            this.html = `<div id="${_thisId}">${this.html}</div>`;
         }
 
         // local i18n resources
@@ -319,6 +322,9 @@ Mixin('(auto)', function() {
         return component;
     };    
     
+    $$('readonly');
+    this.id = _thisId;
+
     $$('protected');
     this.locale = (value) => { return AppDomain.host().locale(value); };
 

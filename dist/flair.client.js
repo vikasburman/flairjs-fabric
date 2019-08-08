@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.3
- *  Thu, 08 Aug 2019 05:17:00 GMT
+ *  Version: 0.55.7
+ *  Thu, 08 Aug 2019 18:11:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -90,7 +90,8 @@
          */
         $$('ns', 'flair.ui');
         Class('ViewHandler', Handler, function() {
-            let mainEl = '';
+            let mainEl = '',
+                abortControllers = [];       
         
             $$('override');
             this.construct = (base, el, title, transition) => {
@@ -120,11 +121,54 @@
             $$('protectedSet');
             this.meta = null;
         
+            $$('protected');
+            $$('virtual');
+            $$('async');
+            this.beforeLoad = noop;
+        
+            $$('protected');
+            $$('virtual');
+            $$('async');
+            this.afterLoad = noop;
+        
+            $$('protected');
+            $$('virtual');
+            $$('async');
+            this.loadData = noop;    
+        
+            $$('protected');
+            this.cancelLoadData = async () => {
+                for(let abortController of abortControllers) {
+                    try {
+                        abortController.abort();
+                    } catch (err) { // eslint-disable-line no-unused-vars
+                        // ignore
+                    }
+                }
+                abortControllers = []; // reset
+        
+                // any custom cleanup
+                await this.onCancelLoadData();
+            };
+        
+            $$('protected');
+            this.abortHandle = () => {
+                let abortController = new AbortController(); // create new
+                abortControllers.push(abortController); // push to list, so it can be cancelled later
+                return abortController; // give back the new handle
+            };
+        
+            $$('protected');
+            $$('virtual');
+            $$('async');
+            this.onCancelLoadData = noop;    
+        
             this.view = async (ctx) => {
                 const { ViewTransition } = ns('flair.ui');
         
                 // give it a unique name, if not already given
                 this.name = this.name || this.$Type.getName(true); // $Type is the main view which is finally inheriting this ViewHandler
+                this.$static.loadingViewName = this.name;
         
                 // load view transition
                 if (this.viewTransition) {
@@ -143,11 +187,25 @@
                 el.setAttribute('hidden', '');
                 parentEl.appendChild(el);
                 
+                // custom load op before view is created
+                await this.beforeLoad(ctx, el);      
+        
                 // view
                 await this.onView(ctx, el);
         
+                // custom load op after view is created but not shown yet
+                await this.afterLoad(ctx, el);
+        
                 // swap views (old one is replaced with this new one)
                 await this.swap();
+        
+                // now initiate async server data load process, this may take long
+                // therefore any must needed data should be loaded either in beforeLoad 
+                // or afterLoad functions, anything that can wait still when UI is visible
+                // should be loaded here
+                // corresponding cancel operations must also be written in cancelLoadData
+                // NOTE: this does not wait for completion of this async method
+                this.loadData(ctx);        
             };
         
             $$('protected');
@@ -163,13 +221,19 @@
                 if (this.$static.currentView) {
                     let currentViewEl = DOC.getElementById(this.$static.currentView);
         
+                    // cancel load data, if any
+                    this.$static.currentViewCancelLoadData(); // note: this is called and not waited for, so cancel can keep happening in background
+        
                     // remove outgoing view meta   
                     if (this.$static.currentViewMeta) {
                         for(let meta of this.$static.currentViewMeta) {
                             DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
                         }
                     }
-                        
+        
+                    // remove outgoing view styles   
+                    this.$static.removeStyles()
+        
                     // apply transitions
                     if (this.viewTransition) {
                         // leave outgoing, enter incoming
@@ -206,15 +270,47 @@
                 DOC.title = this.title;
         
                 // set new current
-                this.$static.currentView = this.name;
+                this.$static.currentViewName = this.name;
+                this.$static.loadingViewName = null;
                 this.$static.currentViewMeta = this.meta;
+                this.currentViewCancelLoadData = this.cancelLoadData;
             };
         
             $$('static');
-            this.currentView = null;
+            this.currentViewName = null;
         
             $$('static');
             this.currentViewMeta = null;
+        
+            $$('static');
+            this.currentViewCancelLoadData = null;    
+        
+            $$('static');
+            this.loadingViewName = null;
+        
+            $$('static');
+            this.removeStyles = () => {
+                if (this.$static.currentViewName) {
+                    let styles = document.head.getElementsByTagName("style"),
+                        outgoingViewName = this.$static.currentViewName;
+                    for(let styleEl of styles) { // remove all styles which were added by any component (view itself, layout or any component) of this view
+                        if (styleEl.id && styleEl.id.startsWith(`_${outgoingViewName}_style_`)) { // this must match the way styles were added, see below in: addStyle
+                            document.head.removeChild(styleEl);
+                        }
+                    }
+                }
+            };
+        
+            $$('static');
+            this.addStyle = (scopeId, style) => {
+                if (this.$static.loadingViewName) {
+                    let styleEl = window.document.createElement('style');
+                    styleEl.id = `_${this.$static.loadingViewName}_style_${scopeId}`
+                    styleEl.type = 'text/css';
+                    styleEl.appendChild(window.document.createTextNode(style));
+                    window.document.head.appendChild(styleEl);
+                }
+            };
         });
         
     })();    
@@ -519,13 +615,16 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui.vue/@10-VueComponentMembers.js
+        const { ViewHandler } = ns('flair.ui');
+        
         /**
          * @name VueComponentMembers
          * @description Vue Component Members
          */
         $$('ns', 'flair.ui.vue');
         Mixin('VueComponentMembers', function() {
-            var _this = this;
+            var _this = this,
+                _thisId = guid();
         
             $$('private');
             this.define = async () => {
@@ -535,32 +634,32 @@
         
                 let viewState = new ViewState(),
                     component = {};
-                    // scopedStyleId = guid(); // TODO: Sort out scoped style issue
         
                 // get port
                 let clientFileLoader = Port('clientFile');  
         
                 // load style content in property
-                if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>');
+                if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>'); OR directly name is written
                     // pick file from assets folder
                     this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
                     // load file content
                     this.style = await clientFileLoader(this.style);
+                    // load styles in dom - as scoped style
+                    if (this.style) {
+                        this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+                        ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
+                    }
                 }
         
                 // load html content in property
-                if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');
+                if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');  OR directly name is written
                     // pick file from assets folder
                     this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
                     // load file content
                     this.html = await clientFileLoader(this.html);
-                }
-        
-                // merge html and style // TODO: Sort out scoped style issue
-                if (this.html && this.style) { // merge style as scoped style
-                    this.html = '<div><style scoped>' + this.style.trim() +'</style>' + this.html.trim() + '</div>';
-                } else if (this.style) {
-                    this.html = '<div><style scoped>' + this.style.trim() +'</style></div>';
+                    // put entire html into a unique id div
+                    // even empty html will become an empty div here with ID - so it ensures that all components have a div
+                    this.html = `<div id="${_thisId}">${this.html}</div>`;
                 }
         
                 // local i18n resources
@@ -840,6 +939,9 @@
                 return component;
             };    
             
+            $$('readonly');
+            this.id = _thisId;
+        
             $$('protected');
             this.locale = (value) => { return AppDomain.host().locale(value); };
         
@@ -1490,12 +1592,21 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui.vue/VueLayout.js
+        const { ViewHandler } = ns('flair.ui');
+        
         /**
          * @name VueLayout
          * @description Vue Layout
+         *              It's purpose is mostly to define layout - so components can be places differently
+         *              the html of the layout should not have anything else - no data binding etc.
          */
         $$('ns', 'flair.ui.vue');
         Class('VueLayout', function() {
+            let _thisId = guid();
+        
+            $$('readonly');
+            this.id = _thisId;
+        
             $$('protected');
             this.html = '';
         
@@ -1520,22 +1631,29 @@
                 let clientFileLoader = Port('clientFile');  
         
                 // load style content in property
-                if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>');
+                if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>'); OR directly name is written
+                    // pick file from assets folder
+                    this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
+                    // load file content
                     this.style = await clientFileLoader(this.style);
+                    // load styles in dom - as scoped style
+                    if (this.style) {
+                        this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+                        ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
+                    }
                 }
         
                 // load html content in property
-                if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');
+                if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');  OR directly name is written
+                    // pick file from assets folder
+                    this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
+                    // load file content
                     this.html = await clientFileLoader(this.html);
-                } 
+                    // put entire html into a unique id div
+                    // even empty html will become an empty div here with ID - so it ensures that all layouts have a div
+                    this.html = `<div id="${_thisId}">${this.html}</div>`;            
+                }
         
-                // merge html and style
-                if (this.html && this.style) { // merge style as scoped style
-                    this.html = '<div><style scoped>' + this.style.trim() +'</style>' + this.html.trim() + '</div>';
-                } else if (this.style) {
-                    this.html = '<div><style scoped>' + this.style.trim() +'</style></div>';
-                }        
-                
                 // inject components
                 let layoutHtml = this.html;
                 if (this.areas && Array.isArray(this.areas)) {
@@ -1589,8 +1707,6 @@
          */
         $$('ns', 'flair.ui.vue');
         Class('VueView', ViewHandler, [VueComponentMembers], function() {
-            let isLoaded = false;
-        
             $$('private');
             this.factory = async () => {
                 // merge layout's components
@@ -1639,43 +1755,24 @@
             $$('override');
             $$('sealed');
             this.onView = async (base, ctx, el) => {
-                if (!isLoaded) {
-                    isLoaded = true;
-                    base();
+                base();
         
-                    const Vue = await include('vue/vue{.min}.js');
+                const Vue = await include('vue/vue{.min}.js');
         
-                    // custom load op
-                    await this.beforeLoad(ctx, el);            
+                // get component
+                let component = await this.factory();
         
-                    // get component
-                    let component = await this.factory();
+                // set view Html
+                let viewHtml = this.html || '';
+                if (this.layout) {
+                    el.innerHTML = await this.layout.merge(viewHtml);
+                } else {
+                    el.innerHTML = viewHtml;
+                }            
         
-                    // set view Html
-                    let viewHtml = this.html || '';
-                    if (this.layout) {
-                        el.innerHTML = await this.layout.merge(viewHtml);
-                    } else {
-                        el.innerHTML = viewHtml;
-                    }            
-        
-                    // custom load op
-                    await this.afterLoad(ctx, el);
-        
-                    // setup Vue view instance
-                    new Vue(component);
-                }
+                // setup Vue view instance
+                new Vue(component);
             };
-        
-            $$('protected');
-            $$('virtual');
-            $$('async');
-            this.beforeLoad = noop;
-        
-            $$('protected');
-            $$('virtual');
-            $$('async');
-            this.afterLoad = noop;
         
             $$('protected');
             this.el = null;
@@ -1701,7 +1798,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.3","lupdate":"Thu, 08 Aug 2019 05:17:00 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.7","lupdate":"Thu, 08 Aug 2019 18:11:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
