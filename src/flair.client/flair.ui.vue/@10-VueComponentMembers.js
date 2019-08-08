@@ -20,11 +20,17 @@ Mixin('(auto)', function() {
 
         // load style content in property
         if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>');
+            // pick file from assets folder
+            this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
+            // load file content
             this.style = await clientFileLoader(this.style);
         }
 
         // load html content in property
         if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');
+            // pick file from assets folder
+            this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
+            // load file content
             this.html = await clientFileLoader(this.html);
         }
 
@@ -115,6 +121,12 @@ Mixin('(auto)', function() {
         // e.g., {{ route('home') }} will give: '/#/en/'
         component.methods = component.methods || {};
         component.methods['route'] = (routeName, params) => { return _this.route(routeName, params); };
+
+        // supporting util: stuff
+        // this helps in using stuffing values in a string
+        // e.g., {{ stuff('something %1, %2 and %3', A, B, C) }} will give: 'something A, B and C'
+        component.methods = component.methods || {};
+        component.methods['stuff'] = (str, ...args) => { return stuff(str, args); };
 
         // i18n specific built-in methods
         if (this.i18n) {
@@ -307,13 +319,13 @@ Mixin('(auto)', function() {
     };    
     
     $$('protected');
-    this.locale = (value) => { return AppDomain.host().locale(value); }
+    this.locale = (value) => { return AppDomain.host().locale(value); };
 
     $$('protected');
-    this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); }
+    this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
     
     $$('protected');
-    this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); }
+    this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
 
     $$('protected');
     this.i18n = null;

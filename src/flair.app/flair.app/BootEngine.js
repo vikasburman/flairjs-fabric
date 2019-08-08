@@ -20,6 +20,20 @@ Class('(auto)', function() {
                 }
             }
         };
+        const loadLinks = async () => {
+            if (env.isClient && !env.isWorker) {
+                // add links one by one, they will end loading at different times
+                // but since these are added, DOMReady will eventually ensure everything is loaded
+                // before moving ahead
+                for(let item of settings.boot.links) {
+                    let link = document.createElement("link");
+                    for(let key in item) { // item should have same attributes that are required for link tag
+                        link[key] = item[key];
+                    }
+                    window.document.getElementsByTagName("head")[0].appendChild(link);
+                }
+            }
+        };        
         const loadPreambles = async () => {
             // load preambles
             let preambleLoader = null;
@@ -153,6 +167,7 @@ Class('(auto)', function() {
             await AppDomain.app().ready();
         };
           
+        await loadLinks();
         await loadFiles();
         await loadPreambles();
         await loadBootwares();

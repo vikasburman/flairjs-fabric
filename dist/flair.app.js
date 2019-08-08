@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.9.43
- *  Wed, 07 Aug 2019 20:08:40 GMT
+ *  Version: 0.9.48
+ *  Thu, 08 Aug 2019 02:52:02 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -37,7 +37,7 @@
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
     const { TaskInfo } = flair.Tasks;
     const { env } = flair.options;
-    const { guid, forEachAsync, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
+    const { guid, forEachAsync, stuff, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
             deepMerge, getLoadedScript, b64EncodeUnicode, b64DecodeUnicode, lens, globalSetting } = flair.utils;
     
     // inbuilt modifiers and attributes compile-time-safe support
@@ -289,6 +289,20 @@
                         }
                     }
                 };
+                const loadLinks = async () => {
+                    if (env.isClient && !env.isWorker) {
+                        // add links one by one, they will end loading at different times
+                        // but since these are added, DOMReady will eventually ensure everything is loaded
+                        // before moving ahead
+                        for(let item of settings.boot.links) {
+                            let link = document.createElement("link");
+                            for(let key in item) { // item should have same attributes that are required for link tag
+                                link[key] = item[key];
+                            }
+                            window.document.getElementsByTagName("head")[0].appendChild(link);
+                        }
+                    }
+                };        
                 const loadPreambles = async () => {
                     // load preambles
                     let preambleLoader = null;
@@ -422,6 +436,7 @@
                     await AppDomain.app().ready();
                 };
                   
+                await loadLinks();
                 await loadFiles();
                 await loadPreambles();
                 await loadBootwares();
@@ -475,7 +490,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.43","lupdate":"Wed, 07 Aug 2019 20:08:40 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.48","lupdate":"Thu, 08 Aug 2019 02:52:02 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.9.43
- *  Wed, 07 Aug 2019 20:08:41 GMT
+ *  Version: 0.9.48
+ *  Thu, 08 Aug 2019 02:52:03 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -37,7 +37,7 @@
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
     const { TaskInfo } = flair.Tasks;
     const { env } = flair.options;
-    const { guid, forEachAsync, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
+    const { guid, forEachAsync, stuff, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
             deepMerge, getLoadedScript, b64EncodeUnicode, b64DecodeUnicode, lens, globalSetting } = flair.utils;
     
     // inbuilt modifiers and attributes compile-time-safe support
@@ -541,11 +541,17 @@
         
                 // load style content in property
                 if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>');
+                    // pick file from assets folder
+                    this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
+                    // load file content
                     this.style = await clientFileLoader(this.style);
                 }
         
                 // load html content in property
                 if (this.html && this.html.endsWith('.html')) { // if html file is defined via $$('asset', '<fileName>');
+                    // pick file from assets folder
+                    this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
+                    // load file content
                     this.html = await clientFileLoader(this.html);
                 }
         
@@ -636,6 +642,12 @@
                 // e.g., {{ route('home') }} will give: '/#/en/'
                 component.methods = component.methods || {};
                 component.methods['route'] = (routeName, params) => { return _this.route(routeName, params); };
+        
+                // supporting util: stuff
+                // this helps in using stuffing values in a string
+                // e.g., {{ stuff('something %1, %2 and %3', A, B, C) }} will give: 'something A, B and C'
+                component.methods = component.methods || {};
+                component.methods['stuff'] = (str, ...args) => { return stuff(str, args); };
         
                 // i18n specific built-in methods
                 if (this.i18n) {
@@ -828,13 +840,13 @@
             };    
             
             $$('protected');
-            this.locale = (value) => { return AppDomain.host().locale(value); }
+            this.locale = (value) => { return AppDomain.host().locale(value); };
         
             $$('protected');
-            this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); }
+            this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
             
             $$('protected');
-            this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); }
+            this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
         
             $$('protected');
             this.i18n = null;
@@ -1688,7 +1700,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.43","lupdate":"Wed, 07 Aug 2019 20:08:41 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.9.48","lupdate":"Thu, 08 Aug 2019 02:52:03 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
