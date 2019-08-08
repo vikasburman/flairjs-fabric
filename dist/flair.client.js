@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.11
- *  Thu, 08 Aug 2019 19:46:32 GMT
+ *  Version: 0.55.14
+ *  Thu, 08 Aug 2019 23:28:35 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -181,11 +181,16 @@
                 }
         
                 // add view el to parent
-                let el = DOC.createElement('div'),
+                let el = null,
                     parentEl = DOC.getElementById(mainEl);
-                el.id = this.name;
-                el.setAttribute('hidden', '');
-                parentEl.appendChild(el);
+                if (this.$static.currentViewName !== this.name) { // if same view is already loaded, don't add again
+                    el = DOC.createElement('div');
+                    el.id = this.name;
+                    el.setAttribute('hidden', '');
+                    parentEl.appendChild(el);
+                } else {
+                    el = DOC.getElementById(this.name);
+                }
                 
                 // custom load op before view is created
                 await this.beforeLoad(ctx, el);      
@@ -224,46 +229,52 @@
                     // cancel load data, if any
                     this.$static.currentViewCancelLoadData(); // note: this is called and not waited for, so cancel can keep happening in background
         
-                    // remove outgoing view meta   
-                    if (this.$static.currentViewMeta) {
-                        for(let meta of this.$static.currentViewMeta) {
-                            DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
+                    // if incoming view is not same as outgoing view
+                    if (this.$static.currentViewName !== this.name) {
+                        // remove outgoing view meta
+                        if (this.$static.currentViewMeta) {
+                            for(let meta of this.$static.currentViewMeta) {
+                                DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
+                            }
+                        }
+        
+                        // remove outgoing view styles 
+                        this.$static.removeStyles()
+        
+                        // apply transitions
+                        if (this.viewTransition) {
+                            // leave outgoing, enter incoming
+                            await this.viewTransition.leave(currentViewEl, thisViewEl);
+                            await this.viewTransition.enter(thisViewEl, currentViewEl);
+                        } else {
+                            // default is no transition
+                            if (currentViewEl) { currentViewEl.hidden = true; }
+                            thisViewEl.hidden = false;
+                        }
+        
+                        // remove outgoing view
+                        let parentEl = DOC.getElementById(mainEl);  
+                        if (currentViewEl) { parentEl.removeChild(currentViewEl); }
+                    }
+                }
+        
+                // if incoming view is not same as outgoing view
+                if (this.$static.currentViewName !== this.name) {        
+                    // add incoming view meta
+                    if (this.meta) {
+                        for(let meta of this.meta) {
+                            var metaEl = document.createElement('meta');
+                            for(let metaAttr in meta) {
+                                metaEl[metaAttr] = meta[metaAttr];
+                            }
+                            DOC.head.appendChild(metaEl);
                         }
                     }
         
-                    // remove outgoing view styles   
-                    this.$static.removeStyles()
-        
-                    // apply transitions
-                    if (this.viewTransition) {
-                        // leave outgoing, enter incoming
-                        await this.viewTransition.leave(currentViewEl, thisViewEl);
-                        await this.viewTransition.enter(thisViewEl, currentViewEl);
-                    } else {
-                        // default is no transition
-                        if (currentViewEl) { currentViewEl.hidden = true; }
+                    // in case there was no previous view
+                    if (!this.$static.currentViewName && thisViewEl) {
                         thisViewEl.hidden = false;
                     }
-        
-                    // remove outgoing view
-                    let parentEl = DOC.getElementById(mainEl);  
-                    if (currentViewEl) { parentEl.removeChild(currentViewEl); }
-                }
-        
-                // add incoming view meta
-                if (this.meta) {
-                    for(let meta of this.meta) {
-                        var metaEl = document.createElement('meta');
-                        for(let metaAttr in meta) {
-                            metaEl[metaAttr] = meta[metaAttr];
-                        }
-                        DOC.head.appendChild(metaEl);
-                    }
-                }
-        
-                // in case there was no previous view
-                if (!this.$static.currentViewName && thisViewEl) {
-                    thisViewEl.hidden = false;
                 }
         
                 // update title
@@ -408,7 +419,7 @@
                 if (path.substr(0, 2) === '#/') { path = path.substr(2); }
                 if (path.substr(0, 1) === '#') { path = path.substr(1); }
                 if (path.substr(0, 1) === '/') { path = path.substr(1); }
-                path = '/' + path; // add initial slash 
+                path = '/' + path; // add initial slash
         
                 // remove base
                 if (path.startsWith(this.base)) {
@@ -560,6 +571,7 @@
                 // default ctx
                 let ctx = {
                     $url: url,
+                    $page: '',
                     $route: '',
                     $handler: '',
                     $mount: '',
@@ -582,6 +594,8 @@
                     ctx.$handler = parts.route.handler;
                     ctx.$mount = parts.route.mount;
                     ctx.$path = parts.route.path;
+                } else {
+                    ctx.$path = parts.path;
                 }
         
                 // add params to ctx
@@ -644,11 +658,11 @@
                     this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
                     // load file content
                     this.style = await clientFileLoader(this.style);
-                    // load styles in dom - as scoped style
-                    if (this.style) {
-                        this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
-                        ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
-                    }
+                }
+                // load styles in dom - as scoped style
+                if (this.style) {
+                    this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+                    ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
                 }
         
                 // load html content in property
@@ -657,10 +671,10 @@
                     this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
                     // load file content
                     this.html = await clientFileLoader(this.html);
-                    // put entire html into a unique id div
-                    // even empty html will become an empty div here with ID - so it ensures that all components have a div
-                    this.html = `<div id="${_thisId}">${this.html}</div>`;
                 }
+                // put entire html into a unique id div
+                // even empty html will become an empty div here with ID - so it ensures that all components have a div
+                this.html = `<div id="${_thisId}">${this.html}</div>`;
         
                 // local i18n resources
                 // each i18n resource file is defined as:
@@ -1636,11 +1650,11 @@
                     this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
                     // load file content
                     this.style = await clientFileLoader(this.style);
-                    // load styles in dom - as scoped style
-                    if (this.style) {
-                        this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
-                        ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
-                    }
+                }
+                // load styles in dom - as scoped style
+                if (this.style) {
+                    this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+                    ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
                 }
         
                 // load html content in property
@@ -1649,10 +1663,10 @@
                     this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
                     // load file content
                     this.html = await clientFileLoader(this.html);
-                    // put entire html into a unique id div
-                    // even empty html will become an empty div here with ID - so it ensures that all layouts have a div
-                    this.html = `<div id="${_thisId}">${this.html}</div>`;            
                 }
+                // put entire html into a unique id div
+                // even empty html will become an empty div here with ID - so it ensures that all layouts have a div
+                this.html = `<div id="${_thisId}">${this.html}</div>`;            
         
                 // inject components
                 let layoutHtml = this.html;
@@ -1798,7 +1812,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.11","lupdate":"Thu, 08 Aug 2019 19:46:32 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.14","lupdate":"Thu, 08 Aug 2019 23:28:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

@@ -91,7 +91,7 @@ Class('(auto)', function() {
         if (path.substr(0, 2) === '#/') { path = path.substr(2); }
         if (path.substr(0, 1) === '#') { path = path.substr(1); }
         if (path.substr(0, 1) === '/') { path = path.substr(1); }
-        path = '/' + path; // add initial slash 
+        path = '/' + path; // add initial slash
 
         // remove base
         if (path.startsWith(this.base)) {
@@ -243,6 +243,7 @@ Class('(auto)', function() {
         // default ctx
         let ctx = {
             $url: url,
+            $page: '',
             $route: '',
             $handler: '',
             $mount: '',
@@ -265,6 +266,8 @@ Class('(auto)', function() {
             ctx.$handler = parts.route.handler;
             ctx.$mount = parts.route.mount;
             ctx.$path = parts.route.path;
+        } else {
+            ctx.$path = parts.path;
         }
 
         // add params to ctx

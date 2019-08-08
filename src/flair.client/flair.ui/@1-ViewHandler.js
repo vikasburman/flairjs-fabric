@@ -97,11 +97,16 @@ Class('(auto)', Handler, function() {
         }
 
         // add view el to parent
-        let el = DOC.createElement('div'),
+        let el = null,
             parentEl = DOC.getElementById(mainEl);
-        el.id = this.name;
-        el.setAttribute('hidden', '');
-        parentEl.appendChild(el);
+        if (this.$static.currentViewName !== this.name) { // if same view is already loaded, don't add again
+            el = DOC.createElement('div');
+            el.id = this.name;
+            el.setAttribute('hidden', '');
+            parentEl.appendChild(el);
+        } else {
+            el = DOC.getElementById(this.name);
+        }
         
         // custom load op before view is created
         await this.beforeLoad(ctx, el);      
@@ -140,46 +145,52 @@ Class('(auto)', Handler, function() {
             // cancel load data, if any
             this.$static.currentViewCancelLoadData(); // note: this is called and not waited for, so cancel can keep happening in background
 
-            // remove outgoing view meta   
-            if (this.$static.currentViewMeta) {
-                for(let meta of this.$static.currentViewMeta) {
-                    DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
+            // if incoming view is not same as outgoing view
+            if (this.$static.currentViewName !== this.name) {
+                // remove outgoing view meta
+                if (this.$static.currentViewMeta) {
+                    for(let meta of this.$static.currentViewMeta) {
+                        DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
+                    }
+                }
+
+                // remove outgoing view styles 
+                this.$static.removeStyles()
+
+                // apply transitions
+                if (this.viewTransition) {
+                    // leave outgoing, enter incoming
+                    await this.viewTransition.leave(currentViewEl, thisViewEl);
+                    await this.viewTransition.enter(thisViewEl, currentViewEl);
+                } else {
+                    // default is no transition
+                    if (currentViewEl) { currentViewEl.hidden = true; }
+                    thisViewEl.hidden = false;
+                }
+
+                // remove outgoing view
+                let parentEl = DOC.getElementById(mainEl);  
+                if (currentViewEl) { parentEl.removeChild(currentViewEl); }
+            }
+        }
+
+        // if incoming view is not same as outgoing view
+        if (this.$static.currentViewName !== this.name) {        
+            // add incoming view meta
+            if (this.meta) {
+                for(let meta of this.meta) {
+                    var metaEl = document.createElement('meta');
+                    for(let metaAttr in meta) {
+                        metaEl[metaAttr] = meta[metaAttr];
+                    }
+                    DOC.head.appendChild(metaEl);
                 }
             }
 
-            // remove outgoing view styles   
-            this.$static.removeStyles()
-
-            // apply transitions
-            if (this.viewTransition) {
-                // leave outgoing, enter incoming
-                await this.viewTransition.leave(currentViewEl, thisViewEl);
-                await this.viewTransition.enter(thisViewEl, currentViewEl);
-            } else {
-                // default is no transition
-                if (currentViewEl) { currentViewEl.hidden = true; }
+            // in case there was no previous view
+            if (!this.$static.currentViewName && thisViewEl) {
                 thisViewEl.hidden = false;
             }
-
-            // remove outgoing view
-            let parentEl = DOC.getElementById(mainEl);  
-            if (currentViewEl) { parentEl.removeChild(currentViewEl); }
-        }
-
-        // add incoming view meta
-        if (this.meta) {
-            for(let meta of this.meta) {
-                var metaEl = document.createElement('meta');
-                for(let metaAttr in meta) {
-                    metaEl[metaAttr] = meta[metaAttr];
-                }
-                DOC.head.appendChild(metaEl);
-            }
-        }
-
-        // in case there was no previous view
-        if (!this.$static.currentViewName && thisViewEl) {
-            thisViewEl.hidden = false;
         }
 
         // update title

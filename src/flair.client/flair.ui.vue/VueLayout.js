@@ -42,11 +42,11 @@ Class('(auto)', function() {
             this.style = this.$Type.getAssembly().getAssetFilePath(this.style);
             // load file content
             this.style = await clientFileLoader(this.style);
-            // load styles in dom - as scoped style
-            if (this.style) {
-                this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
-                ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
-            }
+        }
+        // load styles in dom - as scoped style
+        if (this.style) {
+            this.style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_component_unique_id>
+            ViewHandler.addStyle(_thisId, this.style); // static method, that add this style in context of view-being-loaded
         }
 
         // load html content in property
@@ -55,10 +55,10 @@ Class('(auto)', function() {
             this.html = this.$Type.getAssembly().getAssetFilePath(this.html);
             // load file content
             this.html = await clientFileLoader(this.html);
-            // put entire html into a unique id div
-            // even empty html will become an empty div here with ID - so it ensures that all layouts have a div
-            this.html = `<div id="${_thisId}">${this.html}</div>`;            
         }
+        // put entire html into a unique id div
+        // even empty html will become an empty div here with ID - so it ensures that all layouts have a div
+        this.html = `<div id="${_thisId}">${this.html}</div>`;            
 
         // inject components
         let layoutHtml = this.html;
