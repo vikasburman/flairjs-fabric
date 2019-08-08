@@ -14,6 +14,7 @@ Mixin('(auto)', function() {
 
         let viewState = new ViewState(),
             component = {};
+            // scopedStyleId = guid(); // TODO: Sort out scoped style issue
 
         // get port
         let clientFileLoader = Port('clientFile');  
@@ -34,7 +35,7 @@ Mixin('(auto)', function() {
             this.html = await clientFileLoader(this.html);
         }
 
-        // merge html and style
+        // merge html and style // TODO: Sort out scoped style issue
         if (this.html && this.style) { // merge style as scoped style
             this.html = '<div><style scoped>' + this.style.trim() +'</style>' + this.html.trim() + '</div>';
         } else if (this.style) {

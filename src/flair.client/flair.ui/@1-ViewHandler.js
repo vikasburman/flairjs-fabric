@@ -76,12 +76,12 @@ Class('(auto)', Handler, function() {
         let thisViewEl = DOC.getElementById(this.name);
 
         // outgoing view
-        if (this.$Type.currentView) {
-            let currentViewEl = DOC.getElementById(this.$Type.currentView);
+        if (this.$static.currentView) {
+            let currentViewEl = DOC.getElementById(this.$static.currentView);
 
             // remove outgoing view meta   
-            if (this.$Type.currentViewMeta) {
-                for(let meta of this.$Type.currentViewMeta) {
+            if (this.$static.currentViewMeta) {
+                for(let meta of this.$static.currentViewMeta) {
                     DOC.head.removeChild(DOC.querySelector('meta[name="' + meta + '"]'));
                 }
             }
@@ -114,7 +114,7 @@ Class('(auto)', Handler, function() {
         }
 
         // in case there was no previous view
-        if (!this.$Type.currentView) {
+        if (!this.$static.currentView && thisViewEl) {
             thisViewEl.hidden = false;
         }
 
