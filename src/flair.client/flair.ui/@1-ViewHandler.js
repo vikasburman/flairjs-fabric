@@ -134,8 +134,8 @@ Class('(auto)', Handler, function() {
         let thisViewEl = DOC.getElementById(this.name);
 
         // outgoing view
-        if (this.$static.currentView) {
-            let currentViewEl = DOC.getElementById(this.$static.currentView);
+        if (this.$static.currentViewName) {
+            let currentViewEl = DOC.getElementById(this.$static.currentViewName);
 
             // cancel load data, if any
             this.$static.currentViewCancelLoadData(); // note: this is called and not waited for, so cancel can keep happening in background
@@ -178,7 +178,7 @@ Class('(auto)', Handler, function() {
         }
 
         // in case there was no previous view
-        if (!this.$static.currentView && thisViewEl) {
+        if (!this.$static.currentViewName && thisViewEl) {
             thisViewEl.hidden = false;
         }
 
@@ -189,7 +189,7 @@ Class('(auto)', Handler, function() {
         this.$static.currentViewName = this.name;
         this.$static.loadingViewName = null;
         this.$static.currentViewMeta = this.meta;
-        this.currentViewCancelLoadData = this.cancelLoadData;
+        this.$static.currentViewCancelLoadData = this.cancelLoadData;
     };
 
     $$('static');
@@ -205,10 +205,10 @@ Class('(auto)', Handler, function() {
     this.loadingViewName = null;
 
     $$('static');
-    this.removeStyles = () => {
-        if (this.$static.currentViewName) {
+    this.removeStyles = function() {
+        if (this.currentViewName) {
             let styles = document.head.getElementsByTagName("style"),
-                outgoingViewName = this.$static.currentViewName;
+                outgoingViewName = this.currentViewName;
             for(let styleEl of styles) { // remove all styles which were added by any component (view itself, layout or any component) of this view
                 if (styleEl.id && styleEl.id.startsWith(`_${outgoingViewName}_style_`)) { // this must match the way styles were added, see below in: addStyle
                     document.head.removeChild(styleEl);
@@ -218,10 +218,10 @@ Class('(auto)', Handler, function() {
     };
 
     $$('static');
-    this.addStyle = (scopeId, style) => {
-        if (this.$static.loadingViewName) {
+    this.addStyle = function(scopeId, style) {
+        if (this.loadingViewName) {
             let styleEl = window.document.createElement('style');
-            styleEl.id = `_${this.$static.loadingViewName}_style_${scopeId}`
+            styleEl.id = `_${this.loadingViewName}_style_${scopeId}`
             styleEl.type = 'text/css';
             styleEl.appendChild(window.document.createTextNode(style));
             window.document.head.appendChild(styleEl);
