@@ -34,16 +34,6 @@ Class('(auto)', Bootware, function () {
             });
         }
 
-        const runInterceptor = async (interceptor, ctx) => {
-            let ICType = as(await include(interceptor), ViewInterceptor);
-            if (ICType) {
-                let ic = new ICType();
-                await ic.run(ctx);
-            } else {
-                throw Exception.InvalidDefinition(`Invalid interceptor type. (${interceptor})`);
-            }                    
-
-        };
         const runHandler = async (routeHandler, ctx) => {
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {
@@ -65,9 +55,12 @@ Class('(auto)', Bootware, function () {
                 // async run method of it takes ctx, can update it
                 // each item is: "InterceptorTypeQualifiedName"
                 let mountInterceptors = settings.routing[`${mount.name}-interceptors`] || [];
-                for(let interceptor of mountInterceptors) {
-                    await runInterceptor(interceptor, ctx);
-                    if (ctx.$stop) { break; }
+                for(let ic of mountInterceptors) {
+                    let ICType = as(await include(ic), ViewInterceptor);
+                    if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
+                    
+                    await new ICType().run(ctx);
+                    if (ctx.$stop) { break; } // break, if someone forced to stop 
                 }
 
                 // handle route

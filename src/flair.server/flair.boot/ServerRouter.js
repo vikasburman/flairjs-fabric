@@ -36,33 +36,14 @@ Class('(auto)', Bootware, function () {
 
         let result = false;
 
-        const runInterceptor = (IC, req, res) => {
-            return new Promise((resolve, reject) => {
-                try {
-                    let aic = new IC();
-                    aic.run(req, res).then(() => {
-                        if (req.$stop) {
-                            reject();
-                        } else {
-                            resolve();
-                        }
-                    }).catch(reject);
-                } catch (err) {
-                    reject(err);
-                }
-            });
-        };
-        const runInterceptors = (interceptors, req, res) => {
-            return forEachAsync(interceptors, (resolve, reject, ic) => {
-                include(ic).then((theType) => {
-                    let RequiredICType = as(theType, RestInterceptor);
-                    if (RequiredICType) {
-                        runInterceptor(RequiredICType, req, res).then(resolve).catch(reject);
-                    } else {
-                        reject(Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`));
-                    }
-                }).catch(reject);
-            });
+        const runInterceptors = async (interceptors, req, res) => {
+            for (let ic of interceptors) {
+                let ICType = as(await include(ic), RestInterceptor);
+                if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
+                
+                await new ICType().run(req, res);
+                if (req.$stop) { break; } // break, if someone forced to stop 
+            }
         };
        
         // add routes related to current mount
