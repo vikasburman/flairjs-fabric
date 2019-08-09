@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.14
- *  Thu, 08 Aug 2019 23:28:35 GMT
+ *  Version: 0.55.15
+ *  Fri, 09 Aug 2019 02:08:05 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -91,7 +91,7 @@
         $$('ns', 'flair.ui');
         Class('ViewHandler', Handler, function() {
             let mainEl = '',
-                abortControllers = [];       
+                abortControllers = {};       
         
             $$('override');
             this.construct = (base, el, title, transition) => {
@@ -138,24 +138,37 @@
         
             $$('protected');
             this.cancelLoadData = async () => {
-                for(let abortController of abortControllers) {
+                let abortController = null;
+                for(let handleId in abortControllers) {
                     try {
+                        abortController = abortControllers[handleId];
                         abortController.abort();
                     } catch (err) { // eslint-disable-line no-unused-vars
                         // ignore
                     }
                 }
-                abortControllers = []; // reset
+                abortControllers = {}; // reset
         
                 // any custom cleanup
                 await this.onCancelLoadData();
             };
         
             $$('protected');
-            this.abortHandle = () => {
+            this.abortHandle = (handleId) => {
+                handleId = handleId || guid(); // use a unique if none is given
                 let abortController = new AbortController(); // create new
-                abortControllers.push(abortController); // push to list, so it can be cancelled later
+                abortControllers[handleId] = abortController; // this may overwrite also
                 return abortController; // give back the new handle
+            };
+        
+            $$('protected');
+            this.abort = (handleId) => {
+                try {
+                    let abortController = abortControllers[handleId]; // this may or may not be present
+                    abortController.abort();
+                } catch (err) { // eslint-disable-line no-unused-vars
+                    // ignore
+                }
             };
         
             $$('protected');
@@ -1812,7 +1825,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.14","lupdate":"Thu, 08 Aug 2019 23:28:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.15","lupdate":"Fri, 09 Aug 2019 02:08:05 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
