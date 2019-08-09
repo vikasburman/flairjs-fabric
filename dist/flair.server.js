@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.23
- *  Fri, 09 Aug 2019 18:51:44 GMT
+ *  Version: 0.55.24
+ *  Fri, 09 Aug 2019 19:18:03 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -543,33 +543,14 @@
         
                 let result = false;
         
-                const runInterceptor = (IC, req, res) => {
-                    return new Promise((resolve, reject) => {
-                        try {
-                            let aic = new IC();
-                            aic.run(req, res).then(() => {
-                                if (req.$stop) {
-                                    reject();
-                                } else {
-                                    resolve();
-                                }
-                            }).catch(reject);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    });
-                };
-                const runInterceptors = (interceptors, req, res) => {
-                    return forEachAsync(interceptors, (resolve, reject, ic) => {
-                        include(ic).then((theType) => {
-                            let RequiredICType = as(theType, RestInterceptor);
-                            if (RequiredICType) {
-                                runInterceptor(RequiredICType, req, res).then(resolve).catch(reject);
-                            } else {
-                                reject(Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`));
-                            }
-                        }).catch(reject);
-                    });
+                const runInterceptors = async (interceptors, req, res) => {
+                    for (let ic of interceptors) {
+                        let ICType = as(await include(ic), RestInterceptor);
+                        if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
+                        
+                        await new ICType().run(req, res);
+                        if (req.$stop) { break; } // break, if someone forced to stop 
+                    }
                 };
                
                 // add routes related to current mount
@@ -691,7 +672,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.23","lupdate":"Fri, 09 Aug 2019 18:51:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.24","lupdate":"Fri, 09 Aug 2019 19:18:03 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
