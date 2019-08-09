@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.20
- *  Fri, 09 Aug 2019 17:53:11 GMT
+ *  Version: 0.55.22
+ *  Fri, 09 Aug 2019 18:09:15 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -277,33 +277,41 @@
         $$('ns', '(root)');
         Class('cache', Attribute, function() {
             $$('override');
-            this.construct = (base, args) => {
-                base(args);
+            this.construct = (base, cacheConfig) => {
+                base(cacheConfig);
+        
+                // set cache config
+                this.cacheConfig = (typeof cacheConfig === 'number' ? { duration: cacheConfig } : cacheConfig)
+                this.enabled = (this.cacheConfig && this.cacheConfig.duration);
         
                 // can be applied
                 this.constraints = '(class || struct) && (func && async) && !(timer || on || @fetch || @cache)';
             };
         
+            $$('readOnly');
+            this.cacheConfig = null;
+        
+            $$('private');
+            this.cacheHandler = Port('cacheHandler');
+        
             $$('override');
             this.decorateFunction = (base, typeName, memberName, member) => { // eslint-disable-line no-unused-vars
-                let cacheConfig = (typeof this.args[0] === 'number' ? { duration: this.args[0] } : this.args[0]),
-                    isEnabled = (cacheConfig && cacheConfig.duration),
-                    cacheId = `${typeName}___${memberName}`,
-                    cacheHandler = Port('cacheHandler');
+                let _this = this,
+                    cacheId = `${typeName}___${memberName}`;
         
                 let callMember = async (...args) => {
                     let resultData = await member(...args);
-                    if (isEnabled) { // save for later
-                        await cacheHandler.set(cacheId, cacheConfig, resultData);
+                    if (_this.isEnabled) { // save for later
+                        await _this.cacheHandler.set(cacheId, _this.cacheConfig, resultData);
                     }
                     return resultData;
                 };
         
                 // decorated function
                 return async function(...args) {
-                    if (isEnabled) {
+                    if (_this.isEnabled) {
                         try {
-                            return await cacheHandler.get(cacheId, cacheConfig);
+                            return await _this.cacheHandler.get(cacheId, _this.cacheConfig);
                         } catch (err) { // eslint-disable-line no-unused-vars
                             // ignore and move forward by calling callMember below
                         }
@@ -538,7 +546,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.20","lupdate":"Fri, 09 Aug 2019 17:53:11 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","cache","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.22","lupdate":"Fri, 09 Aug 2019 18:09:15 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","cache","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

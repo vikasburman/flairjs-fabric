@@ -1,5 +1,3 @@
-import { throws } from "assert";
-
 const { Attribute } = ns();
 
 /**
