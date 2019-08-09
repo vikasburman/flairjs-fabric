@@ -7,7 +7,7 @@ const Handler = await include('flair.app.Handler');
 $$('ns', '(auto)');
 Class('(auto)', Handler, function() {
     let mainEl = '',
-        abortControllers = [];       
+        abortControllers = {};       
 
     $$('override');
     this.construct = (base, el, title, transition) => {
@@ -54,24 +54,37 @@ Class('(auto)', Handler, function() {
 
     $$('protected');
     this.cancelLoadData = async () => {
-        for(let abortController of abortControllers) {
+        let abortController = null;
+        for(let handleId in abortControllers) {
             try {
+                abortController = abortControllers[handleId];
                 abortController.abort();
             } catch (err) { // eslint-disable-line no-unused-vars
                 // ignore
             }
         }
-        abortControllers = []; // reset
+        abortControllers = {}; // reset
 
         // any custom cleanup
         await this.onCancelLoadData();
     };
 
     $$('protected');
-    this.abortHandle = () => {
+    this.abortHandle = (handleId) => {
+        handleId = handleId || guid(); // use a unique if none is given
         let abortController = new AbortController(); // create new
-        abortControllers.push(abortController); // push to list, so it can be cancelled later
+        abortControllers[handleId] = abortController; // this may overwrite also
         return abortController; // give back the new handle
+    };
+
+    $$('protected');
+    this.abort = (handleId) => {
+        try {
+            let abortController = abortControllers[handleId]; // this may or may not be present
+            abortController.abort();
+        } catch (err) { // eslint-disable-line no-unused-vars
+            // ignore
+        }
     };
 
     $$('protected');
