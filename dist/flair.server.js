@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.34
- *  Sat, 17 Aug 2019 02:31:24 GMT
+ *  Version: 0.55.35
+ *  Sat, 17 Aug 2019 14:55:21 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -166,6 +166,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.server/flair.app/FirebaseApp.js
+        const fbAdmin = require('firebase-admin');
+        
         /**
          * @name FirebaseApp
          * @description Firebase specific App extensions
@@ -175,18 +177,21 @@
             $$('private');
             this.apps = {};
         
+            $$('private');
+            this.fbConfig = null;
+        
             this.firebase = (appName) => {
                 if (!this.apps[appName]) { // load required app now (this may throw, if error or config is missing)
-                    let fb_admin = require('firebase-admin');
-                    let fb_config = require(AppDomain.resolvePath('./firebaseConfig.json'))[appName];
+                    if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath('./firebaseConfig.json')); }
+                    let fbAppConfig = this.fbConfig[appName];
                     
                     // add credential
                     // it assumes that serviceAccountKey.json file path is set in GOOGLE_APPLICATION_CREDENTIALS env variable
                     // as explained in https://firebase.google.com/docs/admin/setup/?authuser=0#initialize_the_sdk
-                    fb_config['credential'] = fb_admin.credential.applicationDefault();
+                    fbAppConfig['credential'] = fbAdmin.credential.applicationDefault();
         
                     // initialize and store
-                    this.apps[appName] = fb_admin.initializeApp(fb_config, appName);
+                    this.apps[appName] = fbAdmin.initializeApp(fbAppConfig, appName);
                 }
         
                 // return
@@ -702,7 +707,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.34","lupdate":"Sat, 17 Aug 2019 02:31:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.35","lupdate":"Sat, 17 Aug 2019 14:55:21 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
