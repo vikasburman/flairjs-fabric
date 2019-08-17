@@ -18,24 +18,12 @@
     'use strict';
     
     const flair = require('flairjs');
-    const admin = require('firebase-admin');
     const functions = require('firebase-functions');
-    const firebaseConfig = require(rootDir + '/firebase/firebaseConfig.json');
-    const functionsConfig = require(rootDir + '/firebase/functionsConfig.json');
-    const serviceAccount = require(rootDir + '/firebase/serviceAccountKey.json');
+    const functionsConfig = require(rootDir + '/functionsConfig.json');
 
-    let _functions = {};
-    
-    // define credentials, if serviceAccount is configured
-    if (typeof serviceAccount.project_id !== 'undefined') {
-        firebaseConfig.credential = admin.credential.cert(serviceAccount);
-    }
-    
-    // initialize firebase app
-    admin.initializeApp(firebaseConfig);
-    
     // define functions
-    let defined = {};
+    let _functions = {},
+        defined = {};
     const initializeFlairAppMode = async () => {
         if (!flair.env.isAppMode()) {
             let app = await flair(entryPoint);
@@ -53,7 +41,22 @@
             return new functions.https.HttpsError('failed', err.message);
         }
     };
-
+    const moveToGroup = (f) => {
+        // move to group, if configured
+        if (_functions[f.name]) {
+            if (f.groups) {
+                for(let gName of f.groups) {
+                    _functions[gName] = _functions[gName] || {};
+                    _functions[gName][`${gName}_${f.name}`] = _functions[f.name];
+                }
+                delete _functions[f.name];
+            } else if (f.group) {
+                _functions[f.group] = _functions[f.group] || {};
+                _functions[f.group][`${f.group}_${f.name}`] = _functions[f.name];
+                delete _functions[f.name];
+            }
+        }
+    };
     const httpFunction = (f) => { // http 
         const handler = async (req, res) => {
             await initializeFlairAppMode();
@@ -69,6 +72,8 @@
         } else {
             _functions[f.name] = functions.https.onRequest(handler);
         }
+
+        moveToGroup(f);
         defined[f.name] = true;
     };
     const directFunction = (f) => { // callable
@@ -78,6 +83,8 @@
         };
 
         _functions[f.name] = functions.https.onCall(handler);
+
+        moveToGroup(f);        
         defined[f.name] = true;
     };
     const cronFunction = (f) => { // scheduled 
@@ -91,6 +98,8 @@
         } else {
             _functions[f.name] = functions.pubsub.schedule(f.config.when).onRun(handler);
         }
+
+        moveToGroup(f);        
         defined[f.name] = true;
     };
     const triggerFunction = (f) => { // trigger
@@ -134,6 +143,7 @@
                 delete defined[f.name];
                 break;
         }
+        moveToGroup(f);
     };
     
     for(let f of functionsConfig.functions) {
