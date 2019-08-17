@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.39
- *  Sat, 17 Aug 2019 15:36:34 GMT
+ *  Version: 0.55.40
+ *  Sat, 17 Aug 2019 18:18:35 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.server', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"express":{"server-http":{"enable":false,"port":80,"timeout":-1},"server-https":{"enable":false,"port":443,"timeout":-1,"privateKey":"","publicCert":""}},"envVars":{"vars":[],"options":{"overwrite":true}},"routing":{"mounts":{"main":"/"},"main-settings":[],"main-middlewares":[],"main-interceptors":[],"main-resHeaders":[]}}');
+    let settings = JSON.parse('{"express":{"server-http":{"enable":false,"port":80,"timeout":-1},"server-https":{"enable":false,"port":443,"timeout":-1,"privateKey":"","publicCert":""}},"firebase":{"firebaseApps":"","serviceAccount":""},"envVars":{"vars":[],"options":{"overwrite":true}},"routing":{"mounts":{"main":"/"},"main-settings":[],"main-middlewares":[],"main-interceptors":[],"main-resHeaders":[]}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.server');
@@ -182,13 +182,11 @@
         
             this.firebase = (appName) => {
                 if (!this.apps[appName]) { // load required app now (this may throw, if error or config is missing)
-                    if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath('./firebaseConfig.json')); }
+                    if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath(settings.firebase.firebaseApps)); }
                     let fbAppConfig = this.fbConfig[appName];
                     
                     // add credential
-                    // it assumes that serviceAccountKey.json file path is set in GOOGLE_APPLICATION_CREDENTIALS env variable
-                    // as explained in https://firebase.google.com/docs/admin/setup/?authuser=0#initialize_the_sdk
-                    fbAppConfig['credential'] = fbAdmin.credential.applicationDefault();
+                    fbAppConfig['credential'] = fbAdmin.credential.cert(require(AppDomain.resolvePath(settings.firebase.serviceAccount)));
         
                     // initialize and store
                     this.apps[appName] = fbAdmin.initializeApp(fbAppConfig, appName);
@@ -707,7 +705,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.39","lupdate":"Sat, 17 Aug 2019 15:36:34 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.40","lupdate":"Sat, 17 Aug 2019 18:18:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

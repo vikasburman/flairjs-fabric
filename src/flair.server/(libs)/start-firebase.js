@@ -19,7 +19,7 @@
     
     const flair = require('flairjs');
     const functions = require('firebase-functions');
-    const functionsConfig = require(rootDir + '/functionsConfig.json');
+    const functionsList = require(rootDir + '/functions.json');
 
     // define functions
     let _functions = {},
@@ -146,7 +146,7 @@
         moveToGroup(f);
     };
     
-    for(let f of functionsConfig.functions) {
+    for(let f of functionsList) {
         if (f.enabled && f.type && f.name && !defined[f.name]) {
             switch(f.type) {
                 case 'http': httpFunction(f); break;

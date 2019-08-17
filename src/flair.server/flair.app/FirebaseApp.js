@@ -14,13 +14,11 @@ Mixin('(auto)', function() {
 
     this.firebase = (appName) => {
         if (!this.apps[appName]) { // load required app now (this may throw, if error or config is missing)
-            if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath('./firebaseConfig.json')); }
+            if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath(settings.firebase.firebaseApps)); }
             let fbAppConfig = this.fbConfig[appName];
             
             // add credential
-            // it assumes that serviceAccountKey.json file path is set in GOOGLE_APPLICATION_CREDENTIALS env variable
-            // as explained in https://firebase.google.com/docs/admin/setup/?authuser=0#initialize_the_sdk
-            fbAppConfig['credential'] = fbAdmin.credential.applicationDefault();
+            fbAppConfig['credential'] = fbAdmin.credential.cert(require(AppDomain.resolvePath(settings.firebase.serviceAccount)));
 
             // initialize and store
             this.apps[appName] = fbAdmin.initializeApp(fbAppConfig, appName);
