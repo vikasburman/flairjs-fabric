@@ -47,12 +47,12 @@
             if (f.groups) {
                 for(let gName of f.groups) {
                     _functions[gName] = _functions[gName] || {};
-                    _functions[gName][`${gName}_${f.name}`] = _functions[f.name];
+                    _functions[gName][f.name] = _functions[f.name];
                 }
                 delete _functions[f.name];
             } else if (f.group) {
                 _functions[f.group] = _functions[f.group] || {};
-                _functions[f.group][`${f.group}_${f.name}`] = _functions[f.name];
+                _functions[f.group][f.name] = _functions[f.name];
                 delete _functions[f.name];
             }
         }
