@@ -16,10 +16,7 @@
             "request": "launch",
             "name": "Server Mode",
             "program": "${workspaceFolder}/debug/server/main.js",
-            "cwd": "${workspaceFolder}",
-            "env": { 
-                "FLAIR_SYMBOLS": "DEV,DEBUG"
-            }            
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

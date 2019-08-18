@@ -1,3 +1,5 @@
+process.env.FLAIR_SYMBOLS="DEV,DEBUG";
+
 const flair = require('flairjs');
 const preamble = require('../../dist/preamble.js');
 preamble(flair).then(() => {
