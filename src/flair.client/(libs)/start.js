@@ -16,10 +16,15 @@
     }
 })(this, function(entryPoint, callback) {
     'use strict';
-    require(['./modules/flairjs/flair.js'], (flair) => {
-        flair(entryPoint).then((app) => {
-            console.log('*');
-            if (typeof callback === 'function') { callback(flair, app); }
+    let afterSymbols = () => {
+        require(['./modules/flairjs/flair.js'], (flair) => {
+            flair(entryPoint).then((app) => {
+                console.log('*');
+                if (typeof callback === 'function') { callback(flair, app); }
+            });
         });
-    });
+    }; 
+    
+    // load optional symbols first, it may not be present also
+    require(['./symbols.js'], afterSymbols, afterSymbols); 
 });
