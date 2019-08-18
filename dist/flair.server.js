@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.42
- *  Sat, 17 Aug 2019 23:56:38 GMT
+ *  Version: 0.55.43
+ *  Sun, 18 Aug 2019 04:13:16 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -180,13 +180,39 @@
             $$('private');
             this.fbConfig = null;
         
+            $$('privateSet');
+            this.projectId = null;
+        
             this.firebase = (appName) => {
                 if (!this.apps[appName]) { // load required app now (this may throw, if error or config is missing)
+                    // get the project id from environment
+                    fbAdmin.initializeApp(); // initializing blank populates the environment variables GCLOUD_PROJECT and FIREBASE_CONFIG
+                    this.projectId = (process.env.GCLOUD_PROJECT || JSON.parse(process.env.FIREBASE_CONFIG).projectId || process.env.GCP_PROJECT);
+        
+                    // get the correct firebase app config for this project
+                    // structure of settings.firebase.firebaseApps JSON file should be:
+                    // {
+                    //     "<projectId>": {
+                    //          "<appName>": { ...firebase config for this app... },
+                    //          ...
+                    //      },
+                    //      ...
+                    // } 
                     if (!this.fbConfig) { this.fbConfig = require(AppDomain.resolvePath(settings.firebase.firebaseApps)); }
-                    let fbAppConfig = this.fbConfig[appName];
-                    
+                    let fbAppConfig = this.fbConfig[this.projectId][appName];
+        
+                    // get the correct serviceAccount config for this project
+                    // structure of settings.firebase.serviceAccount JSON file should be:
+                    // {
+                    //     "<projectId>": {
+                    //          ...serviceAccount config for this project...
+                    //      },
+                    //      ...
+                    // } 
+        
                     // add credential
-                    fbAppConfig['credential'] = fbAdmin.credential.cert(require(AppDomain.resolvePath(settings.firebase.serviceAccount)));
+                    let saConfig = require(AppDomain.resolvePath(settings.firebase.serviceAccount));
+                    fbAppConfig['credential'] = fbAdmin.credential.cert(saConfig[this.projectId]);
         
                     // initialize and store
                     this.apps[appName] = fbAdmin.initializeApp(fbAppConfig, appName);
@@ -705,7 +731,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.42","lupdate":"Sat, 17 Aug 2019 23:56:38 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.43","lupdate":"Sun, 18 Aug 2019 04:13:16 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
