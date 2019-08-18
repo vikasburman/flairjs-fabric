@@ -14,12 +14,17 @@
     } else { // expose as global on root
         root['flair_server_start'] = factory;
     }
-})(this, function(entryPoint, callback) {
+})(this, function(rootDir, entryPoint, callback) {
     'use strict';
 
-    const flair = require('flairjs');
-    flair(entryPoint).then((app) => {
-        console.log('*');
-        if (typeof callback === 'function') { callback(flair, app); }
-    });
+    try {
+        // load optional env.js first, it may not be present also
+        require(rootDir + '/env.js');
+    } finally {
+        const flair = require('flairjs');
+        flair(entryPoint).then((app) => {
+            console.log('*');
+            if (typeof callback === 'function') { callback(flair, app); }
+        });
+    }
 });

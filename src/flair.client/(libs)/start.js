@@ -16,7 +16,7 @@
     }
 })(this, function(entryPoint, callback) {
     'use strict';
-    let afterSymbols = () => {
+    let afterEnv = () => {
         require(['./modules/flairjs/flair.js'], (flair) => {
             flair(entryPoint).then((app) => {
                 console.log('*');
@@ -25,6 +25,6 @@
         });
     }; 
     
-    // load optional symbols first, it may not be present also
-    require(['./symbols.js'], afterSymbols, afterSymbols); 
+    // load optional env.js first, it may not be present also
+    require(['./env.js'], afterEnv, afterEnv); 
 });
