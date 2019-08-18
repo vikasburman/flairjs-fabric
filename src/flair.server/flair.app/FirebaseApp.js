@@ -1,11 +1,11 @@
-const fbAdmin = require('firebase-admin');
-
 /**
  * @name FirebaseApp
  * @description Firebase specific App extensions
  */
 $$('ns', '(auto)');
 Mixin('(auto)', function() {
+    const fbAdmin = require('firebase-admin');
+
     $$('private');
     this.apps = {};
 
