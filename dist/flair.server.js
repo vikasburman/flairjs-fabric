@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.43
- *  Sun, 18 Aug 2019 04:13:16 GMT
+ *  Version: 0.55.51
+ *  Sun, 18 Aug 2019 04:42:01 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -180,15 +180,20 @@
             $$('private');
             this.fbConfig = null;
         
-            $$('privateSet');
-            this.projectId = null;
+            let _projectId = null;
+            this.projectId = {
+                get: () => {
+                    if (!_projectId) {
+                        // get the project id from environment
+                        fbAdmin.initializeApp(); // initializing blank populates the environment variables GCLOUD_PROJECT and FIREBASE_CONFIG
+                        _projectId = (process.env.GCLOUD_PROJECT || JSON.parse(process.env.FIREBASE_CONFIG).projectId || process.env.GCP_PROJECT);
+                    }
+                    return _projectId;
+                }
+            };
         
             this.firebase = (appName) => {
                 if (!this.apps[appName]) { // load required app now (this may throw, if error or config is missing)
-                    // get the project id from environment
-                    fbAdmin.initializeApp(); // initializing blank populates the environment variables GCLOUD_PROJECT and FIREBASE_CONFIG
-                    this.projectId = (process.env.GCLOUD_PROJECT || JSON.parse(process.env.FIREBASE_CONFIG).projectId || process.env.GCP_PROJECT);
-        
                     // get the correct firebase app config for this project
                     // structure of settings.firebase.firebaseApps JSON file should be:
                     // {
@@ -731,7 +736,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.43","lupdate":"Sun, 18 Aug 2019 04:13:16 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.51","lupdate":"Sun, 18 Aug 2019 04:42:01 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
