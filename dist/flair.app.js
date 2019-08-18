@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.51
- *  Sun, 18 Aug 2019 04:42:00 GMT
+ *  Version: 0.55.53
+ *  Sun, 18 Aug 2019 19:30:50 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"files":[],"preambles":[],"bootwares":[]},"di":{"container":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"files":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -320,6 +320,19 @@
                         }
                     }
                 };
+                const loadPortHandlers = async () => {
+                    // load custom port-handlers
+                    let portHandler = null,
+                        portHandlerType = '';
+                    for(let item in settings.boot.ports) {
+                        // get port handler (qualified type-nane of a type that complies to IPortHandler (having .factory function))
+                        portHandlerType = which(settings.boot.ports[item]); // server/client specific version (although this will not be the case, generally)
+                        if (portHandlerType) { // in case no item is set for either server/client
+                            portHandler = new (await include(portHandlerType))(); 
+                            Port.connect(item, portHandler.factory);
+                        }
+                    }
+                };
                 const loadBootwares = async () => {
                     // load bootwares
                     let Item = null,
@@ -439,6 +452,7 @@
                 await loadLinks();
                 await loadFiles();
                 await loadPreambles();
+                await loadPortHandlers();
                 await loadBootwares();
                 await boot();
                 await start();
@@ -448,6 +462,18 @@
                 // return success
                 return true;
             };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app/IPortHandler.js
+        /**
+         * @name IPortHandler
+         * @description IPortHandler interface
+         */
+        $$('ns', 'flair.app');
+        Interface('IPortHandler', function() {
+            this.port = nip;
+            this.factory = nim;
         });
         
     })();    
@@ -490,7 +516,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.51","lupdate":"Sun, 18 Aug 2019 04:42:00 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.53","lupdate":"Sun, 18 Aug 2019 19:30:50 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

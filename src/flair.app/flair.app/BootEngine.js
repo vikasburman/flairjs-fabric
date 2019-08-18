@@ -51,6 +51,19 @@ Class('(auto)', function() {
                 }
             }
         };
+        const loadPortHandlers = async () => {
+            // load custom port-handlers
+            let portHandler = null,
+                portHandlerType = '';
+            for(let item in settings.boot.ports) {
+                // get port handler (qualified type-nane of a type that complies to IPortHandler (having .factory function))
+                portHandlerType = which(settings.boot.ports[item]); // server/client specific version (although this will not be the case, generally)
+                if (portHandlerType) { // in case no item is set for either server/client
+                    portHandler = new (await include(portHandlerType))(); 
+                    Port.connect(item, portHandler.factory);
+                }
+            }
+        };
         const loadBootwares = async () => {
             // load bootwares
             let Item = null,
@@ -170,6 +183,7 @@ Class('(auto)', function() {
         await loadLinks();
         await loadFiles();
         await loadPreambles();
+        await loadPortHandlers();
         await loadBootwares();
         await boot();
         await start();
