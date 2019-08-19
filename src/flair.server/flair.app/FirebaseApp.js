@@ -16,9 +16,13 @@ Mixin('(auto)', function() {
     this.projectId = {
         get: () => {
             if (!_projectId) {
-                // get the project id from environment
-                fbAdmin.initializeApp(); // initializing blank populates the environment variables GCLOUD_PROJECT and FIREBASE_CONFIG
-                _projectId = (process.env.GCLOUD_PROJECT || JSON.parse(process.env.FIREBASE_CONFIG).projectId || process.env.GCP_PROJECT);
+                // get the project id from environment as:
+                //  FIREBASE_PROJECT_ID environment variable OR GCLOUD_PROJECT or FIREBASE_CONFIG.projectId or GCP_PROJECT
+                _projectId = process.env.FIREBASE_PROJECT_ID || ''; // set via flairjs env variable set approach 
+                if (!_projectId) {
+                    fbAdmin.initializeApp(); // initializing blank populates the environment variables GCLOUD_PROJECT and FIREBASE_CONFIG
+                    _projectId = (process.env.GCLOUD_PROJECT || JSON.parse(process.env.FIREBASE_CONFIG).projectId || process.env.GCP_PROJECT);
+                }
             }
             return _projectId;
         }
