@@ -16,7 +16,7 @@
     }
 })(this, function(entryPoint, callback) {
     'use strict';
-    let afterEnv = () => {
+    let afterFlags = () => {
         require(['./modules/flairjs/flair.js'], (flair) => {
             flair(entryPoint).then((app) => {
                 console.log('*');
@@ -25,6 +25,19 @@
         });
     }; 
     
-    // load optional env.js first, it may not be present also
-    require(['./env.js'], afterEnv, afterEnv); 
+    // load optional flags.json first, it may not be present also
+    fetch('./flags.json').then((res) => {
+        if (res.ok) {
+            res.json().then((flags) => {
+                if (flags && flags.__active && flags[flags.__active]) {
+                    for(let envVar in flags[flags.__active]) {
+                        window[envVar] = flags[flags.__active][envVar];
+                    }
+                    afterFlags();
+                }        
+            }).catch(afterFlags);
+        } else {
+            afterFlags();
+        }            
+    }).catch(afterFlags)
 });

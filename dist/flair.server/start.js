@@ -18,8 +18,13 @@
     'use strict';
 
     try {
-        // load optional env.js first, it may not be present also
-        require(rootDir + '/env.js');
+        // load optional flags.json first, it may not be present also
+        let flags = require(rootDir + '/flags.json');
+        if (flags && flags.__active && flags[flags.__active]) {
+            for(let envVar in flags[flags.__active]) {
+                process.env[envVar] = flags[flags.__active][envVar];
+            }
+        }
     } finally {
         const flair = require('flairjs');
         flair(entryPoint).then((app) => {
