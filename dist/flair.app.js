@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.63
- *  Tue, 20 Aug 2019 02:18:49 GMT
+ *  Version: 0.55.65
+ *  Thu, 22 Aug 2019 02:09:21 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"files":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"files":[],"links":[],"meta":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -230,6 +230,10 @@
                 throw Exception.OperationFailed(err, this.onError);
             };
         
+            $$('virtual');
+            $$('async');
+            this.getRoutingContext = noop;
+        
             $$('override');
             this.dispose = (base) => {
                 base();
@@ -294,15 +298,29 @@
                         // add links one by one, they will end loading at different times
                         // but since these are added, DOMReady will eventually ensure everything is loaded
                         // before moving ahead
+                        let headTag = window.document.getElementsByTagName("head")[0];
                         for(let item of settings.boot.links) {
                             let link = document.createElement("link");
                             for(let key in item) { // item should have same attributes that are required for link tag
                                 link[key] = item[key];
                             }
-                            window.document.getElementsByTagName("head")[0].appendChild(link);
+                            headTag.appendChild(link);
                         }
                     }
-                };        
+                };   
+                const loadMeta = async () => {
+                    if (env.isClient && !env.isWorker) {
+                        // add meta one by one,
+                        let headTag = window.document.getElementsByTagName("head")[0];
+                        for(let item of settings.boot.meta) {
+                            let meta = document.createElement("meta");
+                            for(let key in item) { // item should have same attributes that are required for meta tag
+                                meta[key] = item[key];
+                            }
+                            headTag.appendChild(meta);
+                        }
+                    }
+                };              
                 const loadPreambles = async () => {
                     // load preambles
                     let preambleLoader = null;
@@ -449,6 +467,7 @@
                     await AppDomain.app().ready();
                 };
                   
+                await loadMeta();
                 await loadLinks();
                 await loadFiles();
                 await loadPreambles();
@@ -516,7 +535,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.63","lupdate":"Tue, 20 Aug 2019 02:18:49 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.65","lupdate":"Thu, 22 Aug 2019 02:09:21 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

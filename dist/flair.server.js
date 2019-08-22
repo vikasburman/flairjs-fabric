@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.63
- *  Tue, 20 Aug 2019 02:18:50 GMT
+ *  Version: 0.55.65
+ *  Thu, 22 Aug 2019 02:09:23 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -620,7 +620,11 @@
                         if (req.$stop) { break; } // break, if someone forced to stop 
                     }
                 };
-               
+                const chooseRouteHandler = (route) => {
+                    if (typeof route.handler === 'string') { return route.handler; }
+                    return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+                };
+        
                 // add routes related to current mount
                 for (let route of routes) {
                     // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
@@ -636,7 +640,18 @@
                                     }
                                 };
                                 const handleRoute = () => {
-                                    include(route.handler).then((theType) => {
+                                    // route.handler can be defined as:
+                                    // string: qualified type name of the handler
+                                    // object: { "routingContext": "handler", ...}
+                                    //  routingContext can be any value that represents a routing context for whatever situation 
+                                    //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                                    //  basis it will pick required handler from here some examples of handlers can be:
+                                    //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                                    //      free | freemium | full  - if some routing is to be based on license model
+                                    //      anything else
+                                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                                    let routeHandler = chooseRouteHandler(route);
+                                    include(routeHandler).then((theType) => {
                                         let RouteHandler = as(theType, RestHandler);
                                         if (RouteHandler) {
                                             try {
@@ -657,7 +672,7 @@
                                                 onError(err);
                                             }
                                         } else {
-                                            onError(Exception.InvalidDefinition(`Invalid route handler. ${route.handler}`));
+                                            onError(Exception.InvalidDefinition(`Invalid route handler. ${routeHandler}`));
                                         }
                                     }).catch(onError);
                                 };
@@ -740,7 +755,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.63","lupdate":"Tue, 20 Aug 2019 02:18:50 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.65","lupdate":"Thu, 22 Aug 2019 02:09:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.app.FirebaseApp","flair.app.ServerHost","flair.boot.Middlewares","flair.boot.NodeEnv","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

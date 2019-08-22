@@ -80,7 +80,7 @@ Class('(auto)', Bootware, function () {
                     //      anything else
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
-                    await runHandler(routeHandler ctx);
+                    await runHandler(routeHandler, ctx);
                 }
             };
         };

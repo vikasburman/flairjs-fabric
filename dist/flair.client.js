@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.63
- *  Tue, 20 Aug 2019 02:18:49 GMT
+ *  Version: 0.55.65
+ *  Thu, 22 Aug 2019 02:09:22 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -1450,6 +1450,10 @@
                         throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
                     }
                 };
+                const chooseRouteHandler = (route) => {
+                    if (typeof route.handler === 'string') { return route.handler; }
+                    return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+                };
                 const getHandler = function(route) {
                     return async (ctx) => {
                         // ctx.params has all the route parameters.
@@ -1472,7 +1476,18 @@
         
                         // handle route
                         if (!ctx.$stop) {
-                            await runHandler(route.handler, ctx);
+                            // route.handler can be defined as:
+                            // string: qualified type name of the handler
+                            // object: { "routingContext": "handler", ...}
+                            //  routingContext can be any value that represents a routing context for whatever situation 
+                            //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                            //  basis it will pick required handler from here some examples of handlers can be:
+                            //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                            //      free | freemium | full  - if some routing is to be based on license model
+                            //      anything else
+                            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                            let routeHandler = chooseRouteHandler(route);
+                            await runHandler(routeHandler, ctx);
                         }
                     };
                 };
@@ -1818,7 +1833,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.63","lupdate":"Tue, 20 Aug 2019 02:18:49 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.65","lupdate":"Thu, 22 Aug 2019 02:09:22 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.ui.vue.VueComponentMembers","flair.app.ClientHost","flair.boot.vue.VueSetup","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition","flair.boot.ClientRouter","flair.ui.vue.VueComponent","flair.ui.vue.VueDirective","flair.ui.vue.VueFilter","flair.ui.vue.VueLayout","flair.ui.vue.VueMixin","flair.ui.vue.VuePlugin","flair.ui.vue.VueView"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
