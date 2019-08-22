@@ -43,6 +43,10 @@ Class('(auto)', Bootware, function () {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
             }
         };
+        const chooseRouteHandler = (route) => {
+            if (typeof route.handler === 'string') { return route.handler; }
+            return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+        };
         const getHandler = function(route) {
             return async (ctx) => {
                 // ctx.params has all the route parameters.
@@ -65,7 +69,18 @@ Class('(auto)', Bootware, function () {
 
                 // handle route
                 if (!ctx.$stop) {
-                    await runHandler(route.handler, ctx);
+                    // route.handler can be defined as:
+                    // string: qualified type name of the handler
+                    // object: { "routingContext": "handler", ...}
+                    //  routingContext can be any value that represents a routing context for whatever situation 
+                    //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                    //  basis it will pick required handler from here some examples of handlers can be:
+                    //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                    //      free | freemium | full  - if some routing is to be based on license model
+                    //      anything else
+                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                    let routeHandler = chooseRouteHandler(route);
+                    await runHandler(routeHandler ctx);
                 }
             };
         };

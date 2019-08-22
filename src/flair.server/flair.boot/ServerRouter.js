@@ -45,7 +45,11 @@ Class('(auto)', Bootware, function () {
                 if (req.$stop) { break; } // break, if someone forced to stop 
             }
         };
-       
+        const chooseRouteHandler = (route) => {
+            if (typeof route.handler === 'string') { return route.handler; }
+            return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+        };
+
         // add routes related to current mount
         for (let route of routes) {
             // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
@@ -61,7 +65,18 @@ Class('(auto)', Bootware, function () {
                             }
                         };
                         const handleRoute = () => {
-                            include(route.handler).then((theType) => {
+                            // route.handler can be defined as:
+                            // string: qualified type name of the handler
+                            // object: { "routingContext": "handler", ...}
+                            //  routingContext can be any value that represents a routing context for whatever situation 
+                            //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                            //  basis it will pick required handler from here some examples of handlers can be:
+                            //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                            //      free | freemium | full  - if some routing is to be based on license model
+                            //      anything else
+                            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                            let routeHandler = chooseRouteHandler(route);
+                            include(routeHandler).then((theType) => {
                                 let RouteHandler = as(theType, RestHandler);
                                 if (RouteHandler) {
                                     try {
@@ -82,7 +97,7 @@ Class('(auto)', Bootware, function () {
                                         onError(err);
                                     }
                                 } else {
-                                    onError(Exception.InvalidDefinition(`Invalid route handler. ${route.handler}`));
+                                    onError(Exception.InvalidDefinition(`Invalid route handler. ${routeHandler}`));
                                 }
                             }).catch(onError);
                         };

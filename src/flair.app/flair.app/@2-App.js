@@ -73,6 +73,10 @@ Class('(auto)', Bootware, [IDisposable], function() {
         throw Exception.OperationFailed(err, this.onError);
     };
 
+    $$('virtual');
+    $$('async');
+    this.getRoutingContext = noop;
+
     $$('override');
     this.dispose = (base) => {
         base();
