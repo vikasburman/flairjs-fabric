@@ -5,6 +5,10 @@
     "boot": {
         "files": [
         ],
+        "links": [
+        ],
+        "meta": [
+        ],        
         "preambles": [
         ],
         "ports": {
