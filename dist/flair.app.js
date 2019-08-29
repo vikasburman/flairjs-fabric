@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.70
- *  Sat, 24 Aug 2019 03:08:58 GMT
+ *  Version: 0.55.71
+ *  Thu, 29 Aug 2019 00:15:37 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"files":[],"links":[],"meta":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"scripts":[],"links":[],"meta":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -283,17 +283,26 @@
             this.start = async function () {
                 let allBootwares = [],
                     mountSpecificBootwares = [];
-                const loadFiles = async () => {
-                    // load scripts
-                    for(let item of settings.boot.files) {
-                        // get simple script file
-                        item = which(item); // server/client specific version
-                        if (item) { // in case no item is set for either server/client
-                            await include(item); // script file will be loaded as is
+                const loadScripts = async () => { // scripts loading is supported only on client ui environment
+                    if (env.isClient && !env.isWorker) {
+                        // add scripts one by one, they will end loading at different times
+                        // but since these are added, DOMReady will eventually ensure everything is loaded
+                        // before moving ahead
+                        let headTag = window.document.getElementsByTagName("head")[0];
+                        for(let item of settings.boot.scripts) {
+                            let script = document.createElement("script");
+                            for(let key in item) { // item should have same attributes that are required for script tag
+                                if (key === 'src') {
+                                    script[key] = which(item[key], true); // debug/prod file
+                                } else {
+                                    script[key] = item[key];
+                                }
+                            }
+                            headTag.appendChild(script);
                         }
                     }
                 };
-                const loadLinks = async () => {
+                const loadLinks = async () => { // links loading is supported only on client ui environment
                     if (env.isClient && !env.isWorker) {
                         // add links one by one, they will end loading at different times
                         // but since these are added, DOMReady will eventually ensure everything is loaded
@@ -302,7 +311,11 @@
                         for(let item of settings.boot.links) {
                             let link = document.createElement("link");
                             for(let key in item) { // item should have same attributes that are required for link tag
-                                link[key] = item[key];
+                                if (key === 'href') {
+                                    link[key] = which(item[key], true); // debug/prod file
+                                } else {
+                                    link[key] = item[key];
+                                }                        
                             }
                             headTag.appendChild(link);
                         }
@@ -469,7 +482,7 @@
                   
                 await loadMeta();
                 await loadLinks();
-                await loadFiles();
+                await loadScripts();
                 await loadPreambles();
                 await loadPortHandlers();
                 await loadBootwares();
@@ -535,7 +548,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.70","lupdate":"Sat, 24 Aug 2019 03:08:58 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.71","lupdate":"Thu, 29 Aug 2019 00:15:37 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

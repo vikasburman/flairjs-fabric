@@ -1397,10 +1397,10 @@ flairjs-cli@^0.55.85:
     stylelint "^10.1.0"
     uglify-es "^3.3.9"
 
-flairjs@^0.55.68:
-  version "0.55.68"
-  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.55.68.tgz#638c154bc42bc9b69c24d67726f7cefbf79141c1"
-  integrity sha512-5wJv7OGPEoHMBQt2M25guc8vrYraupwQmhJTFC2bRtMFseTd1TsuvqfKg8fQbjbpmfwtzPIIhXSDcIKDlElE1Q==
+flairjs@^0.55.73:
+  version "0.55.73"
+  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.55.73.tgz#7bd25800fb40e041b7a2811f4dfc20fecd0b1d98"
+  integrity sha512-BhxKQxGE0aFsYuROZHE5++9CioO++wf0JSoKsh0w4Zmrvl6hm1Sm5PAmF9ggg0kVbDVC53xaoTHkWHgeZFG51Q==
 
 flat-cache@^2.0.1:
   version "2.0.1"

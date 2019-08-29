@@ -16,46 +16,16 @@ Class('(auto)', function() {
                 // but since these are added, DOMReady will eventually ensure everything is loaded
                 // before moving ahead
                 let headTag = window.document.getElementsByTagName("head")[0];
-                for(let item of settings.boot.links) {
-                    let link = document.createElement("link");
-                    for(let key in item) { // item should have same attributes that are required for link tag
-                        link[key] = item[key];
-                    }
-                    headTag.appendChild(link);
-                }
-            }
-
-            // load scripts
-            for(let item of settings.boot.files) {
-                // get simple script file
-                item = which(item); // server/client specific version
-                if (item) { // in case no item is set for either server/client
-                    if (item.indexOf('://') !== -1) { // some protocol
-                        if (env.isServer) { // server cannot load an external url module
-                            throw Exception.NotSupported(`Cannot load module from a url. (${item})`);
-                        } else if (env.isClient) {
-                            if (env.isWorker) { // include
-
-                            } else { // load via dom
-
-                            }
-                            // add links one by one, they will end loading at different times
-                            // but since these are added, DOMReady will eventually ensure everything is loaded
-                            // before moving ahead
-                            let headTag = window.document.getElementsByTagName("head")[0];
-                            for(let item of settings.boot.links) {
-                                let link = document.createElement("link");
-                                for(let key in item) { // item should have same attributes that are required for link tag
-                                    link[key] = item[key];
-                                }
-                                headTag.appendChild(link);
-                            }
-                        }
-
+                for(let item of settings.boot.scripts) {
+                    let script = document.createElement("script");
+                    for(let key in item) { // item should have same attributes that are required for script tag
+                        if (key === 'src') {
+                            script[key] = which(item[key], true); // debug/prod file
+                        } else {
+                            script[key] = item[key];
                         }
                     }
-
-                    await include(item); // script file will be loaded as is
+                    headTag.appendChild(script);
                 }
             }
         };
@@ -68,7 +38,11 @@ Class('(auto)', function() {
                 for(let item of settings.boot.links) {
                     let link = document.createElement("link");
                     for(let key in item) { // item should have same attributes that are required for link tag
-                        link[key] = item[key];
+                        if (key === 'href') {
+                            link[key] = which(item[key], true); // debug/prod file
+                        } else {
+                            link[key] = item[key];
+                        }                        
                     }
                     headTag.appendChild(link);
                 }
