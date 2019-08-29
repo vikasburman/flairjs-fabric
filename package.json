@@ -3,7 +3,7 @@
     "title": "Flair.js Fabric",
     "description": "Foundation for True Object Oriented JavaScript Apps",
     "copyright": "(c) 2017-2019 Vikas Burman",
-    "version": "0.55.71",
+    "version": "0.55.72",
     "author": "Vikas Burman <vikasburman@gmail.com>",
     "keywords": [
         "javascript",
@@ -31,7 +31,7 @@
         "serve": "http-server ./ -p8088 && pkill -f http-server"
     },
     "devDependencies": {
-        "flairjs-cli": "^0.55.85",
+        "flairjs-cli": "^0.55.86",
         "http-server": "^0.11.1"
     },
     "peerDependencies": {
