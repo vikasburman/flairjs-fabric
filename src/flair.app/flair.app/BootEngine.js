@@ -10,17 +10,56 @@ Class('(auto)', function() {
     this.start = async function () {
         let allBootwares = [],
             mountSpecificBootwares = [];
-        const loadFiles = async () => {
+        const loadScripts = async () => { // scripts loading is supported only on client ui environment
+            if (env.isClient && !env.isWorker) {
+                // add scripts one by one, they will end loading at different times
+                // but since these are added, DOMReady will eventually ensure everything is loaded
+                // before moving ahead
+                let headTag = window.document.getElementsByTagName("head")[0];
+                for(let item of settings.boot.links) {
+                    let link = document.createElement("link");
+                    for(let key in item) { // item should have same attributes that are required for link tag
+                        link[key] = item[key];
+                    }
+                    headTag.appendChild(link);
+                }
+            }
+
             // load scripts
             for(let item of settings.boot.files) {
                 // get simple script file
                 item = which(item); // server/client specific version
                 if (item) { // in case no item is set for either server/client
+                    if (item.indexOf('://') !== -1) { // some protocol
+                        if (env.isServer) { // server cannot load an external url module
+                            throw Exception.NotSupported(`Cannot load module from a url. (${item})`);
+                        } else if (env.isClient) {
+                            if (env.isWorker) { // include
+
+                            } else { // load via dom
+
+                            }
+                            // add links one by one, they will end loading at different times
+                            // but since these are added, DOMReady will eventually ensure everything is loaded
+                            // before moving ahead
+                            let headTag = window.document.getElementsByTagName("head")[0];
+                            for(let item of settings.boot.links) {
+                                let link = document.createElement("link");
+                                for(let key in item) { // item should have same attributes that are required for link tag
+                                    link[key] = item[key];
+                                }
+                                headTag.appendChild(link);
+                            }
+                        }
+
+                        }
+                    }
+
                     await include(item); // script file will be loaded as is
                 }
             }
         };
-        const loadLinks = async () => {
+        const loadLinks = async () => { // links loading is supported only on client ui environment
             if (env.isClient && !env.isWorker) {
                 // add links one by one, they will end loading at different times
                 // but since these are added, DOMReady will eventually ensure everything is loaded
@@ -196,7 +235,7 @@ Class('(auto)', function() {
           
         await loadMeta();
         await loadLinks();
-        await loadFiles();
+        await loadScripts();
         await loadPreambles();
         await loadPortHandlers();
         await loadBootwares();

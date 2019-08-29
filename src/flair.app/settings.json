@@ -3,7 +3,7 @@
     "app": "flair.app.App",
 
     "boot": {
-        "files": [
+        "scripts": [
         ],
         "links": [
         ],
