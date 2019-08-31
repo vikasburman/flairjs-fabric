@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.80
- *  Sat, 31 Aug 2019 02:47:53 GMT
+ *  Version: 0.55.85
+ *  Sat, 31 Aug 2019 03:45:03 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -507,14 +507,14 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app/RouterSettingReader.js
+    await (async () => { // type: ./src/flair.app/flair.app/RouteSettingReader.js
         /**
-         * @name RouterSettingReader
-         * @description RouterSettingReader helper
+         * @name RouteSettingReader
+         * @description RouteSettingReader helper
          */
         $$('ns', 'flair.app');
         $$('static');
-        Class('RouterSettingReader', function() {
+        Class('RouteSettingReader', function() {
             this.getMergedSection = function(sectionName, routing, mountName, checkDuplicateOnProp) {
                 let section = [];
         
@@ -630,7 +630,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.80","lupdate":"Sat, 31 Aug 2019 02:47:53 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouterSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.85","lupdate":"Sat, 31 Aug 2019 03:45:03 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouteSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

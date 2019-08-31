@@ -1,6 +1,6 @@
 /**
- * @name RouterSettingReader
- * @description RouterSettingReader helper
+ * @name RouteSettingReader
+ * @description RouteSettingReader helper
  */
 $$('ns', '(auto)');
 $$('static');
