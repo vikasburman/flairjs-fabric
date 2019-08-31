@@ -1376,10 +1376,10 @@ find-up@^2.0.0:
   dependencies:
     locate-path "^2.0.0"
 
-flairjs-cli@^0.55.95:
-  version "0.55.95"
-  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.55.95.tgz#beb229fd562d95b609ba6975b735196154d1bbbf"
-  integrity sha512-3J6nBNxbgeAONDzBi0nePNMSE2IYYyMkbbVDgKGFGpH8vAQ/zvKJ2wo/KpG46It78QUqP3zeoXq+AO1oFScMCw==
+flairjs-cli@^0.55.96:
+  version "0.55.96"
+  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.55.96.tgz#a546ea448ce4e5bf15f13491f76034e6b3dea5b1"
+  integrity sha512-0T8bQi/6yAZibj8PEQa71wSOU+WOgBLutjEH3KC0BSBEy20bym38FTwZE/meLoz45b7NoQLRphq3/G5bAsszFg==
   dependencies:
     clean-css "^4.2.1"
     copy-dir "^1.1.0"
@@ -1396,11 +1396,6 @@ flairjs-cli@^0.55.95:
     recursive-readdir-sync "^1.0.6"
     stylelint "^10.1.0"
     uglify-es "^3.3.9"
-
-flairjs@^0.55.91:
-  version "0.55.91"
-  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.55.91.tgz#a704680df86ef749f2b51c76a924a9bb21d90516"
-  integrity sha512-rNt7TETDzIW/SHyDQZLqe4Ri0ndfTLIRQwyPnSnYS85C63WMN3k4wCHYBAMITpFw6bnjAsA4cs/n5Jagct3Ctw==
 
 flat-cache@^2.0.1:
   version "2.0.1"

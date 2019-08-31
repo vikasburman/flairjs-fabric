@@ -3,7 +3,7 @@
     "title": "Flair.js Fabric",
     "description": "Foundation for True Object Oriented JavaScript Apps",
     "copyright": "(c) 2017-2019 Vikas Burman",
-    "version": "0.55.100",
+    "version": "0.56.1",
     "author": "Vikas Burman <vikasburman@gmail.com>",
     "keywords": [
         "javascript",
@@ -33,13 +33,13 @@
         "refresh": "yarn remove flairjs-cli && yarn remove flairjs && yarn add flairjs-cli --dev && yarn add flairjs --peer"
     },
     "devDependencies": {
-        "flairjs-cli": "^0.55.95",
         "http-server": "^0.11.1"
     },
     "peerDependencies": {
         "flairjs": "^0.55.91"
     },
     "dependencies": {
+        "flairjs-cli": "^0.55.96",
         "node-env-file": "^0.1.8",
         "node-fetch": "^2.6.0"
     }
