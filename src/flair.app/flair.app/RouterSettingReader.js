@@ -5,7 +5,7 @@
 $$('ns', '(auto)');
 $$('static');
 Class('(auto)', function() {
-    this.getMergedSection = (sectionName, routing, mountName, checkDuplicateOnProp) => {
+    this.getMergedSection = function(sectionName, routing, mountName, checkDuplicateOnProp) {
         let section = [];
 
         // get all.before
