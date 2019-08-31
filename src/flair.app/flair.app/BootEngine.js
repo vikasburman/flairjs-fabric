@@ -91,8 +91,8 @@ Class('(auto)', function() {
                 item = which(item); // server/client specific version (although this will not be the case, generally)
                 if (item.indexOf(':') !== -1) {
                     let items = item.split(':'),
-                        envProp = items[0].trim(),
-                        item = items[1].trim();
+                        envProp = items[0].trim();
+                    item = items[1].trim();
                     if (env[envProp] || env.x()[envProp]) { // if envProp is defined either at root env or at extended env, and true
                         await AppDomain.context.loadAssembly(item);
                     }
