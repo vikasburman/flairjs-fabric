@@ -10,12 +10,6 @@
         "notfound": ""
     },
 
-    "ui": {
-        "vue": {
-            "extensions": []
-        }
-    },
-
     "i18n": {
         "lang": {
             "default": "en",
@@ -29,12 +23,22 @@
         "mounts": {
             "main": "/"
         },
-        "main-settings": [
-            { "name": "hashbang", "value": false },
-            { "name": "lang", "value": false },
-            { "name": "sensitive", "value": false }
-        ],
-        "main-interceptors": [
-        ]        
-    }        
+        "all": {
+            "before": {
+                "settings": [
+                    { "name": "hashbang", "value": false },
+                    { "name": "lang", "value": false },
+                    { "name": "sensitive", "value": false }
+                ],
+                "interceptors": [
+                ]        
+            },
+            "after": {
+                "settings": [
+                ],
+                "interceptors": [
+                ]        
+            }
+        }
+    }    
 }

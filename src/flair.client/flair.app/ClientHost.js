@@ -1,4 +1,4 @@
-const Host = await include('flair.app.Host');
+const { Host, RouteSettingReader } = await ns('flair.app', 'flair.app.Host');
 const { ViewHandler, Page } = ns('flair.ui');
 
 /**
@@ -148,7 +148,7 @@ Class('(auto)', Host, function() {
             mount = null;
         const getSettings = (mountName) => {
             // each item is: { name: '', value:  }
-            let pageSettings = settings.routing[`${mountName}-settings`];
+            let pageSettings = RouteSettingReader.getMergedSection('settings', settings.routing, mountName, 'name');
             if (pageSettings && pageSettings.length > 0) {
                 for(let pageSetting of pageSettings) {
                     appSettings[pageSetting.name] = pageSetting.value;

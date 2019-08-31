@@ -1,43 +1,9 @@
 {
-    "express": {
-        "server-http": {
-            "enable": false,
-            "port": 80,
-            "timeout": -1
-        },
-        "server-https": {
-            "enable": false,
-            "port": 443,
-            "timeout": -1,
-            "privateKey": "",
-            "publicCert": ""
-        }
-    },
-    
-    "firebase": {
-        "firebaseApps": "",
-        "serviceAccount": ""
-    },
-
     "envVars": {
         "vars": [
         ],
         "options": {
             "overwrite": true
         }
-    },
-
-    "routing": {
-        "mounts": {
-            "main": "/"
-        },
-        "main-settings": [
-        ],
-        "main-middlewares": [
-        ],
-        "main-interceptors": [
-        ],
-        "main-resHeaders": [
-        ]
     }
 }

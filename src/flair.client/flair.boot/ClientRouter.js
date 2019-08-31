@@ -1,4 +1,4 @@
-const Bootware = await include('flair.app.Bootware');
+const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
 
 /**
  * @name ClientRouter
@@ -58,7 +58,7 @@ Class('(auto)', Bootware, function () {
                 // each interceptor is derived from ViewInterceptor and
                 // async run method of it takes ctx, can update it
                 // each item is: "InterceptorTypeQualifiedName"
-                let mountInterceptors = settings.routing[`${mount.name}-interceptors`] || [];
+                let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
                 for(let ic of mountInterceptors) {
                     let ICType = as(await include(ic), ViewInterceptor);
                     if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }

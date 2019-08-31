@@ -1,4 +1,4 @@
-const Host = await include('flair.app.Host');
+const { Host, RouteSettingReader } = await ns('flair.app', 'flair.app.Host');
 
 /**
  * @name ServerHost
@@ -38,7 +38,7 @@ Class('(auto)', Host, function() {
             // each item is: { name: '', value:  }
             // name: as in above link (as-is)
             // value: as defined in above link
-            let appSettings = settings.routing[`${mountName}-settings`];
+            let appSettings = RouteSettingReader.getMergedSection('settings', settings.routing, mountName, 'name');
             if (appSettings && appSettings.length > 0) {
                 for(let appSetting of appSettings) {
                     mount.set(appSetting.name, appSetting.value);

@@ -16,7 +16,7 @@ Class('(auto)', Bootware, function() {
         base();
 
         const Vue = await include('vue/vue{.min}.js');
-        const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = ns('flair.ui.vue');
+        const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = ns('flair.ui');
         
         // setup Vue configuration, if any
         // TODO: (if any)
@@ -24,7 +24,7 @@ Class('(auto)', Bootware, function() {
         // load Vue extensions
         // each plugin in array is defined as:
         // { "name": "name", "type": "ns.typeName", "options": {} }
-        let extensions = settings.ui.vue.extensions,
+        let extensions = settings.vue.extensions,
             ExtType = null,
             ext = null;
         for (let item of extensions) {

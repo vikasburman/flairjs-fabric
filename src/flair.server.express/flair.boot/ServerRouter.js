@@ -1,4 +1,4 @@
-const Bootware = await include('flair.app.Bootware');
+const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
 
 /**
  * @name ServerRouter
@@ -109,7 +109,7 @@ Class('(auto)', Bootware, function () {
                         // each interceptor is derived from RestInterceptor and
                         // run method of it takes req, can update it, also takes res method and can generate response, in case request is being stopped
                         // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = settings.routing[`${mount.name}-interceptors`] || [];
+                        let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
                         runInterceptors(mountInterceptors, req, res).then(() => {
                             if (!req.$stop) {
                                 handleRoute();

@@ -1,5 +1,4 @@
-const { ViewHandler } = ns('flair.ui');
-const { VueComponentMembers } = ns('flair.ui.vue');
+const { ViewHandler, VueComponentMembers } = ns('flair.ui');
 
 /**
  * @name VueView
