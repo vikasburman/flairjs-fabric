@@ -9,8 +9,8 @@ Class('(auto)', function() {
         let section = [];
 
         // get all.before
-        if (routing.all && routing.before && routing.before[sectionName]) {
-            section.push(...routing.before[sectionName]);
+        if (routing.all && routing.all.before && routing.all.before[sectionName]) {
+            section.push(...routing.all.before[sectionName]);
         }
 
         // get from mount
@@ -46,12 +46,12 @@ Class('(auto)', function() {
         }
 
         // get from all.after
-        if (routing.all && routing.after && routing.after[sectionName]) {
+        if (routing.all && routing.all.after && routing.all.after[sectionName]) {
             if (section.length === 0) {
-                section.push(...routing.after[sectionName]);
+                section.push(...routing.all.after[sectionName]);
             } else {
                 if (checkDuplicateOnProp) {
-                    for(let afterItem of routing.after[sectionName]) {
+                    for(let afterItem of routing.all.after[sectionName]) {
                         let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, afterItem[checkDuplicateOnProp]);
                         if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
                             // skip as more specific version is already added
@@ -60,7 +60,7 @@ Class('(auto)', function() {
                         }
                     }
                 } else {
-                    for(let afterItem of routing.after[sectionName]) {
+                    for(let afterItem of routing.all.after[sectionName]) {
                         if (typeof afterItem === 'string') {
                             if (section.indexOf(afterItem) !== -1) { // found
                                 // ignore, as it is already added

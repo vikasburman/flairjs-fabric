@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.77
- *  Sat, 31 Aug 2019 02:19:23 GMT
+ *  Version: 0.55.78
+ *  Sat, 31 Aug 2019 02:23:16 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -519,8 +519,8 @@
                 let section = [];
         
                 // get all.before
-                if (routing.all && routing.before && routing.before[sectionName]) {
-                    section.push(...routing.before[sectionName]);
+                if (routing.all && routing.all.before && routing.all.before[sectionName]) {
+                    section.push(...routing.all.before[sectionName]);
                 }
         
                 // get from mount
@@ -556,12 +556,12 @@
                 }
         
                 // get from all.after
-                if (routing.all && routing.after && routing.after[sectionName]) {
+                if (routing.all && routing.all.after && routing.all.after[sectionName]) {
                     if (section.length === 0) {
-                        section.push(...routing.after[sectionName]);
+                        section.push(...routing.all.after[sectionName]);
                     } else {
                         if (checkDuplicateOnProp) {
-                            for(let afterItem of routing.after[sectionName]) {
+                            for(let afterItem of routing.all.after[sectionName]) {
                                 let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, afterItem[checkDuplicateOnProp]);
                                 if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
                                     // skip as more specific version is already added
@@ -570,7 +570,7 @@
                                 }
                             }
                         } else {
-                            for(let afterItem of routing.after[sectionName]) {
+                            for(let afterItem of routing.all.after[sectionName]) {
                                 if (typeof afterItem === 'string') {
                                     if (section.indexOf(afterItem) !== -1) { // found
                                         // ignore, as it is already added
@@ -630,7 +630,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.77","lupdate":"Sat, 31 Aug 2019 02:19:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouterSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.78","lupdate":"Sat, 31 Aug 2019 02:23:16 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouterSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
