@@ -1,4 +1,4 @@
-const { Host, RouteSettingReader } = await ns('flair.app');
+const { Host, RouteSettingReader } = await ns('flair.app', './flair.app.js');
 const { ViewHandler, Page } = await ns('flair.ui');
 
 /**

@@ -24,7 +24,7 @@ Class('(auto)', Bootware, [IDisposable], function() {
     this.start = async () => {
         // initialize view state
         if (!env.isServer && !env.isWorker) {
-            const { ViewState } = await ns('flair.ui');
+            const { ViewState } = await ns('flair.ui', './flair.client.js');
             new ViewState(); // this initializes the global view state store's persistance via this singleton object
         }
 
@@ -50,7 +50,7 @@ Class('(auto)', Bootware, [IDisposable], function() {
     this.stop = async () => {
         // clear view state
         if (!env.isServer && !env.isWorker) {
-            const { ViewState } = await ns('flair.ui');
+            const { ViewState } = await ns('flair.ui', './flair.client.js');
             new ViewState().clear();
         }
 

@@ -1,4 +1,4 @@
-const { Bootware } = await ns('flair.app');
+const { Bootware } = await ns('flair.app', './flair.app.js');
 
 /**
  * @name NodeEnv

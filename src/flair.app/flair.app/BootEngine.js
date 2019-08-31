@@ -77,14 +77,6 @@ Class('(auto)', function() {
                     await preambleLoader(flair);
                 }
             }
-
-            // NOTE: it is expected that ALL preambles will be loaded once at the start time and 
-            // these will not be loaded dynamically. Which means no assembly at runtime will be loaded
-            // now this is not restricted and can be done - but the behavior will be unpredictable
-            // because at least ns() lookup is set to optimize in a way that if a namespace is scanned in
-            // all assemblies once, it is not scanned second time, unless this flag is turned off
-            AppDomain.context.namespace.optimizer(true); // enable optimizer
-
         };
         const loadPortHandlers = async () => {
             // load custom port-handlers

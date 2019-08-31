@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
 
 /**
  * @name ResHeaders

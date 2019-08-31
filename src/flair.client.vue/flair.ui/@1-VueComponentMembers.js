@@ -9,8 +9,9 @@ Mixin('(auto)', function() {
 
     $$('private');
     this.define = async () => {
-        const Vue = await include('vue/vue{.min}.js');   
-        const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
+        const Vue = await include('vue/vue{.min}.js');  
+        const { ViewHandler, ViewState } = ns('flair.ui', './flair.client.js');
+        const { VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
 
         let viewState = new ViewState(),
             component = {};

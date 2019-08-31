@@ -1,5 +1,5 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
-const { RestHandler, RestInterceptor } = await ns('flair.api');
+const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+const { RestHandler, RestInterceptor } = await ns('flair.api', './flair.server.js');
 
 /**
  * @name ServerRouter

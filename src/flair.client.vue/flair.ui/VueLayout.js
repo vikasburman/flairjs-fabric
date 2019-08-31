@@ -1,4 +1,4 @@
-const { ViewHandler } = await ns('flair.ui');
+const { ViewHandler } = await ns('flair.ui', './flair.client.js');
 
 /**
  * @name VueLayout
