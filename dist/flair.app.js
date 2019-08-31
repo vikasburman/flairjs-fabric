@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.95
- *  Sat, 31 Aug 2019 17:13:41 GMT
+ *  Version: 0.55.96
+ *  Sat, 31 Aug 2019 18:22:08 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"links":[],"scripts":[],"meta":[],"preambles":[],"ports":{},"bootwares":[]},"di":{"container":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":false,"isExpress":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"ports":{},"bootwares":[],"coreAssemblies":["./flair.app.js","isServer: ./flair.server.js","isClient: ./flair.client.js","isVue: ./flair.client.vue.js","isExpress: ./flair.server.express.js","isFirebase: ./flair.server.firebase.js"],"assemblies":[]},"di":{"container":{}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -281,6 +281,9 @@
             this.start = async function () {
                 let allBootwares = [],
                     mountSpecificBootwares = [];
+                const loadConfiguredEnv = async () => {
+                    env.x = Object.freeze(settings.boot.env); // add it once as freezed
+                };
                 const loadScripts = async () => { // scripts loading is supported only on client ui environment
                     if (env.isClient && !env.isWorker) {
                         // add scripts one by one, they will end loading at different times
@@ -347,6 +350,36 @@
                             preambleLoader = await include(item);
                             await preambleLoader(flair);
                         }
+                    }
+                };
+                const loadAssemblies = async () => {
+                    const loadAssembly = async (item) => {
+                        // item can be:
+                        //      "path/fileName.js"
+                        //      "path/fileName.js | path/fileName.js" <-- server/client
+                        //      "envProp: path/fileName.js"
+                        //      "envProp: path/fileName.js | envProp: path/fileName.js" <-- server/client
+                        item = which(item); // server/client specific version (although this will not be the case, generally)
+                        if (item.indexOf(':') !== -1) {
+                            let items = item.split(':'),
+                                envProp = items[0].trim(),
+                                item = items[1].trim();
+                            if (env[envProp] || env.x[envProp]) { // if envProp is defined either at root env or at extended env, and true
+                                await AppDomain.context.loadAssembly(item);
+                            }
+                        } else { // no condition
+                            await AppDomain.context.loadAssembly(item);
+                        }
+                    };
+        
+                    // load core assemblies first
+                    for(let item of settings.boot.coreAssemblies) { 
+                        await loadAssembly(item);
+                    }
+        
+                    // load other defined assemblies
+                    for(let item of settings.boot.assemblies) { 
+                        await loadAssembly(item);
                     }
                 };
                 const loadPortHandlers = async () => {
@@ -478,10 +511,12 @@
                     await AppDomain.app().ready();
                 };
                   
+                await loadConfiguredEnv();
                 await loadMeta();
                 await loadLinks();
                 await loadScripts();
                 await loadPreambles();
+                await loadAssemblies();
                 await loadPortHandlers();
                 await loadBootwares();
                 await boot();
@@ -630,7 +665,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.95","lupdate":"Sat, 31 Aug 2019 17:13:41 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouteSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.96","lupdate":"Sat, 31 Aug 2019 18:22:08 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouteSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

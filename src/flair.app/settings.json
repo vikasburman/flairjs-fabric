@@ -3,6 +3,11 @@
     "app": "flair.app.App",
 
     "boot": {
+        "env": {
+            "isVue": false,
+            "isExpress": false,
+            "isFirebase": false
+        },
         "links": [
         ],
         "scripts": [
@@ -14,6 +19,16 @@
         "ports": {
         },
         "bootwares": [
+        ],
+        "coreAssemblies": [
+            "./flair.app.js",
+            "isServer: ./flair.server.js",
+            "isClient: ./flair.client.js",
+            "isVue: ./flair.client.vue.js",
+            "isExpress: ./flair.server.express.js",
+            "isFirebase: ./flair.server.firebase.js"
+        ],
+        "assemblies": [
         ]
     },
 

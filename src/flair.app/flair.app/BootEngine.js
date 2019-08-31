@@ -10,6 +10,9 @@ Class('(auto)', function() {
     this.start = async function () {
         let allBootwares = [],
             mountSpecificBootwares = [];
+        const loadConfiguredEnv = async () => {
+            env.x = Object.freeze(settings.boot.env); // add it once as freezed
+        };
         const loadScripts = async () => { // scripts loading is supported only on client ui environment
             if (env.isClient && !env.isWorker) {
                 // add scripts one by one, they will end loading at different times
@@ -76,6 +79,36 @@ Class('(auto)', function() {
                     preambleLoader = await include(item);
                     await preambleLoader(flair);
                 }
+            }
+        };
+        const loadAssemblies = async () => {
+            const loadAssembly = async (item) => {
+                // item can be:
+                //      "path/fileName.js"
+                //      "path/fileName.js | path/fileName.js" <-- server/client
+                //      "envProp: path/fileName.js"
+                //      "envProp: path/fileName.js | envProp: path/fileName.js" <-- server/client
+                item = which(item); // server/client specific version (although this will not be the case, generally)
+                if (item.indexOf(':') !== -1) {
+                    let items = item.split(':'),
+                        envProp = items[0].trim(),
+                        item = items[1].trim();
+                    if (env[envProp] || env.x[envProp]) { // if envProp is defined either at root env or at extended env, and true
+                        await AppDomain.context.loadAssembly(item);
+                    }
+                } else { // no condition
+                    await AppDomain.context.loadAssembly(item);
+                }
+            };
+
+            // load core assemblies first
+            for(let item of settings.boot.coreAssemblies) { 
+                await loadAssembly(item);
+            }
+
+            // load other defined assemblies
+            for(let item of settings.boot.assemblies) { 
+                await loadAssembly(item);
             }
         };
         const loadPortHandlers = async () => {
@@ -207,10 +240,12 @@ Class('(auto)', function() {
             await AppDomain.app().ready();
         };
           
+        await loadConfiguredEnv();
         await loadMeta();
         await loadLinks();
         await loadScripts();
         await loadPreambles();
+        await loadAssemblies();
         await loadPortHandlers();
         await loadBootwares();
         await boot();
