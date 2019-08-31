@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.55.86
- *  Sat, 31 Aug 2019 05:17:33 GMT
+ *  Version: 0.55.87
+ *  Sat, 31 Aug 2019 06:53:24 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -568,7 +568,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.86","lupdate":"Sat, 31 Aug 2019 05:17:33 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.87","lupdate":"Sat, 31 Aug 2019 06:53:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
