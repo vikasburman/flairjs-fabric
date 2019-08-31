@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.55.76
- *  Fri, 30 Aug 2019 14:16:56 GMT
+ *  Version: 0.55.77
+ *  Sat, 31 Aug 2019 02:19:23 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -71,9 +71,7 @@
     // assembly closure init (end)
     
     // assembly global functions (start)
-    // global handler
-    let onLoadComplete = () => {
-    }; 
+    // (not defined)
     // assembly global functions (end)
     
     // set assembly being loaded
@@ -509,6 +507,90 @@
         });
         
     })();    
+    await (async () => { // type: ./src/flair.app/flair.app/RouterSettingReader.js
+        /**
+         * @name RouterSettingReader
+         * @description RouterSettingReader helper
+         */
+        $$('ns', 'flair.app');
+        $$('static');
+        Class('RouterSettingReader', function() {
+            this.getMergedSection = (sectionName, routing, mountName, checkDuplicateOnProp) => {
+                let section = [];
+        
+                // get all.before
+                if (routing.all && routing.before && routing.before[sectionName]) {
+                    section.push(...routing.before[sectionName]);
+                }
+        
+                // get from mount
+                if (routing[mountName] && routing[mountName][sectionName]) {
+                    if (section.length === 0) { 
+                        section.push(...routing[mountName][sectionName]);
+                    } else {
+                        if (checkDuplicateOnProp) {
+                            for(let specificItem of routing[mountName][sectionName]) {
+                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, specificItem[checkDuplicateOnProp]);
+                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
+                                    for(let p in specificItem) { // iterate all defined properties only, rest can be same as found earlier
+                                        alreadyAddedItem[p] = specificItem[p]; // overwrite all values with what is found here, as this more specific
+                                    }
+                                } else {
+                                    section.push(specificItem); // add
+                                }
+                            }
+                        } else {
+                            for(let specificItem of routing[mountName][sectionName]) {
+                                if (typeof specificItem === 'string') {
+                                    if (section.indexOf(specificItem) !== -1) { // found
+                                        // ignore, as it is already added
+                                    } else { 
+                                        section.push(specificItem); // add
+                                    }                  
+                                } else { // object
+                                    section.push(specificItem); // add, as no way to check for duplicate
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                // get from all.after
+                if (routing.all && routing.after && routing.after[sectionName]) {
+                    if (section.length === 0) {
+                        section.push(...routing.after[sectionName]);
+                    } else {
+                        if (checkDuplicateOnProp) {
+                            for(let afterItem of routing.after[sectionName]) {
+                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, afterItem[checkDuplicateOnProp]);
+                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
+                                    // skip as more specific version is already added
+                                } else {
+                                    section.push(afterItem); // add
+                                }
+                            }
+                        } else {
+                            for(let afterItem of routing.after[sectionName]) {
+                                if (typeof afterItem === 'string') {
+                                    if (section.indexOf(afterItem) !== -1) { // found
+                                        // ignore, as it is already added
+                                    } else { 
+                                        section.push(afterItem); // add
+                                    }                  
+                                } else { // object
+                                    section.push(afterItem); // add, as no way to check for duplicate
+                                }
+                            }
+                        } 
+                    }
+                }
+                
+                // return
+                return section;
+            };
+        });
+        
+    })();    
     await (async () => { // type: ./src/flair.app/flair.boot/DIContainer.js
         const { Bootware } = ns('flair.app');
         
@@ -548,7 +630,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.76","lupdate":"Fri, 30 Aug 2019 14:16:56 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.77","lupdate":"Sat, 31 Aug 2019 02:19:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouterSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

@@ -1,7 +1,7 @@
 /**
  * loader
  */
-const start = require('flairjs-fabric/flair.server/start-firebase.js');
+const start = require('flairjs-fabric/flair.server.firebase/start.js');
 let _functions = start(__dirname, __filename, (flair, app) => {
     console.log('!'); // application is started now
 });
