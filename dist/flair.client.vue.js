@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.55.87
- *  Sat, 31 Aug 2019 06:53:24 GMT
+ *  Version: 0.55.95
+ *  Sat, 31 Aug 2019 17:13:43 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -91,8 +91,9 @@
         
             $$('private');
             this.define = async () => {
-                const Vue = await include('vue/vue{.min}.js');   
-                const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
+                const Vue = await include('vue/vue{.min}.js');  
+                const { ViewHandler, ViewState } = ns('flair.ui', './flair.client.js');
+                const { VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
         
                 let viewState = new ViewState(),
                     component = {};
@@ -466,86 +467,6 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.client.vue/flair.boot/VueSetup.js
-        const { Bootware } = await ns('flair.app');
-        
-        /**
-         * @name VueSetup
-         * @description Vue initializer
-         */
-        $$('ns', 'flair.boot');
-        Class('VueSetup', Bootware, function() {
-            $$('override');
-            this.construct = (base) => {
-                base('Vue Setup');
-            };
-        
-            $$('override');
-            this.boot = async (base) => {
-                base();
-        
-                const Vue = await include('vue/vue{.min}.js');
-                const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
-        
-                // setup Vue configuration, if any
-                // TODO: (if any)
-        
-                // load Vue extensions
-                // each plugin in array is defined as:
-                // { "name": "name", "type": "ns.typeName", "options": {} }
-                let extensions = settings.vue.extensions,
-                    ExtType = null,
-                    ext = null;
-                for (let item of extensions) {
-                    if (!item.name) { throw Exception.OperationFailed(`Extension name cannot be empty. (${item.type})`); }
-                    if (!item.type) { throw Exception.OperationFailed(`Extension type cannot be empty. (${item.name})`); }
-                    
-                    ExtType = await include(item.type);
-                    if (as(ExtType, VueComponent)) {
-                        try {
-                            ext = new ExtType();
-                            if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
-                            Vue.component(item.name, await ext.factory()); // register globally
-                        } catch (err) {
-                            throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
-                        }
-                    } else if (as(ExtType, VueDirective)) {
-                        try {
-                            ext = new ExtType();
-                            Vue.directive(item.name, await ext.factory()); // register globally
-                        } catch (err) {
-                            throw Exception.OperationFailed(`Directive registration failed. (${item.type})`, err);
-                        }
-                    } else if (as(ExtType, VueFilter)) {
-                        try {
-                            ext = new ExtType();
-                            // TODO: prevent duplicate filter registration, as done for components
-                            Vue.filter(item.name, await ext.factory());
-                        } catch (err) {
-                            throw Exception.OperationFailed(`Filter registration failed. (${item.type})`, err);
-                        }                
-                    } else if (as(ExtType, VueMixin)) {
-                        try {
-                            ext = new ExtType();
-                            Vue.mixin(await ext.factory());
-                        } catch (err) {
-                            throw Exception.OperationFailed(`Mixin registration failed. (${item.type})`, err);
-                        }
-                    } else if (as(ExtType, VuePlugin)) {
-                        try {
-                            ext = new ExtType(item.name);
-                            Vue.use(await ext.factory(), item.options || {});
-                        } catch (err) {
-                            throw Exception.OperationFailed(`Plugin registration failed. (${item.type})`, err);
-                        }
-                    } else {
-                        throw Exception.InvalidArgument(item.type);
-                    }
-                }
-            };   
-        });
-        
-    })();    
     await (async () => { // type: ./src/flair.client.vue/flair.ui/VueComponent.js
         const { VueComponentMembers } = await ns('flair.ui');
         
@@ -652,7 +573,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client.vue/flair.ui/VueLayout.js
-        const { ViewHandler } = await ns('flair.ui');
+        const { ViewHandler } = await ns('flair.ui', './flair.client.js');
         
         /**
          * @name VueLayout
@@ -758,7 +679,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.client.vue/flair.ui/VueView.js
-        const { ViewHandler, VueComponentMembers } = await ns('flair.ui');
+        const { ViewHandler } = await ns('flair.ui', './flair.client.js');
+        const { VueComponentMembers } = await ns('flair.ui');
         
         /**
          * @name VueView
@@ -846,6 +768,86 @@
             this.layout = null;
         });
         
+    })();    
+    await (async () => { // type: ./src/flair.client.vue/flair.boot/@@1-VueSetup.js
+        const { Bootware } = await ns('flair.app', './flair.app.js');
+        
+        /**
+         * @name VueSetup
+         * @description Vue initializer
+         */
+        $$('ns', 'flair.boot');
+        Class('VueSetup', Bootware, function() {
+            $$('override');
+            this.construct = (base) => {
+                base('Vue Setup');
+            };
+        
+            $$('override');
+            this.boot = async (base) => {
+                base();
+        
+                const Vue = await include('vue/vue{.min}.js');
+                const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
+        
+                // setup Vue configuration, if any
+                // TODO: (if any)
+        
+                // load Vue extensions
+                // each plugin in array is defined as:
+                // { "name": "name", "type": "ns.typeName", "options": {} }
+                let extensions = settings.vue.extensions,
+                    ExtType = null,
+                    ext = null;
+                for (let item of extensions) {
+                    if (!item.name) { throw Exception.OperationFailed(`Extension name cannot be empty. (${item.type})`); }
+                    if (!item.type) { throw Exception.OperationFailed(`Extension type cannot be empty. (${item.name})`); }
+                    
+                    ExtType = await include(item.type);
+                    if (as(ExtType, VueComponent)) {
+                        try {
+                            ext = new ExtType();
+                            if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
+                            Vue.component(item.name, await ext.factory()); // register globally
+                        } catch (err) {
+                            throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
+                        }
+                    } else if (as(ExtType, VueDirective)) {
+                        try {
+                            ext = new ExtType();
+                            Vue.directive(item.name, await ext.factory()); // register globally
+                        } catch (err) {
+                            throw Exception.OperationFailed(`Directive registration failed. (${item.type})`, err);
+                        }
+                    } else if (as(ExtType, VueFilter)) {
+                        try {
+                            ext = new ExtType();
+                            // TODO: prevent duplicate filter registration, as done for components
+                            Vue.filter(item.name, await ext.factory());
+                        } catch (err) {
+                            throw Exception.OperationFailed(`Filter registration failed. (${item.type})`, err);
+                        }                
+                    } else if (as(ExtType, VueMixin)) {
+                        try {
+                            ext = new ExtType();
+                            Vue.mixin(await ext.factory());
+                        } catch (err) {
+                            throw Exception.OperationFailed(`Mixin registration failed. (${item.type})`, err);
+                        }
+                    } else if (as(ExtType, VuePlugin)) {
+                        try {
+                            ext = new ExtType(item.name);
+                            Vue.use(await ext.factory(), item.options || {});
+                        } catch (err) {
+                            throw Exception.OperationFailed(`Plugin registration failed. (${item.type})`, err);
+                        }
+                    } else {
+                        throw Exception.InvalidArgument(item.type);
+                    }
+                }
+            };   
+        });
+        
     })();
     // assembly types (end)
     
@@ -854,10 +856,10 @@
     // assembly embedded resources (end)        
     
     // clear assembly being loaded
-    AppDomain.context.current().currentAssemblyBeingLoaded('');
+    AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.87","lupdate":"Sat, 31 Aug 2019 06:53:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.boot.VueSetup","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.ui.VueView"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.95","lupdate":"Sat, 31 Aug 2019 17:13:43 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.ui.VueView","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

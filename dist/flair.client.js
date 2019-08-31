@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.87
- *  Sat, 31 Aug 2019 06:53:23 GMT
+ *  Version: 0.55.95
+ *  Sat, 31 Aug 2019 17:13:42 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -79,8 +79,25 @@
     
     // assembly types (start)
         
-    await (async () => { // type: ./src/flair.client/flair.ui/@1-ViewHandler.js
-        const { Handler } = await ns('flair.app');
+    await (async () => { // type: ./src/flair.client/flair.ui/@1-ViewTransition.js
+        /**
+         * @name ViewTransition
+         * @description GUI View Transition
+         */
+        $$('ns', 'flair.ui');
+        Class('ViewTransition', function() {
+            $$('virtual');
+            $$('async');
+            this.enter = noop;
+        
+            $$('virtual');
+            $$('async');
+            this.leave = noop;
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.client/flair.ui/@2-ViewHandler.js
+        const { Handler } = await ns('flair.app', './flair.app.js');
         const { ViewTransition } = await ns('flair.ui');
         
         /**
@@ -335,7 +352,7 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.client/flair.ui/@2-Page.js
+    await (async () => { // type: ./src/flair.client/flair.ui/@3-Page.js
         /**
          * @name Page
          * @description Page routing (inspired from (https://www.npmjs.com/package/page))
@@ -639,7 +656,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.app/ClientHost.js
-        const { Host, RouteSettingReader } = await ns('flair.app');
+        const { Host, RouteSettingReader } = await ns('flair.app', './flair.app.js');
         const { ViewHandler, Page } = await ns('flair.ui');
         
         /**
@@ -874,7 +891,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app');
+        const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
         const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
         
         /**
@@ -1029,23 +1046,6 @@
             this.clear = () => { this.store = null; }
         });
         
-    })();    
-    await (async () => { // type: ./src/flair.client/flair.ui/ViewTransition.js
-        /**
-         * @name ViewTransition
-         * @description GUI View Transition
-         */
-        $$('ns', 'flair.ui');
-        Class('ViewTransition', function() {
-            $$('virtual');
-            $$('async');
-            this.enter = noop;
-        
-            $$('virtual');
-            $$('async');
-            this.leave = noop;
-        });
-        
     })();
     // assembly types (end)
     
@@ -1054,10 +1054,10 @@
     // assembly embedded resources (end)        
     
     // clear assembly being loaded
-    AppDomain.context.current().currentAssemblyBeingLoaded('');
+    AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.87","lupdate":"Sat, 31 Aug 2019 06:53:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.95","lupdate":"Sat, 31 Aug 2019 17:13:42 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
