@@ -3,7 +3,7 @@
     "title": "Flair.js Fabric",
     "description": "Foundation for True Object Oriented JavaScript Apps",
     "copyright": "(c) 2017-2019 Vikas Burman",
-    "version": "0.55.96",
+    "version": "0.55.98",
     "author": "Vikas Burman <vikasburman@gmail.com>",
     "keywords": [
         "javascript",
@@ -25,7 +25,7 @@
         "build": "flair build --options ./config/build/options.json",
         "build-full": "flair build --options ./config/build/options.json --full",
         "build-quick": "flair build --options ./config/build/options.json --quick",
-        "package": "flair pack --options ./config/package/options.json && npm pack ./publish/package/npm",
+        "package": "yarn build && flair pack --options ./config/package/options.json && npm pack ./publish/package/npm",
         "test": "flair test --options ./config/test/options.json",
         "test-client": "flair test --options ./config/test/options.json --client",
         "serve": "http-server ./ -p8088 && pkill -f http-server",
@@ -37,7 +37,7 @@
         "http-server": "^0.11.1"
     },
     "peerDependencies": {
-        "flairjs": "^0.55.89"
+        "flairjs": "^0.55.91"
     },
     "dependencies": {
         "node-env-file": "^0.1.8",

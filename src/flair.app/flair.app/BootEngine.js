@@ -11,7 +11,7 @@ Class('(auto)', function() {
         let allBootwares = [],
             mountSpecificBootwares = [];
         const loadConfiguredEnv = async () => {
-            env.x = Object.freeze(settings.boot.env); // add it once as freezed
+            env.x(settings.boot.env); // add it once as freezed
         };
         const loadScripts = async () => { // scripts loading is supported only on client ui environment
             if (env.isClient && !env.isWorker) {
@@ -93,7 +93,7 @@ Class('(auto)', function() {
                     let items = item.split(':'),
                         envProp = items[0].trim(),
                         item = items[1].trim();
-                    if (env[envProp] || env.x[envProp]) { // if envProp is defined either at root env or at extended env, and true
+                    if (env[envProp] || env.x()[envProp]) { // if envProp is defined either at root env or at extended env, and true
                         await AppDomain.context.loadAssembly(item);
                     }
                 } else { // no condition
