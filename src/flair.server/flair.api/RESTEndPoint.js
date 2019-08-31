@@ -1,4 +1,4 @@
-const { RestHandler } = ns('flair.api');
+const { RestHandler } = await ns('flair.api');
 
 /**
  * @name RESTEndPoint

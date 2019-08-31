@@ -1,4 +1,5 @@
-const Handler = await include('flair.app.Handler');
+const { Handler } = await ns('flair.app');
+const { ViewTransition } = await ns('flair.ui');
 
 /**
  * @name ViewHandler
@@ -93,8 +94,6 @@ Class('(auto)', Handler, function() {
     this.onCancelLoadData = noop;    
 
     this.view = async (ctx) => {
-        const { ViewTransition } = ns('flair.ui');
-
         // give it a unique name, if not already given
         this.name = this.name || this.$Type.getName(true); // $Type is the main view which is finally inheriting this ViewHandler
         this.$static.loadingViewName = this.name;

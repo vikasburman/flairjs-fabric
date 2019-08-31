@@ -1,5 +1,5 @@
-const { IDisposable } = ns();
-const { Bootware } = ns('flair.app');
+const { IDisposable } = await ns();
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name App

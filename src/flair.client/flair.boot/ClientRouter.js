@@ -1,4 +1,5 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
+const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
 
 /**
  * @name ClientRouter
@@ -7,8 +8,6 @@ const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootwa
 $$('sealed');
 $$('ns', '(auto)');
 Class('(auto)', Bootware, function () {
-    const { ViewHandler, ViewInterceptor } = ns('flair.ui');
-
     let routes = null;
     
     $$('override');

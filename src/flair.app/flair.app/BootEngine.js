@@ -1,4 +1,4 @@
-const { Bootware } = ns('flair.app');
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name BootEngine

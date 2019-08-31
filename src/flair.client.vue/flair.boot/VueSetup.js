@@ -1,4 +1,4 @@
-const Bootware = await include('flair.app.Bootware');
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name VueSetup
@@ -16,8 +16,8 @@ Class('(auto)', Bootware, function() {
         base();
 
         const Vue = await include('vue/vue{.min}.js');
-        const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = ns('flair.ui');
-        
+        const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
+
         // setup Vue configuration, if any
         // TODO: (if any)
 

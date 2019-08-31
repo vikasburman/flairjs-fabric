@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
+const { Bootware, RouteSettingReader } = await ns('flair.app');
 
 /**
  * @name Middlewares

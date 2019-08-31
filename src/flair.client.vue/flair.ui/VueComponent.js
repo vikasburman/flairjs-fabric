@@ -1,4 +1,4 @@
-const { VueComponentMembers } = ns('flair.ui');
+const { VueComponentMembers } = await ns('flair.ui');
 
 /**
  * @name VueComponent

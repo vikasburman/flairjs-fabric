@@ -1,5 +1,3 @@
-const ViewHandler = await include('flair.ui.ViewHandler');
-
 /**
  * @name VueComponentMembers
  * @description Vue Component Members
@@ -12,7 +10,7 @@ Mixin('(auto)', function() {
     $$('private');
     this.define = async () => {
         const Vue = await include('vue/vue{.min}.js');   
-        const { ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = ns('flair.ui');
+        const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
 
         let viewState = new ViewState(),
             component = {};

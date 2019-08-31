@@ -1,4 +1,4 @@
-const { Host, RouteSettingReader } = await ns('flair.app', 'flair.app.Host');
+const { Host, RouteSettingReader } = await ns('flair.app');
 
 /**
  * @name ServerHost

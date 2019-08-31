@@ -1,4 +1,5 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
+const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { RestHandler, RestInterceptor } = await ns('flair.api');
 
 /**
  * @name ServerRouter
@@ -7,8 +8,6 @@ const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootwa
 $$('sealed');
 $$('ns', '(auto)');
 Class('(auto)', Bootware, function () {
-    const { RestHandler, RestInterceptor } = ns('flair.api');
-
     let routes = null;
     
     $$('override');

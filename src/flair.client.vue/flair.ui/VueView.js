@@ -1,4 +1,4 @@
-const { ViewHandler, VueComponentMembers } = ns('flair.ui');
+const { ViewHandler, VueComponentMembers } = await ns('flair.ui');
 
 /**
  * @name VueView

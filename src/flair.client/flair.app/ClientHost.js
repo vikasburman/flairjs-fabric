@@ -1,5 +1,5 @@
-const { Host, RouteSettingReader } = await ns('flair.app', 'flair.app.Host');
-const { ViewHandler, Page } = ns('flair.ui');
+const { Host, RouteSettingReader } = await ns('flair.app');
+const { ViewHandler, Page } = await ns('flair.ui');
 
 /**
  * @name ClientHost

@@ -1,5 +1,5 @@
 
-const { IDisposable } = ns();
+const { IDisposable } = await ns();
 
 /**
  * @name Handler
