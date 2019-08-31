@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.55.85
- *  Sat, 31 Aug 2019 03:45:05 GMT
+ *  Version: 0.55.86
+ *  Sat, 31 Aug 2019 05:17:33 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -80,7 +80,7 @@
     // assembly types (start)
         
     await (async () => { // type: ./src/flair.server/flair.api/@1-RestHandler.js
-        const Handler = await include('flair.app.Handler');
+        const { Handler } = await ns('flair.app');
         
         /**
          * @name RestHandler
@@ -138,7 +138,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.server/flair.api/RESTEndPoint.js
-        const { RestHandler } = ns('flair.api');
+        const { RestHandler } = await ns('flair.api');
         
         /**
          * @name RESTEndPoint
@@ -164,7 +164,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.server/flair.boot/NodeEnv.js
-        const Bootware = await include('flair.app.Bootware');
+        const { Bootware } = await ns('flair.app');
         
         /**
          * @name NodeEnv
@@ -205,7 +205,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.85","lupdate":"Sat, 31 Aug 2019 03:45:05 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.86","lupdate":"Sat, 31 Aug 2019 05:17:33 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

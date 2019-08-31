@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.55.85
- *  Sat, 31 Aug 2019 03:45:04 GMT
+ *  Version: 0.55.86
+ *  Sat, 31 Aug 2019 05:17:32 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -80,7 +80,8 @@
     // assembly types (start)
         
     await (async () => { // type: ./src/flair.client/flair.ui/@1-ViewHandler.js
-        const Handler = await include('flair.app.Handler');
+        const { Handler } = await ns('flair.app');
+        const { ViewTransition } = await ns('flair.ui');
         
         /**
          * @name ViewHandler
@@ -175,8 +176,6 @@
             this.onCancelLoadData = noop;    
         
             this.view = async (ctx) => {
-                const { ViewTransition } = ns('flair.ui');
-        
                 // give it a unique name, if not already given
                 this.name = this.name || this.$Type.getName(true); // $Type is the main view which is finally inheriting this ViewHandler
                 this.$static.loadingViewName = this.name;
@@ -640,8 +639,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.app/ClientHost.js
-        const { Host, RouteSettingReader } = await ns('flair.app', 'flair.app.Host');
-        const { ViewHandler, Page } = ns('flair.ui');
+        const { Host, RouteSettingReader } = await ns('flair.app');
+        const { ViewHandler, Page } = await ns('flair.ui');
         
         /**
          * @name ClientHost
@@ -875,7 +874,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app', 'flair.app.Bootware');
+        const { Bootware, RouteSettingReader } = await ns('flair.app');
+        const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
         
         /**
          * @name ClientRouter
@@ -884,8 +884,6 @@
         $$('sealed');
         $$('ns', 'flair.boot');
         Class('ClientRouter', Bootware, function () {
-            const { ViewHandler, ViewInterceptor } = ns('flair.ui');
-        
             let routes = null;
             
             $$('override');
@@ -1059,7 +1057,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('');
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.85","lupdate":"Sat, 31 Aug 2019 03:45:04 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.55.86","lupdate":"Sat, 31 Aug 2019 05:17:32 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState","flair.ui.ViewTransition"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
