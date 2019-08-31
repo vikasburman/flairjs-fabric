@@ -16,8 +16,21 @@ Mixin('(auto)', function() {
         let viewState = new ViewState(),
             component = {};
 
+        // base name
+        let typeQualifiedName = this.$Type.getName(),
+            baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1);
+        this.baseName = baseName;
+
         // get port
         let clientFileLoader = Port('clientFile');  
+
+        // auto wire html and styles, if configured as 'true' - for making it ready to pick from assets below
+        if (typeof this.style === 'boolean' && this.style) {
+            this.style = which(`./${baseName}/index{.min}.css`, true);
+        }
+        if (typeof this.html === 'boolean' && this.html) {
+            this.html = which(`./${baseName}/index{.min}.html`, true);
+        }
 
         // load style content in property
         if (this.style && this.style.endsWith('.css')) { // if style file is defined via $$('asset', '<fileName>'); OR directly name is written
@@ -45,13 +58,23 @@ Mixin('(auto)', function() {
 
         // local i18n resources
         // each i18n resource file is defined as:
-        // "ns": "json-file-name"
+        // { "ns": "json-file-name", "ns2": "", ... }
+        // OR 
+        // 'ns, ns1' - if json-file-name is same as ns suffixed with .json
+        // which means: 'ns' will become './ns.json' and 'ns1' will become './ns1,json'
         // when loaded, each ns will convert into JSON object from defined file
         if(this.i18n) {
             let i18ResFile = '';
+            if (typeof this.i18n === 'string') {
+                let nsItems = this.i18n.split(',');
+                this.i18n = {}; // set it as empty object
+                for(let nsItem of nsItems) {
+                    this.i18n[nsItem.trim()] = false; // so in next loop, it gets replaced with default auto-wired value
+                }
+            }
             for(let i18nNs in this.i18n) {
                 if (this.i18n.hasOwnProperty(i18nNs)) {
-                    i18ResFile = this.$Type.getAssembly().getLocaleFilePath(this.locale(), this.i18n[i18nNs]);
+                    i18ResFile = this.$Type.getAssembly().getLocaleFilePath(this.locale(), (this.i18n[i18nNs] || `./${i18nNs}.json`));
                     this.i18n[i18nNs] = await clientFileLoader(i18ResFile); // this will load defined json file as json object here
                 }
             }
@@ -137,14 +160,8 @@ Mixin('(auto)', function() {
             component.methods['locale'] = (value) => { return _this.locale(value); };
 
             // supporting built-in method: i18n 
-            // e.g., {{ i18n('shared', 'OK', 'Ok!') }} will give: 'Ok' if this was the translation added in shared.json::OK key
-            component.methods['i18n'] = (ns, key, defaultValue) => {  
-                if (env.isDebug && defaultValue) { defaultValue = ':' + defaultValue + ':'; } // so it becomes visible that this is default value and string is not found
-                if (_this.i18n && _this.i18n[ns] && _this.i18n[ns][key]) {
-                    return _this.i18n[ns][key] || defaultValue || '(i18n: 404)';
-                }
-                return defaultValue || '(i18n: 404)';
-            };
+            // e.g., {{ i18n('@strings.OK | Ok!') }} will give: '<whatever>' if this was the translation added in strings.json::OK key - ELSE it will give 'Ok!'
+            component.methods['i18n'] = (key) => { return _this.i18nValue(key); };
         }
 
         // watch
@@ -324,6 +341,9 @@ Mixin('(auto)', function() {
     this.id = _thisId;
 
     $$('protected');
+    this.baseName = '';
+
+    $$('protected');
     this.locale = (value) => { return AppDomain.host().locale(value); };
 
     $$('protected');
@@ -334,6 +354,27 @@ Mixin('(auto)', function() {
 
     $$('protected');
     this.i18n = null;
+
+    $$('protected');
+    this.i18nValue = (key) => {
+        let value = key || '',
+            notFoundRepresentative = (env.isDebug ? ':' : '');
+
+        // key can also be defined as: 
+        //  @i18nNs.keyName | default value
+        //  the value
+        if (key && key.startsWith('@')) {
+            key = key.substr(1); // remove @
+            let keyItems = key.split('|');
+            key = keyItems[0].trim();
+            value = keyItems[1].trim() || '';
+            if (this.i18n) {
+                value = lens(this.i18n, key) || (notFoundRepresentative + value + notFoundRepresentative);
+                // Note: notFoundRepresentative is added, to visually display in debug mode that key was defined, but key not found in json
+            }
+        }
+        return value || '(i18n: 404)'; // finally if no default was defined
+    };
 
     $$('protected');
     this.style = '';

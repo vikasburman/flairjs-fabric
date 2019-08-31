@@ -9,6 +9,19 @@ $$('ns', '(auto)');
 Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('private');
     this.factory = async () => {
+         // get port
+        let clientFileLoader = Port('clientFile');
+
+        // load layout first, if only layout type name is given
+        if (typeof this.layout === 'string') {
+            let layoutType = await include(this.layout);
+            if (layoutType) {
+                this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
+            } else {
+                throw Exception.NotFound(`Layout not found. (${this.layout})`);
+            }
+        }
+
         // merge layout's components
         // each area here can be as:
         // { "area: "", component": "", "type": "" } 
@@ -27,6 +40,9 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
         // coming from VueComponentMembers mixin
         let component = await this.define();
 
+        // set title 
+        this.title = this.i18nValue(this.title);
+
         // el
         // https://vuejs.org/v2/api/#el
         component.el = '#' + this.name;
@@ -35,6 +51,14 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
         // https://vuejs.org/v2/api/#propsData
         if (this.propsData) {
             component.propsData = this.propsData;
+        }
+
+        // auto load static data from a json file in asset, if configured as 'true'
+        if (typeof this.data === 'boolean' && this.data) {
+            let staticDataFile = which(`./${this.baseName}/index{.min}.json`, true);
+            staticDataFile = this.$Type.getAssembly().getAssetFilePath(staticDataFile);
+            // load file content
+            this.data = await clientFileLoader(staticDataFile);
         }
 
         // data
