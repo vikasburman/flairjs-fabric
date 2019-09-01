@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name Middlewares
@@ -26,7 +26,7 @@ Class('(auto)', Bootware, function() {
         //       define it as: "return (res, path, stat) => { res.set('x-timestamp', Date.now()) }"
         //       this string will be passed to new Function(...) and returned values will be used as value of option
         //       all object type arguments will be scanned for string values that start with 'return ' and will be tried to convert into a function
-        let middlewares = RouteSettingReader.getMergedSection('middlewares', settings.routing, mount.name, 'name');
+        let middlewares = this.getMountSpecificSettings('middlewares', settings.routing, mount.name, 'name');
         if (middlewares && middlewares.length > 0) {
             let mod = null,
                 func = null;

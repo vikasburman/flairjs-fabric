@@ -1,13 +1,16 @@
 {
     "view": {
         "el": "main",
-        "title": "",
-        "transition": ""
-    },
-
-    "routes": {
-        "home": "",
-        "notfound": ""
+        "transition": "",
+        "static": {
+            "fileExt": "xml",
+            "root": "./static/",
+            "handler": ""
+        },
+        "routes": {
+            "home": "",
+            "notfound": ""
+        }
     },
 
     "i18n": {

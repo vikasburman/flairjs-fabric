@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { Bootware } = await ns('flair.app');
 const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
 
 /**
@@ -34,9 +34,16 @@ Class('(auto)', Bootware, function () {
         }
 
         const runHandler = async (routeHandler, ctx) => {
+            // static handler
+            let staticFile = null;
+            if (routeHandler.endsWith('.' + (settings.view.static.fileExt || 'xml')) { // static
+                staticFile = routeHandler;
+                routeHandler = settings.view.static.handler || '';
+            }
+
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {
-                let rh = new RouteHandler();
+                let rh = (staticFile ? new RouteHandler(staticFile) : new RouteHandler());
                 await rh.view(ctx);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -57,7 +64,7 @@ Class('(auto)', Bootware, function () {
                 // each interceptor is derived from ViewInterceptor and
                 // async run method of it takes ctx, can update it
                 // each item is: "InterceptorTypeQualifiedName"
-                let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
+                let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
                 for(let ic of mountInterceptors) {
                     let ICType = as(await include(ic), ViewInterceptor);
                     if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
@@ -69,14 +76,20 @@ Class('(auto)', Bootware, function () {
                 // handle route
                 if (!ctx.$stop) {
                     // route.handler can be defined as:
-                    // string: qualified type name of the handler
+                    // string: 
+                    //      qualified type name of the handler (e.g., abc.xyz)
+                    //          one limitation is that the name of the type cannot ends with '.xml' (or configured fileExt)
+                    //      OR
+                    //      static view name - ends with '.xml' (or configured fileExt) (e.g., ./about.xml or ./path/contact.xml)
+                    //          this XML file must be present in on specified path under configured 'static' root folder
                     // object: { "routingContext": "handler", ...}
-                    //  routingContext can be any value that represents a routing context for whatever situation 
-                    //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                    //  basis it will pick required handler from here some examples of handlers can be:
-                    //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
-                    //      free | freemium | full  - if some routing is to be based on license model
-                    //      anything else
+                    //      routingContext can be any value that represents a routing context for whatever situation 
+                    //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                    //      basis it will pick required handler from here some examples of handlers can be:
+                    //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                    //          free | freemium | full  - if some routing is to be based on license model
+                    //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
+                    //          anything else
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
                     await runHandler(routeHandler, ctx);
@@ -89,7 +102,7 @@ Class('(auto)', Bootware, function () {
         for (let route of routes) {
             // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
             if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
-                if (route.name !== settings.routes.notfound) { // add all except the 404 route
+                if (route.name !== settings.view.routes.notfound) { // add all except the 404 route
                     app.add(route, getHandler(route));
                 } 
             }
@@ -100,7 +113,7 @@ Class('(auto)', Bootware, function () {
             // 404 handler does not run interceptors
             // and instead of running the route (for which this ctx was setup)
             // it will pick the handler of notfound route and show that view with this ctx
-            let route404 = settings.routes.notfound;
+            let route404 = settings.view.routes.notfound;
             if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
             if (!route404) { // nothing else can be done
                 setTimeout(() => { window.history.back(); }, 0);

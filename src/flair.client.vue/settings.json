@@ -3,7 +3,16 @@
         "extensions": []
     },
 
-    "lauoyts": {
-        "default": ""
+    "layout": {
+        "default": "",
+        "viewAreaEl": "view"
+    },
+
+    "static": {
+        "layout": "",
+        "i18n": ""
+    },
+
+    "showdown": {
     }
 }

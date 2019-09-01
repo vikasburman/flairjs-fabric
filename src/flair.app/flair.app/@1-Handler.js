@@ -8,10 +8,8 @@ const { IDisposable } = await ns();
 $$('ns', '(auto)');
 Class('(auto)', [IDisposable], function() {
     $$('virtual');
-    this.construct = () => {
-    };
+    this.construct = noop;
 
     $$('virtual');
-    this.dispose = () => {
-    };
+    this.dispose = noop;
 });

@@ -11,18 +11,29 @@ Class('(auto)', Handler, function() {
         abortControllers = {};       
 
     $$('override');
-    this.construct = (base, el, title, transition) => {
+    this.construct = (base, staticFile) => {
         base();
 
-        // read from setting which are not specified
-        el = el || settings.view.el || 'main';
-        title = title || settings.view.title || '';
-        transition = transition || settings.view.transition || '';
+        mainEl = settings.view.el || 'main';
+        this.viewTransition = settings.view.transition || '';
 
-        mainEl = el;
-        this.viewTransition = transition;
-        this.title = this.title + (title ? ' - ' + title : '');
+        // static view situation
+        if (typeof staticFile === 'string') {
+            this.isStatic = true;
+            this.staticRoot = settings.view.static.root || './static/';
+            this.staticFile = staticFile.replace('./', this.staticRoot);
+        }
     };
+
+    $$('readonly');
+    this.isStatic = false;
+
+    $$('readonly');
+    this.staticFile = '';
+
+    $$('protected');
+    $$('readonly');
+    this.staticRoot = '';
 
     $$('privateSet');
     this.viewTransition = '';
@@ -37,6 +48,11 @@ Class('(auto)', Handler, function() {
     // { "<nameOfAttribute>": "<contentOfAttribute>", "<nameOfAttribute>": "<contentOfAttribute>", ... }
     $$('protectedSet');
     this.meta = null;
+
+    $$('protected');
+    $$('virtual');
+    $$('async');
+    this.loadStaticFile = noop;
 
     $$('protected');
     $$('virtual');
@@ -120,6 +136,11 @@ Class('(auto)', Handler, function() {
             el = DOC.getElementById(this.name);
         }
         
+        // static file load support
+        if (this.isStatic) {
+            await this.loadStaticFile(ctx);
+        }
+
         // custom load op before view is created
         await this.beforeLoad(ctx, el);      
 

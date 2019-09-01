@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name ResHeaders
@@ -16,7 +16,7 @@ Class('(auto)', Bootware, function() {
     this.boot = async (base, mount) => {
         base();
         
-        let resHeaders = RouteSettingReader.getMergedSection('resHeaders', settings.routing, mount.name, 'name');
+        let resHeaders = this.getMountSpecificSettings('resHeaders', settings.routing, mount.name, 'name');
         if (resHeaders && resHeaders.length > 0) {
             mount.app.use((req, res, next) => {
                 // each item is: { name: '', value:  }

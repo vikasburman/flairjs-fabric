@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app');
+const { Bootware } = await ns('flair.app');
 const { RestHandler, RestInterceptor } = await ns('flair.api');
 
 /**
@@ -67,12 +67,12 @@ Class('(auto)', Bootware, function () {
                             // route.handler can be defined as:
                             // string: qualified type name of the handler
                             // object: { "routingContext": "handler", ...}
-                            //  routingContext can be any value that represents a routing context for whatever situation 
-                            //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                            //  basis it will pick required handler from here some examples of handlers can be:
-                            //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
-                            //      free | freemium | full  - if some routing is to be based on license model
-                            //      anything else
+                            //      routingContext can be any value that represents a routing context for whatever situation 
+                            //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                            //      basis it will pick required handler from here some examples of handlers can be:
+                            //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                            //          free | freemium | full  - if some routing is to be based on license model
+                            //          anything else
                             //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                             let routeHandler = chooseRouteHandler(route);
                             include(routeHandler).then((theType) => {
@@ -108,7 +108,7 @@ Class('(auto)', Bootware, function () {
                         // each interceptor is derived from RestInterceptor and
                         // run method of it takes req, can update it, also takes res method and can generate response, in case request is being stopped
                         // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
+                        let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
                         runInterceptors(mountInterceptors, req, res).then(() => {
                             if (!req.$stop) {
                                 handleRoute();

@@ -1,4 +1,4 @@
-const { Host, RouteSettingReader } = await ns('flair.app');
+const { Host } = await ns('flair.app');
 const { ViewHandler, Page } = await ns('flair.ui');
 
 /**
@@ -148,7 +148,7 @@ Class('(auto)', Host, function() {
             mount = null;
         const getSettings = (mountName) => {
             // each item is: { name: '', value:  }
-            let pageSettings = RouteSettingReader.getMergedSection('settings', settings.routing, mountName, 'name');
+            let pageSettings = this.getMountSpecificSettings('settings', settings.routing, mountName, 'name');
             if (pageSettings && pageSettings.length > 0) {
                 for(let pageSetting of pageSettings) {
                     appSettings[pageSetting.name] = pageSetting.value;
@@ -207,8 +207,8 @@ Class('(auto)', Host, function() {
         window.addEventListener('hashchange', hashChangeHandler);
 
         // redirect to home
-        if (settings.routes.home) {
-            await this.redirect(settings.routes.home, {}, true); // force refresh but don't let history entry added for first page
+        if (settings.view.routes.home) {
+            await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
         }
 
         // ready
