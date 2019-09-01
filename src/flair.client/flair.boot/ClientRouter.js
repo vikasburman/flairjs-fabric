@@ -1,4 +1,4 @@
-const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+const { Bootware, RouteSettingReader } = await ns('flair.app');
 const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
 
 /**

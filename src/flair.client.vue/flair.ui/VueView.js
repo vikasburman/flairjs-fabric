@@ -1,4 +1,4 @@
-const { ViewHandler } = await ns('flair.ui', './flair.client.js');
+const { ViewHandler } = await ns('flair.ui');
 const { VueComponentMembers } = await ns('flair.ui');
 
 /**

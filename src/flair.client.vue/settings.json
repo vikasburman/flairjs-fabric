@@ -1,5 +1,9 @@
 {
     "vue": {
         "extensions": []
+    },
+
+    "lauoyts": {
+        "default": ""
     }
 }

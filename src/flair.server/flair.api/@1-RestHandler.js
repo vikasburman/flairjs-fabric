@@ -1,4 +1,4 @@
-const { Handler } = await ns('flair.app', './flair.app.js');
+const { Handler } = await ns('flair.app');
 
 /**
  * @name RestHandler
