@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.56.24
- *  Mon, 02 Sep 2019 17:16:26 GMT
+ *  Version: 0.56.25
+ *  Mon, 02 Sep 2019 18:22:54 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -417,7 +417,7 @@
                         if (item) { // in case no item is set for either server/client
                             // suffix preamble.js
                             if (!item.endsWith('/')) { item += '/'; }
-                            item += 'preamble.js';
+                            item += 'preamble{.min}.js'; // as bundled preambles can be minified too
         
                             // this loads it as a function which is called here
                             preambleLoader = await include(item);
@@ -654,7 +654,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.24","lupdate":"Mon, 02 Sep 2019 17:16:26 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.25","lupdate":"Mon, 02 Sep 2019 18:22:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
