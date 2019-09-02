@@ -5,7 +5,7 @@
         "static": {
             "fileExt": "xml",
             "root": "./static/",
-            "handler": ""
+            "handler": "flair.ui.StaticView"
         },
         "routes": {
             "home": "",
