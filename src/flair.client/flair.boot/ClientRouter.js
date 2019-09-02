@@ -36,7 +36,7 @@ Class('(auto)', Bootware, function () {
         const runHandler = async (routeHandler, ctx) => {
             // static handler
             let staticFile = null;
-            if (routeHandler.endsWith('.' + (settings.view.static.fileExt || 'xml')) { // static
+            if (routeHandler.endsWith('.' + (settings.view.static.fileExt || 'xml'))) { // static
                 staticFile = routeHandler;
                 routeHandler = settings.view.static.handler || '';
             }

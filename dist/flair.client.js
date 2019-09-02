@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.56.14
- *  Sat, 31 Aug 2019 23:25:55 GMT
+ *  Version: 0.56.17
+ *  Mon, 02 Sep 2019 00:01:44 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.client', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"view":{"el":"main","title":"","transition":""},"routes":{"home":"","notfound":""},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"lang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
+    let settings = JSON.parse('{"view":{"el":"main","transition":"","static":{"fileExt":"xml","root":"./static/","handler":""},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"lang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
@@ -97,7 +97,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@2-ViewHandler.js
-        const { Handler } = await ns('flair.app', './flair.app.js');
+        const { Handler } = await ns('flair.app');
         const { ViewTransition } = await ns('flair.ui');
         
         /**
@@ -110,18 +110,29 @@
                 abortControllers = {};       
         
             $$('override');
-            this.construct = (base, el, title, transition) => {
+            this.construct = (base, staticFile) => {
                 base();
         
-                // read from setting which are not specified
-                el = el || settings.view.el || 'main';
-                title = title || settings.view.title || '';
-                transition = transition || settings.view.transition || '';
+                mainEl = settings.view.el || 'main';
+                this.viewTransition = settings.view.transition || '';
         
-                mainEl = el;
-                this.viewTransition = transition;
-                this.title = this.title + (title ? ' - ' + title : '');
+                // static view situation
+                if (typeof staticFile === 'string') {
+                    this.isStatic = true;
+                    this.staticRoot = settings.view.static.root || './static/';
+                    this.staticFile = staticFile.replace('./', this.staticRoot);
+                }
             };
+        
+            $$('readonly');
+            this.isStatic = false;
+        
+            $$('readonly');
+            this.staticFile = '';
+        
+            $$('protected');
+            $$('readonly');
+            this.staticRoot = '';
         
             $$('privateSet');
             this.viewTransition = '';
@@ -136,6 +147,11 @@
             // { "<nameOfAttribute>": "<contentOfAttribute>", "<nameOfAttribute>": "<contentOfAttribute>", ... }
             $$('protectedSet');
             this.meta = null;
+        
+            $$('protected');
+            $$('virtual');
+            $$('async');
+            this.loadStaticFile = noop;
         
             $$('protected');
             $$('virtual');
@@ -219,6 +235,11 @@
                     el = DOC.getElementById(this.name);
                 }
                 
+                // static file load support
+                if (this.isStatic) {
+                    await this.loadStaticFile(ctx);
+                }
+        
                 // custom load op before view is created
                 await this.beforeLoad(ctx, el);      
         
@@ -656,7 +677,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.app/ClientHost.js
-        const { Host, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+        const { Host } = await ns('flair.app');
         const { ViewHandler, Page } = await ns('flair.ui');
         
         /**
@@ -806,7 +827,7 @@
                     mount = null;
                 const getSettings = (mountName) => {
                     // each item is: { name: '', value:  }
-                    let pageSettings = RouteSettingReader.getMergedSection('settings', settings.routing, mountName, 'name');
+                    let pageSettings = this.getMountSpecificSettings('settings', settings.routing, mountName, 'name');
                     if (pageSettings && pageSettings.length > 0) {
                         for(let pageSetting of pageSettings) {
                             appSettings[pageSetting.name] = pageSetting.value;
@@ -865,8 +886,8 @@
                 window.addEventListener('hashchange', hashChangeHandler);
         
                 // redirect to home
-                if (settings.routes.home) {
-                    await this.redirect(settings.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                if (settings.view.routes.home) {
+                    await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
                 }
         
                 // ready
@@ -891,7 +912,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+        const { Bootware } = await ns('flair.app');
         const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
         
         /**
@@ -927,9 +948,16 @@
                 }
         
                 const runHandler = async (routeHandler, ctx) => {
+                    // static handler
+                    let staticFile = null;
+                    if (routeHandler.endsWith('.' + (settings.view.static.fileExt || 'xml'))) { // static
+                        staticFile = routeHandler;
+                        routeHandler = settings.view.static.handler || '';
+                    }
+        
                     let RouteHandler = as(await include(routeHandler), ViewHandler);
                     if (RouteHandler) {
-                        let rh = new RouteHandler();
+                        let rh = (staticFile ? new RouteHandler(staticFile) : new RouteHandler());
                         await rh.view(ctx);
                     } else {
                         throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -950,7 +978,7 @@
                         // each interceptor is derived from ViewInterceptor and
                         // async run method of it takes ctx, can update it
                         // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
+                        let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
                         for(let ic of mountInterceptors) {
                             let ICType = as(await include(ic), ViewInterceptor);
                             if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
@@ -962,14 +990,20 @@
                         // handle route
                         if (!ctx.$stop) {
                             // route.handler can be defined as:
-                            // string: qualified type name of the handler
+                            // string: 
+                            //      qualified type name of the handler (e.g., abc.xyz)
+                            //          one limitation is that the name of the type cannot ends with '.xml' (or configured fileExt)
+                            //      OR
+                            //      static view name - ends with '.xml' (or configured fileExt) (e.g., ./about.xml or ./path/contact.xml)
+                            //          this XML file must be present in on specified path under configured 'static' root folder
                             // object: { "routingContext": "handler", ...}
-                            //  routingContext can be any value that represents a routing context for whatever situation 
-                            //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                            //  basis it will pick required handler from here some examples of handlers can be:
-                            //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
-                            //      free | freemium | full  - if some routing is to be based on license model
-                            //      anything else
+                            //      routingContext can be any value that represents a routing context for whatever situation 
+                            //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                            //      basis it will pick required handler from here some examples of handlers can be:
+                            //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                            //          free | freemium | full  - if some routing is to be based on license model
+                            //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
+                            //          anything else
                             //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                             let routeHandler = chooseRouteHandler(route);
                             await runHandler(routeHandler, ctx);
@@ -982,7 +1016,7 @@
                 for (let route of routes) {
                     // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
                     if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
-                        if (route.name !== settings.routes.notfound) { // add all except the 404 route
+                        if (route.name !== settings.view.routes.notfound) { // add all except the 404 route
                             app.add(route, getHandler(route));
                         } 
                     }
@@ -993,7 +1027,7 @@
                     // 404 handler does not run interceptors
                     // and instead of running the route (for which this ctx was setup)
                     // it will pick the handler of notfound route and show that view with this ctx
-                    let route404 = settings.routes.notfound;
+                    let route404 = settings.view.routes.notfound;
                     if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
                     if (!route404) { // nothing else can be done
                         setTimeout(() => { window.history.back(); }, 0);
@@ -1057,7 +1091,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.14","lupdate":"Sat, 31 Aug 2019 23:25:55 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.17","lupdate":"Mon, 02 Sep 2019 00:01:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

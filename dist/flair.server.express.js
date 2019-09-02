@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.56.14
- *  Sat, 31 Aug 2019 23:25:56 GMT
+ *  Version: 0.56.17
+ *  Mon, 02 Sep 2019 00:01:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -80,7 +80,7 @@
     // assembly types (start)
         
     await (async () => { // type: ./src/flair.server.express/flair.app/ServerHost.js
-        const { Host, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+        const { Host } = await ns('flair.app');
         
         /**
          * @name ServerHost
@@ -120,7 +120,7 @@
                     // each item is: { name: '', value:  }
                     // name: as in above link (as-is)
                     // value: as defined in above link
-                    let appSettings = RouteSettingReader.getMergedSection('settings', settings.routing, mountName, 'name');
+                    let appSettings = this.getMountSpecificSettings('settings', settings.routing, mountName, 'name');
                     if (appSettings && appSettings.length > 0) {
                         for(let appSetting of appSettings) {
                             mount.set(appSetting.name, appSetting.value);
@@ -269,7 +269,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.server.express/flair.boot/Middlewares.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+        const { Bootware } = await ns('flair.app');
         
         /**
          * @name Middlewares
@@ -297,7 +297,7 @@
                 //       define it as: "return (res, path, stat) => { res.set('x-timestamp', Date.now()) }"
                 //       this string will be passed to new Function(...) and returned values will be used as value of option
                 //       all object type arguments will be scanned for string values that start with 'return ' and will be tried to convert into a function
-                let middlewares = RouteSettingReader.getMergedSection('middlewares', settings.routing, mount.name, 'name');
+                let middlewares = this.getMountSpecificSettings('middlewares', settings.routing, mount.name, 'name');
                 if (middlewares && middlewares.length > 0) {
                     let mod = null,
                         func = null;
@@ -352,7 +352,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.server.express/flair.boot/ResHeaders.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
+        const { Bootware } = await ns('flair.app');
         
         /**
          * @name ResHeaders
@@ -370,7 +370,7 @@
             this.boot = async (base, mount) => {
                 base();
                 
-                let resHeaders = RouteSettingReader.getMergedSection('resHeaders', settings.routing, mount.name, 'name');
+                let resHeaders = this.getMountSpecificSettings('resHeaders', settings.routing, mount.name, 'name');
                 if (resHeaders && resHeaders.length > 0) {
                     mount.app.use((req, res, next) => {
                         // each item is: { name: '', value:  }
@@ -387,8 +387,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.server.express/flair.boot/ServerRouter.js
-        const { Bootware, RouteSettingReader } = await ns('flair.app', './flair.app.js');
-        const { RestHandler, RestInterceptor } = await ns('flair.api', './flair.server.js');
+        const { Bootware } = await ns('flair.app');
+        const { RestHandler, RestInterceptor } = await ns('flair.api');
         
         /**
          * @name ServerRouter
@@ -456,12 +456,12 @@
                                     // route.handler can be defined as:
                                     // string: qualified type name of the handler
                                     // object: { "routingContext": "handler", ...}
-                                    //  routingContext can be any value that represents a routing context for whatever situation 
-                                    //  this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                                    //  basis it will pick required handler from here some examples of handlers can be:
-                                    //      mobile | tablet | tv  etc.  - if some routing is to be based on device type
-                                    //      free | freemium | full  - if some routing is to be based on license model
-                                    //      anything else
+                                    //      routingContext can be any value that represents a routing context for whatever situation 
+                                    //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                                    //      basis it will pick required handler from here some examples of handlers can be:
+                                    //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                                    //          free | freemium | full  - if some routing is to be based on license model
+                                    //          anything else
                                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                                     let routeHandler = chooseRouteHandler(route);
                                     include(routeHandler).then((theType) => {
@@ -497,7 +497,7 @@
                                 // each interceptor is derived from RestInterceptor and
                                 // run method of it takes req, can update it, also takes res method and can generate response, in case request is being stopped
                                 // each item is: "InterceptorTypeQualifiedName"
-                                let mountInterceptors = RouteSettingReader.getMergedSection('interceptors', settings.routing, mount.name);
+                                let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
                                 runInterceptors(mountInterceptors, req, res).then(() => {
                                     if (!req.$stop) {
                                         handleRoute();
@@ -568,7 +568,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.14","lupdate":"Sat, 31 Aug 2019 23:25:56 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.17","lupdate":"Mon, 02 Sep 2019 00:01:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

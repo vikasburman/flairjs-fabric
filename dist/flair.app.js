@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.56.14
- *  Sat, 31 Aug 2019 23:25:54 GMT
+ *  Version: 0.56.17
+ *  Mon, 02 Sep 2019 00:01:42 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -129,6 +129,81 @@
         
             $$('virtual');
             this.dispose = noop;
+        
+            $$('protected');
+            this.getMountSpecificSettings = function(sectionName, routing, mountName, checkDuplicateOnProp) {
+                let section = [];
+        
+                // get all.before
+                if (routing.all && routing.all.before && routing.all.before[sectionName]) {
+                    section.push(...routing.all.before[sectionName]);
+                }
+        
+                // get from mount
+                if (routing[mountName] && routing[mountName][sectionName]) {
+                    if (section.length === 0) { 
+                        section.push(...routing[mountName][sectionName]);
+                    } else {
+                        if (checkDuplicateOnProp) {
+                            for(let specificItem of routing[mountName][sectionName]) {
+                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, specificItem[checkDuplicateOnProp]);
+                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
+                                    for(let p in specificItem) { // iterate all defined properties only, rest can be same as found earlier
+                                        alreadyAddedItem[p] = specificItem[p]; // overwrite all values with what is found here, as this more specific
+                                    }
+                                } else {
+                                    section.push(specificItem); // add
+                                }
+                            }
+                        } else {
+                            for(let specificItem of routing[mountName][sectionName]) {
+                                if (typeof specificItem === 'string') {
+                                    if (section.indexOf(specificItem) !== -1) { // found
+                                        // ignore, as it is already added
+                                    } else { 
+                                        section.push(specificItem); // add
+                                    }                  
+                                } else { // object
+                                    section.push(specificItem); // add, as no way to check for duplicate
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                // get from all.after
+                if (routing.all && routing.all.after && routing.all.after[sectionName]) {
+                    if (section.length === 0) {
+                        section.push(...routing.all.after[sectionName]);
+                    } else {
+                        if (checkDuplicateOnProp) {
+                            for(let afterItem of routing.all.after[sectionName]) {
+                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, afterItem[checkDuplicateOnProp]);
+                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
+                                    // skip as more specific version is already added
+                                } else {
+                                    section.push(afterItem); // add
+                                }
+                            }
+                        } else {
+                            for(let afterItem of routing.all.after[sectionName]) {
+                                if (typeof afterItem === 'string') {
+                                    if (section.indexOf(afterItem) !== -1) { // found
+                                        // ignore, as it is already added
+                                    } else { 
+                                        section.push(afterItem); // add
+                                    }                  
+                                } else { // object
+                                    section.push(afterItem); // add, as no way to check for duplicate
+                                }
+                            }
+                        } 
+                    }
+                }
+                
+                // return
+                return section;
+            };
         });
         
     })();    
@@ -143,12 +218,10 @@
         $$('ns', 'flair.app');
         Class('Handler', [IDisposable], function() {
             $$('virtual');
-            this.construct = () => {
-            };
+            this.construct = noop;
         
             $$('virtual');
-            this.dispose = () => {
-            };
+            this.dispose = noop;
         });
         
     })();    
@@ -179,7 +252,7 @@
             this.start = async () => {
                 // initialize view state
                 if (!env.isServer && !env.isWorker) {
-                    const { ViewState } = await ns('flair.ui', './flair.client.js');
+                    const { ViewState } = await ns('flair.ui');
                     new ViewState(); // this initializes the global view state store's persistance via this singleton object
                 }
         
@@ -205,7 +278,7 @@
             this.stop = async () => {
                 // clear view state
                 if (!env.isServer && !env.isWorker) {
-                    const { ViewState } = await ns('flair.ui', './flair.client.js');
+                    const { ViewState } = await ns('flair.ui');
                     new ViewState().clear();
                 }
         
@@ -542,90 +615,6 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app/RouteSettingReader.js
-        /**
-         * @name RouteSettingReader
-         * @description RouteSettingReader helper
-         */
-        $$('ns', 'flair.app');
-        $$('static');
-        Class('RouteSettingReader', function() {
-            this.getMergedSection = function(sectionName, routing, mountName, checkDuplicateOnProp) {
-                let section = [];
-        
-                // get all.before
-                if (routing.all && routing.all.before && routing.all.before[sectionName]) {
-                    section.push(...routing.all.before[sectionName]);
-                }
-        
-                // get from mount
-                if (routing[mountName] && routing[mountName][sectionName]) {
-                    if (section.length === 0) { 
-                        section.push(...routing[mountName][sectionName]);
-                    } else {
-                        if (checkDuplicateOnProp) {
-                            for(let specificItem of routing[mountName][sectionName]) {
-                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, specificItem[checkDuplicateOnProp]);
-                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
-                                    for(let p in specificItem) { // iterate all defined properties only, rest can be same as found earlier
-                                        alreadyAddedItem[p] = specificItem[p]; // overwrite all values with what is found here, as this more specific
-                                    }
-                                } else {
-                                    section.push(specificItem); // add
-                                }
-                            }
-                        } else {
-                            for(let specificItem of routing[mountName][sectionName]) {
-                                if (typeof specificItem === 'string') {
-                                    if (section.indexOf(specificItem) !== -1) { // found
-                                        // ignore, as it is already added
-                                    } else { 
-                                        section.push(specificItem); // add
-                                    }                  
-                                } else { // object
-                                    section.push(specificItem); // add, as no way to check for duplicate
-                                }
-                            }
-                        }
-                    }
-                }
-        
-                // get from all.after
-                if (routing.all && routing.all.after && routing.all.after[sectionName]) {
-                    if (section.length === 0) {
-                        section.push(...routing.all.after[sectionName]);
-                    } else {
-                        if (checkDuplicateOnProp) {
-                            for(let afterItem of routing.all.after[sectionName]) {
-                                let alreadyAddedItem = findItemByProp(section, checkDuplicateOnProp, afterItem[checkDuplicateOnProp]);
-                                if (alreadyAddedItem !== null) { // found with same propertyValue for givenProp
-                                    // skip as more specific version is already added
-                                } else {
-                                    section.push(afterItem); // add
-                                }
-                            }
-                        } else {
-                            for(let afterItem of routing.all.after[sectionName]) {
-                                if (typeof afterItem === 'string') {
-                                    if (section.indexOf(afterItem) !== -1) { // found
-                                        // ignore, as it is already added
-                                    } else { 
-                                        section.push(afterItem); // add
-                                    }                  
-                                } else { // object
-                                    section.push(afterItem); // add, as no way to check for duplicate
-                                }
-                            }
-                        } 
-                    }
-                }
-                
-                // return
-                return section;
-            };
-        });
-        
-    })();    
     await (async () => { // type: ./src/flair.app/flair.boot/DIContainer.js
         const { Bootware } = await ns('flair.app');
         
@@ -665,7 +654,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.14","lupdate":"Sat, 31 Aug 2019 23:25:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.RouteSettingReader","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.17","lupdate":"Mon, 02 Sep 2019 00:01:42 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

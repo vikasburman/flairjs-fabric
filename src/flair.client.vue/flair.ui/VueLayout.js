@@ -16,8 +16,6 @@ Class('(auto)', function() {
     };
 
     this.merge = async (viewHtml) => {
-        const { ViewHandler } = await ns('flair.ui');
-
         let layoutHtml = '',
             clientFileLoader = Port('clientFile');  
 

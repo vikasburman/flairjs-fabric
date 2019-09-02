@@ -9,8 +9,7 @@ $$('ns', '(auto)');
 Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('private');
     this.factory = async () => {
-        let component = null,
-            clientFileLoader = Port('clientFile');
+        let component = null;
 
         const autoWireAndLoadLayout = async () => {
             // pick default layout from settings, if required
