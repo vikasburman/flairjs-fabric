@@ -73,7 +73,7 @@ Class('(auto)', function() {
                 if (item) { // in case no item is set for either server/client
                     // suffix preamble.js
                     if (!item.endsWith('/')) { item += '/'; }
-                    item += 'preamble.js';
+                    item += 'preamble{.min}.js'; // as bundled preambles can be minified too
 
                     // this loads it as a function which is called here
                     preambleLoader = await include(item);
