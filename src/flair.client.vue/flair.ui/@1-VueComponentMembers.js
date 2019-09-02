@@ -112,7 +112,8 @@ Mixin('(auto)', function() {
                 }
                 for(let i18nNs in this.i18n) {
                     if (this.i18n.hasOwnProperty(i18nNs)) {
-                        i18ResFile = this.localePath + this.locale() + '/' + (this.i18n[i18nNs] || `./${i18nNs}.json`);
+                        i18ResFile = this.i18n[i18nNs] || `./${i18nNs}.json`;
+                        i18ResFile = i18ResFile.replace('./', this.localePath + this.locale() + '/');
                         this.i18n[i18nNs] = await clientFileLoader(i18ResFile); // this will load defined json file as json object here
                     }
                 }

@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.56.18
- *  Mon, 02 Sep 2019 00:10:44 GMT
+ *  Version: 0.56.21
+ *  Mon, 02 Sep 2019 05:52:53 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -131,7 +131,7 @@
             this.dispose = noop;
         
             $$('protected');
-            this.getMountSpecificSettings = function(sectionName, routing, mountName, checkDuplicateOnProp) {
+            this.getMountSpecificSettings = (sectionName, routing, mountName, checkDuplicateOnProp) => {
                 let section = [];
         
                 // get all.before
@@ -351,7 +351,7 @@
         $$('static');
         $$('ns', 'flair.app');
         Class('BootEngine', function() {
-            this.start = async function () {
+            this.start = async function() {
                 let allBootwares = [],
                     mountSpecificBootwares = [];
                 const loadConfiguredEnv = async () => {
@@ -654,7 +654,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.18","lupdate":"Mon, 02 Sep 2019 00:10:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.21","lupdate":"Mon, 02 Sep 2019 05:52:53 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

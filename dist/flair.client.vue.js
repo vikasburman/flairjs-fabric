@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.56.18
- *  Mon, 02 Sep 2019 00:10:45 GMT
+ *  Version: 0.56.21
+ *  Mon, 02 Sep 2019 05:52:54 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -194,7 +194,8 @@
                         }
                         for(let i18nNs in this.i18n) {
                             if (this.i18n.hasOwnProperty(i18nNs)) {
-                                i18ResFile = this.localePath + this.locale() + '/' + (this.i18n[i18nNs] || `./${i18nNs}.json`);
+                                i18ResFile = this.i18n[i18nNs] || `./${i18nNs}.json`;
+                                i18ResFile = i18ResFile.replace('./', this.localePath + this.locale() + '/');
                                 this.i18n[i18nNs] = await clientFileLoader(i18ResFile); // this will load defined json file as json object here
                             }
                         }
@@ -1179,7 +1180,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.18","lupdate":"Mon, 02 Sep 2019 00:10:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.21","lupdate":"Mon, 02 Sep 2019 05:52:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

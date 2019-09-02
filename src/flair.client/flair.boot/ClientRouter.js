@@ -7,7 +7,7 @@ const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
  */
 $$('sealed');
 $$('ns', '(auto)');
-Class('(auto)', Bootware, function () {
+Class('(auto)', Bootware, function() {
     let routes = null;
     
     $$('override');
@@ -53,7 +53,7 @@ Class('(auto)', Bootware, function () {
             if (typeof route.handler === 'string') { return route.handler; }
             return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
         };
-        const getHandler = function(route) {
+        const getHandler = (route) => {
             return async (ctx) => {
                 // ctx.params has all the route parameters.
                 // e.g., for route "/users/:userId/books/:bookId" ctx.params will 

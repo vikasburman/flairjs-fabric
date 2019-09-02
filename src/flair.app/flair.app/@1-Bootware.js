@@ -49,7 +49,7 @@ Class('(auto)', function() {
     this.dispose = noop;
 
     $$('protected');
-    this.getMountSpecificSettings = function(sectionName, routing, mountName, checkDuplicateOnProp) {
+    this.getMountSpecificSettings = (sectionName, routing, mountName, checkDuplicateOnProp) => {
         let section = [];
 
         // get all.before

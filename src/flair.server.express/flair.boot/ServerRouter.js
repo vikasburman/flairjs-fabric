@@ -7,7 +7,7 @@ const { RestHandler, RestInterceptor } = await ns('flair.api');
  */
 $$('sealed');
 $$('ns', '(auto)');
-Class('(auto)', Bootware, function () {
+Class('(auto)', Bootware, function() {
     let routes = null;
     
     $$('override');

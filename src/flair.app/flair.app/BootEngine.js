@@ -7,7 +7,7 @@ const { Bootware } = await ns('flair.app');
 $$('static');
 $$('ns', '(auto)');
 Class('(auto)', function() {
-    this.start = async function () {
+    this.start = async function() {
         let allBootwares = [],
             mountSpecificBootwares = [];
         const loadConfiguredEnv = async () => {
