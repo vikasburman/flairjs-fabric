@@ -4,7 +4,7 @@
         "transition": "",
         "static": {
             "fileExt": "xml",
-            "root": "./static/",
+            "root": "./pages/",
             "handler": "flair.ui.StaticView"
         },
         "routes": {

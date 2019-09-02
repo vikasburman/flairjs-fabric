@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.56.21
- *  Mon, 02 Sep 2019 05:52:54 GMT
+ *  Version: 0.56.24
+ *  Mon, 02 Sep 2019 17:16:27 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.client', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"view":{"el":"main","transition":"","static":{"fileExt":"xml","root":"./static/","handler":"flair.ui.StaticView"},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"lang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
+    let settings = JSON.parse('{"view":{"el":"main","transition":"","static":{"fileExt":"xml","root":"./pages/","handler":"flair.ui.StaticView"},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"lang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
@@ -119,7 +119,7 @@
                 // static view situation
                 if (typeof staticFile === 'string') {
                     this.isStatic = true;
-                    this.staticRoot = settings.view.static.root || './static/';
+                    this.staticRoot = settings.view.static.root || './pages/';
                     this.staticFile = staticFile.replace('./', this.staticRoot);
                 }
             };
@@ -804,8 +804,10 @@
             };  
             this.go = async (url, isReplace) => {
                 if (isReplace) {
-                    // this will not trigger hanschange event, neither will add a history entry
-                    history.replaceState(null, null, window.document.location.pathname + url);
+                    if (url !== '#/') { // let root remain as is. e.g., abc.com will be abc.com itself and not abc.com/#/
+                        // this will not trigger hanschange event, neither will add a history entry
+                        history.replaceState(null, null, window.document.location.pathname + url);
+                    }
                 } else {
                     // this will trigger hanschange event, and will add a history entry
                     if (url.substr(0, 1) === '#') { url = url.substr(1); } // remove #, because it will automatically be added when setting hash below
@@ -1091,7 +1093,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.21","lupdate":"Mon, 02 Sep 2019 05:52:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.24","lupdate":"Mon, 02 Sep 2019 17:16:27 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

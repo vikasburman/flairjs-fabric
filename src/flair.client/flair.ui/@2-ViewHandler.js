@@ -20,7 +20,7 @@ Class('(auto)', Handler, function() {
         // static view situation
         if (typeof staticFile === 'string') {
             this.isStatic = true;
-            this.staticRoot = settings.view.static.root || './static/';
+            this.staticRoot = settings.view.static.root || './pages/';
             this.staticFile = staticFile.replace('./', this.staticRoot);
         }
     };

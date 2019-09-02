@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.56.21
- *  Mon, 02 Sep 2019 05:52:54 GMT
+ *  Version: 0.56.24
+ *  Mon, 02 Sep 2019 17:16:28 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -737,6 +737,14 @@
                     // set paths
                     this.basePath = this.staticRoot;
                     this.localePath = this.basePath + 'locales/';
+        
+                    // static file can be localized as well, hence its name can be:
+                    // ./path/file.xml : Will be resolved with ./path/file.xml
+                    // OR 
+                    // ./path/file{.en}.xml <-- yes: {.en} is a placeholder for chosen locale: Will be resolved with ./path/file.<locale>.xml
+                    if (this.staticFile.indexOf('{.en}') !== -1) {
+                        this.staticFile = this.staticFile.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
+                    }
                 }
             };
         
@@ -747,11 +755,11 @@
         
                 // read static file and load all required elements here
                 // static file is supposed to be an XML file having following format
-                // <static title="" layout="" i18n="">
+                // <page title="" layout="" i18n="">
                 //  <data><![CDATA[ ... ]]></data>
                 //  <html type="md"><![CDATA[ ... ]]></html>
                 //  <style><![CDATA[ ... ]]></style>
-                // </static>
+                // </page>
                 //  
                 // Root note must be called: static
                 //  root node can have optional attributes:
@@ -769,7 +777,7 @@
                 let clientFileLoader = Port('clientFile'),
                     staticFileContent = '',
                     xmlDoc = null,
-                    tag_static = null,
+                    tag_page = null,
                     tag_html = null,
                     tag_html_attr_type = null,
                     html_content = '',
@@ -782,15 +790,15 @@
                 xmlDoc = dp.parseFromString(staticFileContent, 'text/xml');
         
                 // read structure
-                tag_static = xmlDoc.getElementsByTagName('static')[0];
-                tag_html = tag_static.getElementsByTagName('html')[0];
-                tag_style = tag_static.getElementsByTagName('style')[0];
-                tag_data = tag_static.getElementsByTagName('data')[0];
+                tag_page = xmlDoc.getElementsByTagName('page')[0];
+                tag_html = tag_page.getElementsByTagName('html')[0];
+                tag_style = tag_page.getElementsByTagName('style')[0];
+                tag_data = tag_page.getElementsByTagName('data')[0];
         
                 // settings
-                this.title = tag_static.getAttribute('title') || '';
-                this.layout = tag_static.getAttribute('layout') || settings.static.layout || null;
-                this.i18n = tag_static.getAttribute('i18n') || settings.static.i18n || null;
+                this.title = tag_page.getAttribute('title') || '';
+                this.layout = tag_page.getAttribute('layout') || settings.static.layout || null;
+                this.i18n = tag_page.getAttribute('i18n') || settings.static.i18n || null;
                 
                 // style
                 this.style = tag_style ? tag_style.firstChild.data.trim() : null;
@@ -1180,7 +1188,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.21","lupdate":"Mon, 02 Sep 2019 05:52:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.24","lupdate":"Mon, 02 Sep 2019 17:16:28 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

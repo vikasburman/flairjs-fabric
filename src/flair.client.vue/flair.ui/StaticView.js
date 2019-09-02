@@ -36,11 +36,11 @@ Class('(auto)', VueView, function() {
 
         // read static file and load all required elements here
         // static file is supposed to be an XML file having following format
-        // <static title="" layout="" i18n="">
+        // <page title="" layout="" i18n="">
         //  <data><![CDATA[ ... ]]></data>
         //  <html type="md"><![CDATA[ ... ]]></html>
         //  <style><![CDATA[ ... ]]></style>
-        // </static>
+        // </page>
         //  
         // Root note must be called: static
         //  root node can have optional attributes:
@@ -58,7 +58,7 @@ Class('(auto)', VueView, function() {
         let clientFileLoader = Port('clientFile'),
             staticFileContent = '',
             xmlDoc = null,
-            tag_static = null,
+            tag_page = null,
             tag_html = null,
             tag_html_attr_type = null,
             html_content = '',
@@ -71,15 +71,15 @@ Class('(auto)', VueView, function() {
         xmlDoc = dp.parseFromString(staticFileContent, 'text/xml');
 
         // read structure
-        tag_static = xmlDoc.getElementsByTagName('static')[0];
-        tag_html = tag_static.getElementsByTagName('html')[0];
-        tag_style = tag_static.getElementsByTagName('style')[0];
-        tag_data = tag_static.getElementsByTagName('data')[0];
+        tag_page = xmlDoc.getElementsByTagName('page')[0];
+        tag_html = tag_page.getElementsByTagName('html')[0];
+        tag_style = tag_page.getElementsByTagName('style')[0];
+        tag_data = tag_page.getElementsByTagName('data')[0];
 
         // settings
-        this.title = tag_static.getAttribute('title') || '';
-        this.layout = tag_static.getAttribute('layout') || settings.static.layout || null;
-        this.i18n = tag_static.getAttribute('i18n') || settings.static.i18n || null;
+        this.title = tag_page.getAttribute('title') || '';
+        this.layout = tag_page.getAttribute('layout') || settings.static.layout || null;
+        this.i18n = tag_page.getAttribute('i18n') || settings.static.i18n || null;
         
         // style
         this.style = tag_style ? tag_style.firstChild.data.trim() : null;
