@@ -125,8 +125,10 @@ Class('(auto)', Host, function() {
     };  
     this.go = async (url, isReplace) => {
         if (isReplace) {
-            // this will not trigger hanschange event, neither will add a history entry
-            history.replaceState(null, null, window.document.location.pathname + url);
+            if (url !== '#/') { // let root remain as is. e.g., abc.com will be abc.com itself and not abc.com/#/
+                // this will not trigger hanschange event, neither will add a history entry
+                history.replaceState(null, null, window.document.location.pathname + url);
+            }
         } else {
             // this will trigger hanschange event, and will add a history entry
             if (url.substr(0, 1) === '#') { url = url.substr(1); } // remove #, because it will automatically be added when setting hash below
