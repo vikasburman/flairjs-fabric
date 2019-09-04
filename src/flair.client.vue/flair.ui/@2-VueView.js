@@ -9,19 +9,37 @@ $$('ns', '(auto)');
 Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('private');
     this.factory = async () => {
-        let component = null;
+        let component = null,
+            clientFileLoader = Port('clientFile');  
 
         const autoWireAndLoadLayout = async () => {
-            // pick default layout from settings, if required
-            if (typeof this.layout === 'boolean' && this.layout === true) { 
-                this.layout = settings.layout.default || null;
+            let isHtml = false;
+            if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings, if required
+                this.layout = settings.layout.default || null; // the qualified type name
+            } else if (typeof this.layout === 'string') {
+                if (this.layout.startsWith('res:')) { // its an embedded resource (html) - res:<resTypeName>
+                    let resTypeName = this.layout.substr(4); // remove res:
+                    let res = AppDomain.context.current().getResource(resTypeName) || null;
+                    isHtml = res && res.data;
+                    this.layout = (res ? res.data : this.layout);
+                } else if (this.layout.endsWith('.html')) { // its an asset file
+                    isHtml = true;
+                    let htmlFile = which(this.layout.replace('./', this.basePath), true),
+                        htmlContent = await clientFileLoader(htmlFile);
+                    this.layout = settings.layout.html2Layout; // default type, which will load given html
+                } else { // its qualified type name
+                    // let it be as is
+                }
             }
-
             // load layout first, if only layout type name is given (e.g., in case it was picked from settings as above)
             if (typeof this.layout === 'string') {
                 let layoutType = await include(this.layout);
                 if (layoutType) {
-                    this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
+                    if (isHtml) {
+                        this.layout = new layoutType(htmlContent);
+                    } else {
+                        this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
+                    }
                 } else {
                     throw Exception.NotFound(`Layout not found. (${this.layout})`);
                 }

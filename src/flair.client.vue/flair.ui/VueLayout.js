@@ -11,8 +11,59 @@ Class('(auto)', function() {
     let _thisId = guid();
 
     $$('virtual');
-    this.construct = () => {
-        this.viewArea = settings.layout.viewAreaEl || 'view';
+    this.construct = (html) => {
+        if (!html) {
+            this.viewArea = settings.layout.viewAreaEl || 'view';
+        } else { // process html to load 
+            // html that can be loaded here can be of following format
+            // [[header:CommonHeader:myapp.shared.views.CommonHeader]]
+            // <div class="container">
+            //  [[view]]
+            // </div>
+            // [[footer:CommonFooter:myapp.shared.views.CommonFooter]]
+            // which means, all areas can have in-place configuration as:
+            //  areaName:componentName:componentTypeName
+            //  view area will only have the areaName - and that's how it is identified that it is view area
+            // and set accordingly. If there are more than one such areas where only area-name is given, first one will
+            // be taken as view area and rest will be ignored and not processed at all
+            // if there is any error in layout html definition, it will just load view without layout
+            let startPos = 0,
+            isViewAreaDefined = false;
+            while(true) { // eslint-disable-line no-constant-condition
+                if (startPos >= htmlLength) { break; }
+            
+                // get next start
+                let startIdx = html.indexOf('[[', startPos); 
+                if (startIdx === -1) { break; }
+
+                // get end of this start
+                let endIdx = html.indexOf(']]', startIdx); 
+                if (endIdx === -1 && (startIdx + 1) < htmlLength) { 
+                    html = '[[view]]';
+                    this.viewArea = 'view';
+                    break; 
+                }
+                startPos = endIdx + 1;
+
+                // get definition
+                let areaDef = html.substr(startIdx + 2, ((endIdx - startIdx) - 2)); // remove [[ and ]]
+                let items = areaDef.split(':');
+                if (items.length === 1) {
+                    if (!isViewAreaDefined) {
+                        isViewAreaDefined = true;
+                        this.viewArea = items[0].trim();
+                    } else {
+                        // ignore this definition
+                    }
+                } else {
+                    if (items.length === 3) { // areaName:componentName:componentType
+                        this.areas.push({ area: items[0].trim(), component: items[1].trim(), type: items[2].trim() });
+                        html = html.substr(0, startIdx + 2) + items[0].trim() + html.substr(endIdx);
+                    }
+                }
+            }
+            this.html = html;
+        }
     };
 
     this.merge = async (viewHtml) => {

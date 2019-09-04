@@ -5,6 +5,7 @@
 
     "layout": {
         "default": "",
+        "html2Layout": "flair.ui.VueLayout",
         "viewAreaEl": "view"
     },
 
