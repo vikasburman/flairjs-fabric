@@ -35,16 +35,32 @@ Mixin('(auto)', function() {
             }
         };
         const autoWireHtmlCssAndData = async () => {
+            const getResIfDefined = (defString) => {
+                if (typeof defString === 'string' && defString.startsWith('res:')) { // its an embedded resource - res:<resTypeName>
+                    let resTypeName = defString.substr(4); // remove res:
+                    let res = AppDomain.context.current().getResource(resTypeName) || null;
+                    return (res ? res.data : defString);
+                } else {
+                    return defString;
+                }
+            };
+
             // auto wire html and styles, if configured as 'true' - for making 
             // it ready to pick from assets below
             if (typeof this.style === 'boolean' && this.style === true) {
                 this.style = which(`./${this.baseName}/index{.min}.css`, true);
+            } else { // its an embedded resource - res:<resTypeName>
+                this.style = getResIfDefined(this.style);
             }
             if (typeof this.html === 'boolean' && this.html === true) {
                 this.html = which(`./${this.baseName}/index{.min}.html`, true);
+            } else { // its an embedded resource - res:<resTypeName>
+                this.html = getResIfDefined(this.html);
             }
             if (typeof this.data === 'boolean' && this.data === true) {
                 this.data = which(`./${this.baseName}/index{.min}.json`, true);
+            } else {
+                this.data = getResIfDefined(this.data);
             }
         };
         const loadStyle = async () => {

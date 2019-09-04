@@ -115,7 +115,8 @@ Class('(auto)', Bootware, function() {
             // it will pick the handler of notfound route and show that view with this ctx
             let route404 = settings.view.routes.notfound;
             if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
-            if (!route404) { // nothing else can be done
+            if (!route404) { // break it here
+                alert(`404: ${ctx.$url} not found.`); // eslint-disable-line no-alert
                 setTimeout(() => { window.history.back(); }, 0);
                 return;
             }

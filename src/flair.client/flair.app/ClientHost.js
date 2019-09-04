@@ -62,7 +62,7 @@ Class('(auto)', Host, function() {
         // get route object
         let routeObj = AppDomain.context.current().getRoute(route); // route = qualifiedRouteName
         if (!routeObj) {
-            return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent utl, so it will automatically go to notfound view
+            return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent url, so it will automatically go to notfound view
         }
 
         // get app
@@ -126,11 +126,11 @@ Class('(auto)', Host, function() {
     this.go = async (url, isReplace) => {
         if (isReplace) {
             if (url !== '#/') { // let root remain as is. e.g., abc.com will be abc.com itself and not abc.com/#/
-                // this will not trigger hanschange event, neither will add a history entry
+                // this will not trigger hashchange event, neither will add a history entry
                 history.replaceState(null, null, window.document.location.pathname + url);
             }
         } else {
-            // this will trigger hanschange event, and will add a history entry
+            // this will trigger hashchange event, and will add a history entry
             if (url.substr(0, 1) === '#') { url = url.substr(1); } // remove #, because it will automatically be added when setting hash below
             window.location.hash = url;
         }
@@ -211,6 +211,8 @@ Class('(auto)', Host, function() {
         // redirect to home
         if (settings.view.routes.home) {
             await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+        } else {
+            console.log(`No home route is configured.`); // eslint-disable-line no-console
         }
 
         // ready
