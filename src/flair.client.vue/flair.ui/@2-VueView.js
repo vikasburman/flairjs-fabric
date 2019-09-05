@@ -8,7 +8,7 @@ const { VueComponentMembers } = await ns('flair.ui');
 $$('ns', '(auto)');
 Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('private');
-    this.factory = async () => {
+    this.factory = async (ctx) => {
         let component = null,
             clientFileLoader = Port('clientFile');
 
@@ -66,7 +66,7 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
         const factory_component = async () => {
             // shared between view and component both
             // coming from VueComponentMembers mixin
-            component = await this.define();
+            component = await this.define(ctx);
         };
         const setTitle = async () => {
             // set title 
@@ -116,7 +116,7 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
         const Vue = await include('vue/vue{.min}.js');
 
         // get component
-        let component = await this.factory();
+        let component = await this.factory(ctx);
 
         // set view Html
         let viewHtml = this.html || '';

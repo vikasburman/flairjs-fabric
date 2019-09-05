@@ -8,7 +8,7 @@ Mixin('(auto)', function() {
         _thisId = guid();
 
     $$('private');
-    this.define = async () => {
+    this.define = async (ctx) => {
         const Vue = await include('vue/vue{.min}.js');  
         const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
 
@@ -155,32 +155,37 @@ Mixin('(auto)', function() {
         const builtInMethods = async () => {
             component.methods = component.methods || {};
 
-            // supporting built-in method: path 
+            // built-in method: path 
             // this helps in building client side path nuances
             // e.g., {{ path('abc/xyz') }} will give: '/#/en/abc/xyz'
             // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1'
             component.methods['path'] = (path, params) => { return _this.path(path, params); };
 
-            // supporting built-in method: route
+            // built-in method: route
             // this helps in using path from route settings itself
             // e.g., {{ route('home') }} will give: '/#/en/'
             component.methods['route'] = (routeName, params) => { return _this.route(routeName, params); };
 
-            // supporting util: stuff
+            // built-in method: stuff
             // this helps in using stuffing values in a string
             // e.g., {{ stuff('something %1, %2 and %3', A, B, C) }} will give: 'something A, B and C'
             component.methods['stuff'] = (str, ...args) => { return stuff(str, args); };
 
             // i18n specific built-in methods
             if (this.i18n) {
-                // supporting built-in method: locale 
+                // built-in method: locale 
                 // e.g., {{ locale() }} will give: 'en'
                 component.methods['locale'] = (value) => { return _this.locale(value); };
 
-                // supporting built-in method: i18n 
+                // built-in method: i18n 
                 // e.g., {{ i18n('@strings.OK | Ok!') }} will give: '<whatever>' if this was the translation added in strings.json::OK key - ELSE it will give 'Ok!'
                 component.methods['i18n'] = (key) => { return _this.i18nValue(key); };
-            }            
+            } 
+            
+            // built-in method: ctx 
+            // this helps in getting context information
+            // e.g., {{ ctx('<propName>', 'defaultValue') }} will give: 'value of propName OR defaultValue'
+            component.methods['ctx'] = (prop, defaultValue) => { return (ctx ? (ctx[prop] || defaultValue) : defaultValue); };
         }; 
         const factory_render = async () => {
             // render
@@ -280,7 +285,7 @@ Mixin('(auto)', function() {
 
                             // register locally
                             component.components = component.components || {};
-                            component.components[item.name] = await componentObj.factory();
+                            component.components[item.name] = await componentObj.factory(ctx); // register with context
                         } catch (err) {
                             throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
                         }

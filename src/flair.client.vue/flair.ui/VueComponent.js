@@ -8,10 +8,10 @@ $$('ns', '(auto)');
 Class('(auto)', [VueComponentMembers], function() {
     let _this = this;
 
-    this.factory = async () => {
+    this.factory = async (ctx) => {
         // shared between view and component both
         // coming from VueComponentMembers mixin
-        let component = await this.define();
+        let component = await this.define(ctx);
 
         const factory_template = async () => {
             // template
