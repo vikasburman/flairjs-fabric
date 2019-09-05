@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.59.1
- *  Thu, 05 Sep 2019 22:28:01 GMT
+ *  Version: 0.59.2
+ *  Thu, 05 Sep 2019 23:12:14 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -166,6 +166,9 @@
             this.start = async (base) => { // configure express http and https server
                 base();
         
+                // proceed only if not serverless environment
+                if (env.x().isServerless) { return; }
+        
                 const fs = await include('fs | x');
                 const http = await include('http | x');
                 const https = await include('https | x');
@@ -209,6 +212,9 @@
                 return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
                     base();
         
+                    // proceed only if not serverless environment
+                    if (env.x().isServerless) { resolve(); return; }
+        
                     // start server
                     let httpPort = httpSettings.port || 80,
                         httpsPort = process.env.PORT || httpsSettings.port || 443;
@@ -239,6 +245,9 @@
             $$('override');
             this.stop = async (base) => { // graceful shutdown express http and https servers
                 base();
+        
+                // proceed only if not serverless environment
+                if (env.x().isServerless) { return; }
         
                 // stop http server gracefully
                 if (httpServer) {
@@ -568,7 +577,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.1","lupdate":"Thu, 05 Sep 2019 22:28:01 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.2","lupdate":"Thu, 05 Sep 2019 23:12:14 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

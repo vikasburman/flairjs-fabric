@@ -6,6 +6,7 @@
         "env": {
             "isVue": false,
             "isExpress": false,
+            "isServerless": false,
             "isFirebase": false
         },
         "links": [

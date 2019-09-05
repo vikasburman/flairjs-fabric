@@ -84,6 +84,9 @@ Class('(auto)', Host, function() {
     this.start = async (base) => { // configure express http and https server
         base();
 
+        // proceed only if not serverless environment
+        if (env.x().isServerless) { return; }
+
         const fs = await include('fs | x');
         const http = await include('http | x');
         const https = await include('https | x');
@@ -127,6 +130,9 @@ Class('(auto)', Host, function() {
         return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
             base();
 
+            // proceed only if not serverless environment
+            if (env.x().isServerless) { resolve(); return; }
+
             // start server
             let httpPort = httpSettings.port || 80,
                 httpsPort = process.env.PORT || httpsSettings.port || 443;
@@ -157,6 +163,9 @@ Class('(auto)', Host, function() {
     $$('override');
     this.stop = async (base) => { // graceful shutdown express http and https servers
         base();
+
+        // proceed only if not serverless environment
+        if (env.x().isServerless) { return; }
 
         // stop http server gracefully
         if (httpServer) {
