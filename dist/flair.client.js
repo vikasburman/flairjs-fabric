@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.56.25
- *  Mon, 02 Sep 2019 18:22:54 GMT
+ *  Version: 0.59.0
+ *  Thu, 05 Sep 2019 00:32:02 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -741,7 +741,7 @@
                 // get route object
                 let routeObj = AppDomain.context.current().getRoute(route); // route = qualifiedRouteName
                 if (!routeObj) {
-                    return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent utl, so it will automatically go to notfound view
+                    return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent url, so it will automatically go to notfound view
                 }
         
                 // get app
@@ -805,11 +805,11 @@
             this.go = async (url, isReplace) => {
                 if (isReplace) {
                     if (url !== '#/') { // let root remain as is. e.g., abc.com will be abc.com itself and not abc.com/#/
-                        // this will not trigger hanschange event, neither will add a history entry
+                        // this will not trigger hashchange event, neither will add a history entry
                         history.replaceState(null, null, window.document.location.pathname + url);
                     }
                 } else {
-                    // this will trigger hanschange event, and will add a history entry
+                    // this will trigger hashchange event, and will add a history entry
                     if (url.substr(0, 1) === '#') { url = url.substr(1); } // remove #, because it will automatically be added when setting hash below
                     window.location.hash = url;
                 }
@@ -890,6 +890,8 @@
                 // redirect to home
                 if (settings.view.routes.home) {
                     await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                } else {
+                    console.log(`No home route is configured.`); // eslint-disable-line no-console
                 }
         
                 // ready
@@ -1031,7 +1033,8 @@
                     // it will pick the handler of notfound route and show that view with this ctx
                     let route404 = settings.view.routes.notfound;
                     if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
-                    if (!route404) { // nothing else can be done
+                    if (!route404) { // break it here
+                        alert(`404: ${ctx.$url} not found.`); // eslint-disable-line no-alert
                         setTimeout(() => { window.history.back(); }, 0);
                         return;
                     }
@@ -1093,7 +1096,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.25","lupdate":"Mon, 02 Sep 2019 18:22:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.0","lupdate":"Thu, 05 Sep 2019 00:32:02 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

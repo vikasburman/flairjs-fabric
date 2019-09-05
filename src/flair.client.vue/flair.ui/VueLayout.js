@@ -28,7 +28,8 @@ Class('(auto)', function() {
             // be taken as view area and rest will be ignored and not processed at all
             // if there is any error in layout html definition, it will just load view without layout
             let startPos = 0,
-            isViewAreaDefined = false;
+                isViewAreaDefined = false,
+                htmlLength = html.length;
             while(true) { // eslint-disable-line no-constant-condition
                 if (startPos >= htmlLength) { break; }
             

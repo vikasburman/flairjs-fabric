@@ -84,8 +84,7 @@
             astCount: 0,
             routeCount: 0
           };
-          for(let asm of asms) {
-            let asmInfo = flair.AppDomain.getAdo(asm);
+          for(let asmInfo of asms) {
             if (asmInfo.name === 'flair') { continue; }
             if (info === null) { info = asmInfo; } // pick first
             members.asmNames += asmInfo.name + ', ';
@@ -109,7 +108,7 @@
             git: 'https://github.com/vikasburman/flairjs-fabric',
             npm: 'https://www.npmjs.com/package/flairjs-fabric',
             folderLink: '../../dist/',
-            assemblies: members.asmNames,
+            assemblies: asms.length - 1, // 1 is flairjs
             assemblies_members: `Types: ${members.typeCount}, Resources: ${members.resCount}, Assets: ${members.astCount}, Routes: ${members.routeCount}`
           };
 

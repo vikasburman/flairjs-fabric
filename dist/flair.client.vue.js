@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.56.25
- *  Mon, 02 Sep 2019 18:22:55 GMT
+ *  Version: 0.59.0
+ *  Thu, 05 Sep 2019 00:32:03 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.client.vue', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"vue":{"extensions":[]},"layout":{"default":"","viewAreaEl":"view"},"static":{"layout":"","i18n":""},"showdown":{}}');
+    let settings = JSON.parse('{"vue":{"extensions":[]},"layout":{"default":"","html2Layout":"flair.ui.VueLayout","viewAreaEl":"view"},"static":{"layout":"","i18n":""},"showdown":{}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client.vue');
@@ -117,16 +117,32 @@
                     }
                 };
                 const autoWireHtmlCssAndData = async () => {
+                    const getResIfDefined = (defString) => {
+                        if (typeof defString === 'string' && defString.startsWith('res:')) { // its an embedded resource - res:<resTypeName>
+                            let resTypeName = defString.substr(4); // remove res:
+                            let res = AppDomain.context.current().getResource(resTypeName) || null;
+                            return (res ? res.data : defString);
+                        } else {
+                            return defString;
+                        }
+                    };
+        
                     // auto wire html and styles, if configured as 'true' - for making 
                     // it ready to pick from assets below
                     if (typeof this.style === 'boolean' && this.style === true) {
                         this.style = which(`./${this.baseName}/index{.min}.css`, true);
+                    } else { // its an embedded resource - res:<resTypeName>
+                        this.style = getResIfDefined(this.style);
                     }
                     if (typeof this.html === 'boolean' && this.html === true) {
                         this.html = which(`./${this.baseName}/index{.min}.html`, true);
+                    } else { // its an embedded resource - res:<resTypeName>
+                        this.html = getResIfDefined(this.html);
                     }
                     if (typeof this.data === 'boolean' && this.data === true) {
                         this.data = which(`./${this.baseName}/index{.min}.json`, true);
+                    } else {
+                        this.data = getResIfDefined(this.data);
                     }
                 };
                 const loadStyle = async () => {
@@ -606,19 +622,41 @@
         Class('VueView', ViewHandler, [VueComponentMembers], function() {
             $$('private');
             this.factory = async () => {
-                let component = null;
+                let component = null,
+                    clientFileLoader = Port('clientFile');
         
                 const autoWireAndLoadLayout = async () => {
-                    // pick default layout from settings, if required
-                    if (typeof this.layout === 'boolean' && this.layout === true) { 
-                        this.layout = settings.layout.default || null;
+                    let isHtml = false,
+                        htmlContent = '';
+                    if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings, if required
+                        this.layout = settings.layout.default || null; // the qualified type name
+                    } else if (typeof this.layout === 'string') {
+                        if (this.layout.startsWith('res:')) { // its an embedded resource (html) - res:<resTypeName>
+                            let resTypeName = this.layout.substr(4); // remove res:
+                            let res = AppDomain.context.current().getResource(resTypeName) || null;
+                            isHtml = res && res.data;
+                            if (isHtml) {
+                                htmlContent = res.data;
+                                this.layout = settings.layout.html2Layout; // default type, which will load given html
+                            }
+                        } else if (this.layout.endsWith('.html')) { // its an asset file
+                            isHtml = true;
+                            let htmlFile = which(this.layout.replace('./', this.basePath), true);
+                            htmlContent = await clientFileLoader(htmlFile);
+                            this.layout = settings.layout.html2Layout; // default type, which will load given html
+                        } else { // its qualified type name
+                            // let it be as is
+                        }
                     }
-        
                     // load layout first, if only layout type name is given (e.g., in case it was picked from settings as above)
                     if (typeof this.layout === 'string') {
                         let layoutType = await include(this.layout);
                         if (layoutType) {
-                            this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
+                            if (isHtml) {
+                                this.layout = new layoutType(htmlContent);
+                            } else {
+                                this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
+                            }
                         } else {
                             throw Exception.NotFound(`Layout not found. (${this.layout})`);
                         }
@@ -951,8 +989,60 @@
             let _thisId = guid();
         
             $$('virtual');
-            this.construct = () => {
-                this.viewArea = settings.layout.viewAreaEl || 'view';
+            this.construct = (html) => {
+                if (!html) {
+                    this.viewArea = settings.layout.viewAreaEl || 'view';
+                } else { // process html to load 
+                    // html that can be loaded here can be of following format
+                    // [[header:CommonHeader:myapp.shared.views.CommonHeader]]
+                    // <div class="container">
+                    //  [[view]]
+                    // </div>
+                    // [[footer:CommonFooter:myapp.shared.views.CommonFooter]]
+                    // which means, all areas can have in-place configuration as:
+                    //  areaName:componentName:componentTypeName
+                    //  view area will only have the areaName - and that's how it is identified that it is view area
+                    // and set accordingly. If there are more than one such areas where only area-name is given, first one will
+                    // be taken as view area and rest will be ignored and not processed at all
+                    // if there is any error in layout html definition, it will just load view without layout
+                    let startPos = 0,
+                        isViewAreaDefined = false,
+                        htmlLength = html.length;
+                    while(true) { // eslint-disable-line no-constant-condition
+                        if (startPos >= htmlLength) { break; }
+                    
+                        // get next start
+                        let startIdx = html.indexOf('[[', startPos); 
+                        if (startIdx === -1) { break; }
+        
+                        // get end of this start
+                        let endIdx = html.indexOf(']]', startIdx); 
+                        if (endIdx === -1 && (startIdx + 1) < htmlLength) { 
+                            html = '[[view]]';
+                            this.viewArea = 'view';
+                            break; 
+                        }
+                        startPos = endIdx + 1;
+        
+                        // get definition
+                        let areaDef = html.substr(startIdx + 2, ((endIdx - startIdx) - 2)); // remove [[ and ]]
+                        let items = areaDef.split(':');
+                        if (items.length === 1) {
+                            if (!isViewAreaDefined) {
+                                isViewAreaDefined = true;
+                                this.viewArea = items[0].trim();
+                            } else {
+                                // ignore this definition
+                            }
+                        } else {
+                            if (items.length === 3) { // areaName:componentName:componentType
+                                this.areas.push({ area: items[0].trim(), component: items[1].trim(), type: items[2].trim() });
+                                html = html.substr(0, startIdx + 2) + items[0].trim() + html.substr(endIdx);
+                            }
+                        }
+                    }
+                    this.html = html;
+                }
             };
         
             this.merge = async (viewHtml) => {
@@ -971,13 +1061,27 @@
                     }
                 };        
                 const autoWireHtmlAndCss = async () => {
+                    const getResIfDefined = (defString) => {
+                        if (typeof defString === 'string' && defString.startsWith('res:')) { // its an embedded resource - res:<resTypeName>
+                            let resTypeName = defString.substr(4); // remove res:
+                            let res = AppDomain.context.current().getResource(resTypeName) || null;
+                            return (res ? res.data : defString);
+                        } else {
+                            return defString;
+                        }
+                    };
+        
                     // auto wire html and styles, if configured as 'true' - for making 
                     // it ready to pick from assets below
                     if (typeof this.style === 'boolean' && this.style === true) {
                         this.style = which(`./${this.baseName}/index{.min}.css`, true);
+                    } else { // its an embedded resource - res:<resTypeName>
+                        this.style = getResIfDefined(this.style);
                     }
                     if (typeof this.html === 'boolean' && this.html === true) {
                         this.html = which(`./${this.baseName}/index{.min}.html`, true);
+                    } else { // its an embedded resource - res:<resTypeName>
+                        this.html = getResIfDefined(this.html);
                     }
                 };        
                 const loadStyle = async () => {
@@ -1188,7 +1292,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.56.25","lupdate":"Mon, 02 Sep 2019 18:22:55 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.0","lupdate":"Thu, 05 Sep 2019 00:32:03 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

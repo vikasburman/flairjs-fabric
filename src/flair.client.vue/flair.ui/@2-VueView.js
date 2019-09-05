@@ -10,10 +10,11 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
     $$('private');
     this.factory = async () => {
         let component = null,
-            clientFileLoader = Port('clientFile');  
+            clientFileLoader = Port('clientFile');
 
         const autoWireAndLoadLayout = async () => {
-            let isHtml = false;
+            let isHtml = false,
+                htmlContent = '';
             if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings, if required
                 this.layout = settings.layout.default || null; // the qualified type name
             } else if (typeof this.layout === 'string') {
@@ -21,11 +22,14 @@ Class('(auto)', ViewHandler, [VueComponentMembers], function() {
                     let resTypeName = this.layout.substr(4); // remove res:
                     let res = AppDomain.context.current().getResource(resTypeName) || null;
                     isHtml = res && res.data;
-                    this.layout = (res ? res.data : this.layout);
+                    if (isHtml) {
+                        htmlContent = res.data;
+                        this.layout = settings.layout.html2Layout; // default type, which will load given html
+                    }
                 } else if (this.layout.endsWith('.html')) { // its an asset file
                     isHtml = true;
-                    let htmlFile = which(this.layout.replace('./', this.basePath), true),
-                        htmlContent = await clientFileLoader(htmlFile);
+                    let htmlFile = which(this.layout.replace('./', this.basePath), true);
+                    htmlContent = await clientFileLoader(htmlFile);
                     this.layout = settings.layout.html2Layout; // default type, which will load given html
                 } else { // its qualified type name
                     // let it be as is
