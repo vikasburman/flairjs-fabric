@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.0
- *  Thu, 05 Sep 2019 01:06:45 GMT
+ *  Version: 0.59.1
+ *  Thu, 05 Sep 2019 22:28:00 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -90,7 +90,7 @@
                 _thisId = guid();
         
             $$('private');
-            this.define = async () => {
+            this.define = async (ctx) => {
                 const Vue = await include('vue/vue{.min}.js');  
                 const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
         
@@ -237,32 +237,37 @@
                 const builtInMethods = async () => {
                     component.methods = component.methods || {};
         
-                    // supporting built-in method: path 
+                    // built-in method: path 
                     // this helps in building client side path nuances
                     // e.g., {{ path('abc/xyz') }} will give: '/#/en/abc/xyz'
                     // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1'
                     component.methods['path'] = (path, params) => { return _this.path(path, params); };
         
-                    // supporting built-in method: route
+                    // built-in method: route
                     // this helps in using path from route settings itself
                     // e.g., {{ route('home') }} will give: '/#/en/'
                     component.methods['route'] = (routeName, params) => { return _this.route(routeName, params); };
         
-                    // supporting util: stuff
+                    // built-in method: stuff
                     // this helps in using stuffing values in a string
                     // e.g., {{ stuff('something %1, %2 and %3', A, B, C) }} will give: 'something A, B and C'
                     component.methods['stuff'] = (str, ...args) => { return stuff(str, args); };
         
                     // i18n specific built-in methods
                     if (this.i18n) {
-                        // supporting built-in method: locale 
+                        // built-in method: locale 
                         // e.g., {{ locale() }} will give: 'en'
                         component.methods['locale'] = (value) => { return _this.locale(value); };
         
-                        // supporting built-in method: i18n 
+                        // built-in method: i18n 
                         // e.g., {{ i18n('@strings.OK | Ok!') }} will give: '<whatever>' if this was the translation added in strings.json::OK key - ELSE it will give 'Ok!'
                         component.methods['i18n'] = (key) => { return _this.i18nValue(key); };
-                    }            
+                    } 
+                    
+                    // built-in method: ctx 
+                    // this helps in getting context information
+                    // e.g., {{ ctx('<propName>', 'defaultValue') }} will give: 'value of propName OR defaultValue'
+                    component.methods['ctx'] = (prop, defaultValue) => { return (ctx ? (ctx[prop] || defaultValue) : defaultValue); };
                 }; 
                 const factory_render = async () => {
                     // render
@@ -362,7 +367,7 @@
         
                                     // register locally
                                     component.components = component.components || {};
-                                    component.components[item.name] = await componentObj.factory();
+                                    component.components[item.name] = await componentObj.factory(ctx); // register with context
                                 } catch (err) {
                                     throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
                                 }
@@ -621,7 +626,7 @@
         $$('ns', 'flair.ui');
         Class('VueView', ViewHandler, [VueComponentMembers], function() {
             $$('private');
-            this.factory = async () => {
+            this.factory = async (ctx) => {
                 let component = null,
                     clientFileLoader = Port('clientFile');
         
@@ -679,7 +684,7 @@
                 const factory_component = async () => {
                     // shared between view and component both
                     // coming from VueComponentMembers mixin
-                    component = await this.define();
+                    component = await this.define(ctx);
                 };
                 const setTitle = async () => {
                     // set title 
@@ -729,7 +734,7 @@
                 const Vue = await include('vue/vue{.min}.js');
         
                 // get component
-                let component = await this.factory();
+                let component = await this.factory(ctx);
         
                 // set view Html
                 let viewHtml = this.html || '';
@@ -869,10 +874,10 @@
         Class('VueComponent', [VueComponentMembers], function() {
             let _this = this;
         
-            this.factory = async () => {
+            this.factory = async (ctx) => {
                 // shared between view and component both
                 // coming from VueComponentMembers mixin
-                let component = await this.define();
+                let component = await this.define(ctx);
         
                 const factory_template = async () => {
                     // template
@@ -1237,22 +1242,22 @@
                     if (!item.type) { throw Exception.OperationFailed(`Extension type cannot be empty. (${item.name})`); }
                     
                     ExtType = await include(item.type);
-                    if (as(ExtType, VueComponent)) {
+                    if (as(ExtType, VueComponent)) { // global components
                         try {
                             ext = new ExtType();
                             if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
-                            Vue.component(item.name, await ext.factory()); // register globally
+                            Vue.component(item.name, await ext.factory()); // register globally (without any context)
                         } catch (err) {
                             throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
                         }
-                    } else if (as(ExtType, VueDirective)) {
+                    } else if (as(ExtType, VueDirective)) { // directives
                         try {
                             ext = new ExtType();
                             Vue.directive(item.name, await ext.factory()); // register globally
                         } catch (err) {
                             throw Exception.OperationFailed(`Directive registration failed. (${item.type})`, err);
                         }
-                    } else if (as(ExtType, VueFilter)) {
+                    } else if (as(ExtType, VueFilter)) { // filters
                         try {
                             ext = new ExtType();
                             // TODO: prevent duplicate filter registration, as done for components
@@ -1260,21 +1265,21 @@
                         } catch (err) {
                             throw Exception.OperationFailed(`Filter registration failed. (${item.type})`, err);
                         }                
-                    } else if (as(ExtType, VueMixin)) {
+                    } else if (as(ExtType, VueMixin)) { // mixins
                         try {
                             ext = new ExtType();
                             Vue.mixin(await ext.factory());
                         } catch (err) {
                             throw Exception.OperationFailed(`Mixin registration failed. (${item.type})`, err);
                         }
-                    } else if (as(ExtType, VuePlugin)) {
+                    } else if (as(ExtType, VuePlugin)) { // plugins
                         try {
                             ext = new ExtType(item.name);
                             Vue.use(await ext.factory(), item.options || {});
                         } catch (err) {
                             throw Exception.OperationFailed(`Plugin registration failed. (${item.type})`, err);
                         }
-                    } else {
+                    } else { // unknown
                         throw Exception.InvalidArgument(item.type);
                     }
                 }
@@ -1292,7 +1297,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.0","lupdate":"Thu, 05 Sep 2019 01:06:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.1","lupdate":"Thu, 05 Sep 2019 22:28:00 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
