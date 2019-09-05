@@ -3,11 +3,11 @@
     "title": "Flair.js Fabric",
     "description": "Foundation for True Object Oriented JavaScript Apps",
     "copyright": "(c) 2017-2019 Vikas Burman",
-    "version": "0.58.85",
+    "version": "0.59.0",
     "author": "Vikas Burman <vikasburman@gmail.com>",
     "keywords": [
         "javascript",
-        "oops",
+        "flairjs",
         "javascript-framework",
         "isomorphic-javascript"
     ],
