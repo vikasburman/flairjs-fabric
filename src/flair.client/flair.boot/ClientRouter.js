@@ -32,6 +32,20 @@ Class('', Bootware, function() {
             });
         }
 
+        const runInterceptors = async (ctx) => {
+            // run mount specific interceptors
+            // each interceptor is derived from ViewInterceptor and
+            // async run method of it takes ctx, can update it
+            // each item is: "InterceptorTypeQualifiedName"
+            let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
+            for(let ic of mountInterceptors) {
+                let ICType = as(await include(ic), ViewInterceptor);
+                if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
+                
+                await new ICType().run(ctx);
+                if (ctx.$stop) { break; } // break, if someone forced to stop 
+            }
+        };
         const runHandler = async (routeHandler, ctx) => {
             // static handler
             let staticFile = null;
@@ -59,18 +73,8 @@ Class('', Bootware, function() {
                 // have "ctx.params: { "userId": "34", "bookId": "8989" }"
                 // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
 
-                // run mount specific interceptors
-                // each interceptor is derived from ViewInterceptor and
-                // async run method of it takes ctx, can update it
-                // each item is: "InterceptorTypeQualifiedName"
-                let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
-                for(let ic of mountInterceptors) {
-                    let ICType = as(await include(ic), ViewInterceptor);
-                    if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                    
-                    await new ICType().run(ctx);
-                    if (ctx.$stop) { break; } // break, if someone forced to stop 
-                }
+                // run interceptors
+                await runInterceptors(ctx);
 
                 // handle route
                 if (!ctx.$stop) {
@@ -95,6 +99,9 @@ Class('', Bootware, function() {
                 }
             };
         };
+        const addHandler = (app, route) => {
+            app.add(route, getHandler(route));
+        };
 
         // add routes related to current mount
         let app = mount.app;
@@ -102,7 +109,7 @@ Class('', Bootware, function() {
             // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
             if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                 if (route.name !== settings.view.routes.notfound) { // add all except the 404 route
-                    app.add(route, getHandler(route));
+                    addHandler(app, route);
                 } 
             }
         }

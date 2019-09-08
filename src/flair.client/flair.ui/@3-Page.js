@@ -7,10 +7,12 @@ Class('', function() {
     let handlers = [],
         defaultHandler;
 
-    this.construct = (options) => {
+    this.construct = (options, params) => {
+        // any path can be built using 
+
         // settings
+        this.params = params || '';
         this.hasbang = options.hasbang || false;
-        this.lang = options.lang || false;
         this.base = options.base || '';
         this.sensitive = options.sensitive || false;
 
@@ -23,7 +25,7 @@ Class('', function() {
     this.hasbang = false;
 
     $$('readonly');
-    this.lang = false;
+    this.params = '';
 
     $$('readonly');
     this.base = '';
@@ -76,7 +78,9 @@ Class('', function() {
         let parts = {
             url: url,
             path: '',
-            loc: '',
+            account: '',
+            locale: '',
+            version: '',
             params: {},
             handler: null,
             route: null
@@ -95,21 +99,6 @@ Class('', function() {
         // remove base
         if (path.startsWith(this.base)) {
             path = path.substr(this.base.length);
-        }
-
-        // extract and strip locale
-        if (this.lang) { 
-            if (path.startsWith('/')) { path = path.substr(1); } // remove initial slash 
-            let items = path.split('/');
-            if (items.length > 0) {
-                let loc = items[0].trim();
-                if (AppDomain.host().supportedLocales.indexOf(loc) !== -1) {
-                    parts.loc = loc;
-                }
-                items.shift(); // remove first
-                path = items.join('/');
-                if (!path.startsWith('/')) { path = '/' + path; } // add initial slash 
-            }    
         }
 
         // add initial slash 
@@ -155,7 +144,17 @@ Class('', function() {
                 parts.handler = item.handler; 
 
                 // set route
-                parts.route = item.route; 
+                parts.route = item.route;
+
+                // set known mount params, if required
+                if (this.params) {
+                    let p = '';
+                    p = '/:account'; if (this.params.indexOf(p) !== -1 && parts.params['account']) { parts.account = parts.params['account']; }
+                    p = '/:version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
+                    p = '/:locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
+                }
+
+                // done
                 break;
             }
         }
@@ -173,12 +172,24 @@ Class('', function() {
         let url = this.base;
         if (!url.endsWith('/')) { url += '/'; }
 
-        // add locale next to base
-        if (this.lang) {
-            url += AppDomain.host().currentLocale + '/';
+        // add mount params next to base
+        if (this.params) {
+            let mountParams = this.params;
+            if (mountParams.startsWith('/')) { mountParams = mountParams.substr(1); }
+            url += mountParams;
+
+            // add known mount params value to params
+            // Note: All unknown mount params - means other than account, locale and version, whatever is
+            // added in mount params - must be passed in params from outside
+            // Note: For known mount params, this will always overwrite from what is set in env, so new URL can be built
+            params = params || {};
+            let p = '';
+            p = '/:account'; if (mountParams.indexOf(p) !== -1) { params['account'] = AppDomain.host().account(); }
+            p = '/:version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
+            p = '/:locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
         }
 
-        // add path after base
+        // add path after base (and mountParams, if applicable)
         if (path.startsWith('/')) { path = path.substr(1); }
         url += path;
         if (!url.startsWith('/')) { url = '/' +  url; }
@@ -220,18 +231,29 @@ Class('', function() {
         return url;
     };
     this.rebuildUrl = (url) => {
-        // this will consider any change in locale (and any such other things in future)
+        // this will consider any change in locale, account, version (and any such other mount params)
         let parts = this.breakUrl(url);
         return this.buildUrl(parts.path, parts.params);
     };
 
     this.add = (route, handler) => {
+        let routePath = route.path;
+
+        // modify route path to add mount params, other than base
+        if (this.params) { // mount specific params are defined
+            let newRoutePath = this.params;
+            if (!newRoutePath.startsWith('/')) { newRoutePath = '/' + newRoutePath; } // add first /
+            if (!newRoutePath.endsWith('/')) { newRoutePath = newRoutePath + '/'; } // add last /
+            newRoutePath += routePath; // add route path
+            routePath = newRoutePath.replace('//', '/'); // replace // with / (just in case)
+        }
+
         let keys = []; // contains { name: name, index: indexPosition }
         handlers.push({
             route: route,
-            path: route.path,
+            path: routePath,
             keys: keys,
-            regex: this.pathToRegExp(route.path, keys),
+            regex: this.pathToRegExp(routePath, keys),
             handler: handler
         });
     };
@@ -246,6 +268,9 @@ Class('', function() {
             $route: '',
             $handler: '',
             $mount: '',
+            $account: '',
+            $locale: '',
+            $version: '',
             $path: '',
             $stop: false,  // if no further processing to be done
             $redirect: {
@@ -256,10 +281,12 @@ Class('', function() {
 
         // get path parts
         let parts = this.breakUrl(url),
-            loc = parts.loc,
             params = parts.params;
         
         // enrich ctx
+        ctx.$locale = parts.locale;
+        ctx.$version = parts.version;
+        ctx.$account = parts.account;
         if (parts.route) {
             ctx.$route = parts.route.name;
             ctx.$handler = parts.route.handler;
@@ -275,9 +302,19 @@ Class('', function() {
         try {
             if (parts.handler) {
                 // set locale
-                if (this.lang) { 
-                    AppDomain.host().locale(loc); // this will set only if changed
+                if (parts.locale) { 
+                    AppDomain.host().locale(parts.locale); // this will set only if changed
                 }
+
+                // set version
+                if (parts.version) { 
+                    AppDomain.host().version(parts.version); // this will set only if changed
+                }
+                
+                // set account
+                if (parts.account) { 
+                    AppDomain.host().account(parts.account); // this will set only if changed
+                }                
 
                 // run handler
                 await parts.handler(ctx);

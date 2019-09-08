@@ -46,18 +46,22 @@ Class('', Host, function() {
         };
 
         // create main app instance of express
-        let mainApp = express();
+        let mainApp = express(),
+            mainAppMountParams = (settings.routing['main'] ? settings.routing['main']['params'] : '') || '';
         applySettings('main', mainApp);
 
         // create one instance of express app for each mounted path
         let mountPath = '',
-            mount = null;
+            mount = null,
+            mountParams = '';
         for(let mountName of Object.keys(settings.routing.mounts)) {
             if (mountName === 'main') {
                 mountPath = '/';
                 mount = mainApp;
+                mountParams = mainAppMountParams;
             } else {
                 mountPath = settings.routing.mounts[mountName];
+                mountParams = (settings.routing[mountName] ? settings.routing[mountName]['params'] : '') || '';
                 mount = express(); // create a sub-app
             }
 
@@ -65,6 +69,7 @@ Class('', Host, function() {
             mountedApps[mountName] = Object.freeze({
                 name: mountName,
                 root: mountPath,
+                params: mountParams,
                 app: mount
             });
 

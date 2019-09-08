@@ -30,7 +30,6 @@
             "before": {
                 "settings": [
                     { "name": "hashbang", "value": false },
-                    { "name": "lang", "value": false },
                     { "name": "sensitive", "value": false }
                 ],
                 "interceptors": [

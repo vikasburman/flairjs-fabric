@@ -42,6 +42,9 @@ Class('', Host, function() {
         if (newLocale && this.currentLocale !== newLocale) { 
             this.currentLocale = newLocale;
 
+            // set in env props also, for api endpoint url resolver to pick it, if need be
+            env.props('api', 'locale'. newLocale);
+
             if (isRefresh) {
                 let app = this(window.location.hash);
                 let updatedUrl = app.rebuildUrl(window.location.hash);
@@ -53,6 +56,54 @@ Class('', Host, function() {
         return this.currentLocale;
     };
     // localization support (end)
+
+    // other segmentation support (start)
+    $$('state');
+    $$('private');
+    this.currentVersion = '';
+
+    this.version = (newVersion, isRefresh) => {
+        // update value and refresh for changes (if required)
+        if (newVersion && this.currentVersion !== newVersion) { 
+            this.currentVersion = newVersion;
+
+            // set in env props also, for api endpoint url resolver to pick it, if need be
+            env.props('api', 'version'. newVersion);
+
+            if (isRefresh) {
+                let app = this(window.location.hash);
+                let updatedUrl = app.rebuildUrl(window.location.hash);
+                this.go(updatedUrl);
+            }
+        }
+
+        // return
+        return this.currentVersion;
+    };
+
+    $$('state');
+    $$('private');
+    this.currentAccount = '';
+
+    this.account = (newAccount, isRefresh) => {
+        // update value and refresh for changes (if required)
+        if (newAccount && this.currentAccount !== newAccount) { 
+            this.currentAccount = newAccount;
+
+            // set in env props also, for api endpoint url resolver to pick it, if need be
+            env.props('api', 'account'. newAccount);
+
+            if (isRefresh) {
+                let app = this(window.location.hash);
+                let updatedUrl = app.rebuildUrl(window.location.hash);
+                this.go(updatedUrl);
+            }
+        }
+
+        // return
+        return this.currentAccount;
+    };    
+    // other segmentation support (end)
 
     // path support (start)
     this.routeToUrl = (route, params) => {
@@ -146,7 +197,8 @@ Class('', Host, function() {
         base();
 
         let appSettings = {},
-            mount = null;
+            mount = null,
+            mountParams = '';
         const getSettings = (mountName) => {
             // each item is: { name: '', value:  }
             let pageSettings = this.getMountSpecificSettings('settings', settings.routing, mountName, 'name');
@@ -164,21 +216,25 @@ Class('', Host, function() {
 
         // create main app instance of page
         appSettings = getSettings('main');
-        let mainApp = new Page(appSettings);
+        let mainAppMountParams = (settings.routing['main'] ? settings.routing['main']['params'] : '') || '';
+        let mainApp = new Page(appSettings, mainAppMountParams);
 
         // create one instance of page app for each mounted path
         for(let mountName of Object.keys(settings.routing.mounts)) {
             if (mountName === 'main') {
                 mount = mainApp;
+                mountParams = mainAppMountParams;
             } else {
                 appSettings = getSettings(mountName);
-                mount = new Page(appSettings); 
+                mountParams = (settings.routing[mountName] ? settings.routing[mountName]['params'] : '') || '';
+                mount = new Page(appSettings, mountParams);
             }
 
             // attach
             mountedApps[mountName] = Object.freeze({
                 name: mountName,
                 root: mount.base,
+                params: mountParams,
                 app: mount
             });
         }

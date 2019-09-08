@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.15
- *  Sun, 08 Sep 2019 01:18:34 GMT
+ *  Version: 0.59.18
+ *  Sun, 08 Sep 2019 18:19:51 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -55,7 +55,7 @@
     AppDomain.loadPathOf('flair.client', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"view":{"el":"main","transition":"","static":{"fileExt":"xml","root":"./pages/","handler":"flair.ui.StaticView"},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"lang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
+    let settings = JSON.parse('{"view":{"el":"main","transition":"","static":{"fileExt":"xml","root":"./pages/","handler":"flair.ui.StaticView"},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
     let settingsReader = flair.Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
@@ -384,10 +384,12 @@
             let handlers = [],
                 defaultHandler;
         
-            this.construct = (options) => {
+            this.construct = (options, params) => {
+                // any path can be built using 
+        
                 // settings
+                this.params = params || '';
                 this.hasbang = options.hasbang || false;
-                this.lang = options.lang || false;
                 this.base = options.base || '';
                 this.sensitive = options.sensitive || false;
         
@@ -400,7 +402,7 @@
             this.hasbang = false;
         
             $$('readonly');
-            this.lang = false;
+            this.params = '';
         
             $$('readonly');
             this.base = '';
@@ -453,7 +455,9 @@
                 let parts = {
                     url: url,
                     path: '',
-                    loc: '',
+                    account: '',
+                    locale: '',
+                    version: '',
                     params: {},
                     handler: null,
                     route: null
@@ -472,21 +476,6 @@
                 // remove base
                 if (path.startsWith(this.base)) {
                     path = path.substr(this.base.length);
-                }
-        
-                // extract and strip locale
-                if (this.lang) { 
-                    if (path.startsWith('/')) { path = path.substr(1); } // remove initial slash 
-                    let items = path.split('/');
-                    if (items.length > 0) {
-                        let loc = items[0].trim();
-                        if (AppDomain.host().supportedLocales.indexOf(loc) !== -1) {
-                            parts.loc = loc;
-                        }
-                        items.shift(); // remove first
-                        path = items.join('/');
-                        if (!path.startsWith('/')) { path = '/' + path; } // add initial slash 
-                    }    
                 }
         
                 // add initial slash 
@@ -532,7 +521,17 @@
                         parts.handler = item.handler; 
         
                         // set route
-                        parts.route = item.route; 
+                        parts.route = item.route;
+        
+                        // set known mount params, if required
+                        if (this.params) {
+                            let p = '';
+                            p = '/:account'; if (this.params.indexOf(p) !== -1 && parts.params['account']) { parts.account = parts.params['account']; }
+                            p = '/:version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
+                            p = '/:locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
+                        }
+        
+                        // done
                         break;
                     }
                 }
@@ -550,12 +549,24 @@
                 let url = this.base;
                 if (!url.endsWith('/')) { url += '/'; }
         
-                // add locale next to base
-                if (this.lang) {
-                    url += AppDomain.host().currentLocale + '/';
+                // add mount params next to base
+                if (this.params) {
+                    let mountParams = this.params;
+                    if (mountParams.startsWith('/')) { mountParams = mountParams.substr(1); }
+                    url += mountParams;
+        
+                    // add known mount params value to params
+                    // Note: All unknown mount params - means other than account, locale and version, whatever is
+                    // added in mount params - must be passed in params from outside
+                    // Note: For known mount params, this will always overwrite from what is set in env, so new URL can be built
+                    params = params || {};
+                    let p = '';
+                    p = '/:account'; if (mountParams.indexOf(p) !== -1) { params['account'] = AppDomain.host().account(); }
+                    p = '/:version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
+                    p = '/:locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
                 }
         
-                // add path after base
+                // add path after base (and mountParams, if applicable)
                 if (path.startsWith('/')) { path = path.substr(1); }
                 url += path;
                 if (!url.startsWith('/')) { url = '/' +  url; }
@@ -597,18 +608,29 @@
                 return url;
             };
             this.rebuildUrl = (url) => {
-                // this will consider any change in locale (and any such other things in future)
+                // this will consider any change in locale, account, version (and any such other mount params)
                 let parts = this.breakUrl(url);
                 return this.buildUrl(parts.path, parts.params);
             };
         
             this.add = (route, handler) => {
+                let routePath = route.path;
+        
+                // modify route path to add mount params, other than base
+                if (this.params) { // mount specific params are defined
+                    let newRoutePath = this.params;
+                    if (!newRoutePath.startsWith('/')) { newRoutePath = '/' + newRoutePath; } // add first /
+                    if (!newRoutePath.endsWith('/')) { newRoutePath = newRoutePath + '/'; } // add last /
+                    newRoutePath += routePath; // add route path
+                    routePath = newRoutePath.replace('//', '/'); // replace // with / (just in case)
+                }
+        
                 let keys = []; // contains { name: name, index: indexPosition }
                 handlers.push({
                     route: route,
-                    path: route.path,
+                    path: routePath,
                     keys: keys,
-                    regex: this.pathToRegExp(route.path, keys),
+                    regex: this.pathToRegExp(routePath, keys),
                     handler: handler
                 });
             };
@@ -623,6 +645,9 @@
                     $route: '',
                     $handler: '',
                     $mount: '',
+                    $account: '',
+                    $locale: '',
+                    $version: '',
                     $path: '',
                     $stop: false,  // if no further processing to be done
                     $redirect: {
@@ -633,10 +658,12 @@
         
                 // get path parts
                 let parts = this.breakUrl(url),
-                    loc = parts.loc,
                     params = parts.params;
                 
                 // enrich ctx
+                ctx.$locale = parts.locale;
+                ctx.$version = parts.version;
+                ctx.$account = parts.account;
                 if (parts.route) {
                     ctx.$route = parts.route.name;
                     ctx.$handler = parts.route.handler;
@@ -652,9 +679,19 @@
                 try {
                     if (parts.handler) {
                         // set locale
-                        if (this.lang) { 
-                            AppDomain.host().locale(loc); // this will set only if changed
+                        if (parts.locale) { 
+                            AppDomain.host().locale(parts.locale); // this will set only if changed
                         }
+        
+                        // set version
+                        if (parts.version) { 
+                            AppDomain.host().version(parts.version); // this will set only if changed
+                        }
+                        
+                        // set account
+                        if (parts.account) { 
+                            AppDomain.host().account(parts.account); // this will set only if changed
+                        }                
         
                         // run handler
                         await parts.handler(ctx);
@@ -722,6 +759,9 @@
                 if (newLocale && this.currentLocale !== newLocale) { 
                     this.currentLocale = newLocale;
         
+                    // set in env props also, for api endpoint url resolver to pick it, if need be
+                    env.props('api', 'locale'. newLocale);
+        
                     if (isRefresh) {
                         let app = this(window.location.hash);
                         let updatedUrl = app.rebuildUrl(window.location.hash);
@@ -733,6 +773,54 @@
                 return this.currentLocale;
             };
             // localization support (end)
+        
+            // other segmentation support (start)
+            $$('state');
+            $$('private');
+            this.currentVersion = '';
+        
+            this.version = (newVersion, isRefresh) => {
+                // update value and refresh for changes (if required)
+                if (newVersion && this.currentVersion !== newVersion) { 
+                    this.currentVersion = newVersion;
+        
+                    // set in env props also, for api endpoint url resolver to pick it, if need be
+                    env.props('api', 'version'. newVersion);
+        
+                    if (isRefresh) {
+                        let app = this(window.location.hash);
+                        let updatedUrl = app.rebuildUrl(window.location.hash);
+                        this.go(updatedUrl);
+                    }
+                }
+        
+                // return
+                return this.currentVersion;
+            };
+        
+            $$('state');
+            $$('private');
+            this.currentAccount = '';
+        
+            this.account = (newAccount, isRefresh) => {
+                // update value and refresh for changes (if required)
+                if (newAccount && this.currentAccount !== newAccount) { 
+                    this.currentAccount = newAccount;
+        
+                    // set in env props also, for api endpoint url resolver to pick it, if need be
+                    env.props('api', 'account'. newAccount);
+        
+                    if (isRefresh) {
+                        let app = this(window.location.hash);
+                        let updatedUrl = app.rebuildUrl(window.location.hash);
+                        this.go(updatedUrl);
+                    }
+                }
+        
+                // return
+                return this.currentAccount;
+            };    
+            // other segmentation support (end)
         
             // path support (start)
             this.routeToUrl = (route, params) => {
@@ -826,7 +914,8 @@
                 base();
         
                 let appSettings = {},
-                    mount = null;
+                    mount = null,
+                    mountParams = '';
                 const getSettings = (mountName) => {
                     // each item is: { name: '', value:  }
                     let pageSettings = this.getMountSpecificSettings('settings', settings.routing, mountName, 'name');
@@ -844,21 +933,25 @@
         
                 // create main app instance of page
                 appSettings = getSettings('main');
-                let mainApp = new Page(appSettings);
+                let mainAppMountParams = (settings.routing['main'] ? settings.routing['main']['params'] : '') || '';
+                let mainApp = new Page(appSettings, mainAppMountParams);
         
                 // create one instance of page app for each mounted path
                 for(let mountName of Object.keys(settings.routing.mounts)) {
                     if (mountName === 'main') {
                         mount = mainApp;
+                        mountParams = mainAppMountParams;
                     } else {
                         appSettings = getSettings(mountName);
-                        mount = new Page(appSettings); 
+                        mountParams = (settings.routing[mountName] ? settings.routing[mountName]['params'] : '') || '';
+                        mount = new Page(appSettings, mountParams);
                     }
         
                     // attach
                     mountedApps[mountName] = Object.freeze({
                         name: mountName,
                         root: mount.base,
+                        params: mountParams,
                         app: mount
                     });
                 }
@@ -951,6 +1044,20 @@
                     });
                 }
         
+                const runInterceptors = async (ctx) => {
+                    // run mount specific interceptors
+                    // each interceptor is derived from ViewInterceptor and
+                    // async run method of it takes ctx, can update it
+                    // each item is: "InterceptorTypeQualifiedName"
+                    let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
+                    for(let ic of mountInterceptors) {
+                        let ICType = as(await include(ic), ViewInterceptor);
+                        if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
+                        
+                        await new ICType().run(ctx);
+                        if (ctx.$stop) { break; } // break, if someone forced to stop 
+                    }
+                };
                 const runHandler = async (routeHandler, ctx) => {
                     // static handler
                     let staticFile = null;
@@ -978,18 +1085,8 @@
                         // have "ctx.params: { "userId": "34", "bookId": "8989" }"
                         // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
         
-                        // run mount specific interceptors
-                        // each interceptor is derived from ViewInterceptor and
-                        // async run method of it takes ctx, can update it
-                        // each item is: "InterceptorTypeQualifiedName"
-                        let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
-                        for(let ic of mountInterceptors) {
-                            let ICType = as(await include(ic), ViewInterceptor);
-                            if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                            
-                            await new ICType().run(ctx);
-                            if (ctx.$stop) { break; } // break, if someone forced to stop 
-                        }
+                        // run interceptors
+                        await runInterceptors(ctx);
         
                         // handle route
                         if (!ctx.$stop) {
@@ -1014,6 +1111,9 @@
                         }
                     };
                 };
+                const addHandler = (app, route) => {
+                    app.add(route, getHandler(route));
+                };
         
                 // add routes related to current mount
                 let app = mount.app;
@@ -1021,7 +1121,7 @@
                     // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
                     if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
                         if (route.name !== settings.view.routes.notfound) { // add all except the 404 route
-                            app.add(route, getHandler(route));
+                            addHandler(app, route);
                         } 
                     }
                 }
@@ -1096,7 +1196,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.15","lupdate":"Sun, 08 Sep 2019 01:18:34 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.18","lupdate":"Sun, 08 Sep 2019 18:19:51 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
