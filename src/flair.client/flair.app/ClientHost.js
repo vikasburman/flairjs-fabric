@@ -40,7 +40,7 @@ Class('', Host, function() {
     };
     this.locale = (newLocale, isRefresh) => {
         // update value and refresh for changes (if required)
-        if (newLocale && this.currentLocale !== newLocale) { 
+        if (newLocale && this.currentLocale !== newLocale && findIndexByProp(this.supportedLocales, 'code', newLocale) !== -1) { 
             let oldLocale = this.currentLocale;
             this.currentLocale = newLocale;
 
