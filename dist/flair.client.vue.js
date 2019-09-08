@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.18
- *  Sun, 08 Sep 2019 18:19:51 GMT
+ *  Version: 0.59.21
+ *  Sun, 08 Sep 2019 20:50:36 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -264,6 +264,10 @@
                         component.methods['i18n'] = (key) => { return _this.i18nValue(key); };
                     } 
                     
+                    // built-in method: version 
+                    // e.g., {{ version() }} will give: 'whatever'
+                    component.methods['version'] = (value) => { return _this.version(value); };
+        
                     // built-in method: ctx 
                     // this helps in getting context information
                     // e.g., {{ ctx('<propName>', 'defaultValue') }} will give: 'value of propName OR defaultValue'
@@ -530,7 +534,10 @@
             this.localePath = '';    
         
             $$('protected');
-            this.locale = (value) => { return AppDomain.host().locale(value); };
+            this.locale = (value) => { return AppDomain.host().locale(value, true); };
+        
+            $$('protected');
+            this.version = (value) => { return AppDomain.host().version(value, true); };
         
             $$('protected');
             this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
@@ -1297,7 +1304,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.18","lupdate":"Sun, 08 Sep 2019 18:19:51 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.21","lupdate":"Sun, 08 Sep 2019 20:50:36 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.StaticView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

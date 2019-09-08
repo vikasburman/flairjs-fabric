@@ -12,7 +12,8 @@ Class('', Host, function() {
 
     $$('override');
     this.construct = (base) => {
-        base('Client'); 
+        base('Client');
+        this.currentLocale = this.defaultLocale; // set default
     };
 
     this.app = {
@@ -27,7 +28,7 @@ Class('', Host, function() {
     // localization support (start)
     $$('state');
     $$('private');
-    this.currentLocale = settings.i18n.lang.default;
+    this.currentLocale = '';
 
     this.defaultLocale = {
         get: () => { return settings.i18n.lang.default; },
@@ -40,15 +41,15 @@ Class('', Host, function() {
     this.locale = (newLocale, isRefresh) => {
         // update value and refresh for changes (if required)
         if (newLocale && this.currentLocale !== newLocale) { 
+            let oldLocale = this.currentLocale;
             this.currentLocale = newLocale;
 
             // set in env props also, for api endpoint url resolver to pick it, if need be
             env.props('api', 'locale'. newLocale);
 
             if (isRefresh) {
-                let app = this(window.location.hash);
-                let updatedUrl = app.rebuildUrl(window.location.hash);
-                this.go(updatedUrl);
+                let newUrl = window.location.hash.replace(oldLocale, newLocale);
+                this.go(newUrl);
             }
         }
 
@@ -65,44 +66,21 @@ Class('', Host, function() {
     this.version = (newVersion, isRefresh) => {
         // update value and refresh for changes (if required)
         if (newVersion && this.currentVersion !== newVersion) { 
+            let oldVersion = this.currentVersion;
             this.currentVersion = newVersion;
 
             // set in env props also, for api endpoint url resolver to pick it, if need be
             env.props('api', 'version'. newVersion);
 
             if (isRefresh) {
-                let app = this(window.location.hash);
-                let updatedUrl = app.rebuildUrl(window.location.hash);
-                this.go(updatedUrl);
+                let newUrl = window.location.hash.replace(oldVersion, newVersion);
+                this.go(newUrl);
             }
         }
 
         // return
         return this.currentVersion;
     };
-
-    $$('state');
-    $$('private');
-    this.currentAccount = '';
-
-    this.account = (newAccount, isRefresh) => {
-        // update value and refresh for changes (if required)
-        if (newAccount && this.currentAccount !== newAccount) { 
-            this.currentAccount = newAccount;
-
-            // set in env props also, for api endpoint url resolver to pick it, if need be
-            env.props('api', 'account'. newAccount);
-
-            if (isRefresh) {
-                let app = this(window.location.hash);
-                let updatedUrl = app.rebuildUrl(window.location.hash);
-                this.go(updatedUrl);
-            }
-        }
-
-        // return
-        return this.currentAccount;
-    };    
     // other segmentation support (end)
 
     // path support (start)
@@ -117,6 +95,7 @@ Class('', Host, function() {
 
         // get app
         let app = this.mounts[routeObj.mount].app;
+
 
         // return
         return app.buildUrl(routeObj.path, params);
@@ -263,13 +242,21 @@ Class('', Host, function() {
         // attach event handler
         window.addEventListener('hashchange', hashChangeHandler);
 
-        // redirect to home
-        if (settings.view.routes.home) {
-            await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+        // redirect to home or open given url
+        // url can be given as: 
+        // host
+        // host/
+        // host/#/path
+        if (!window.location.hash) { // no hash is given
+            if (settings.view.routes.home) {
+                await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+            } else {
+                console.log(`No home route is configured.`); // eslint-disable-line no-console
+            }
         } else {
-            console.log(`No home route is configured.`); // eslint-disable-line no-console
+            await hashChangeHandler(); // manually call it the first time
         }
-
+        
         // ready
         console.log(`${AppDomain.app().info.name}, v${AppDomain.app().info.version}`); // eslint-disable-line no-console
     };

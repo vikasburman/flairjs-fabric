@@ -78,7 +78,6 @@ Class('', function() {
         let parts = {
             url: url,
             path: '',
-            account: '',
             locale: '',
             version: '',
             params: {},
@@ -149,9 +148,8 @@ Class('', function() {
                 // set known mount params, if required
                 if (this.params) {
                     let p = '';
-                    p = '/:account'; if (this.params.indexOf(p) !== -1 && parts.params['account']) { parts.account = parts.params['account']; }
-                    p = '/:version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
-                    p = '/:locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
+                    p = ':version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
+                    p = ':locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
                 }
 
                 // done
@@ -179,14 +177,13 @@ Class('', function() {
             url += mountParams;
 
             // add known mount params value to params
-            // Note: All unknown mount params - means other than account, locale and version, whatever is
+            // Note: All unknown mount params - means other than locale and version, whatever is
             // added in mount params - must be passed in params from outside
             // Note: For known mount params, this will always overwrite from what is set in env, so new URL can be built
             params = params || {};
             let p = '';
-            p = '/:account'; if (mountParams.indexOf(p) !== -1) { params['account'] = AppDomain.host().account(); }
-            p = '/:version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
-            p = '/:locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
+            p = ':version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
+            p = ':locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
         }
 
         // add path after base (and mountParams, if applicable)
@@ -230,11 +227,6 @@ Class('', function() {
         // done
         return url;
     };
-    this.rebuildUrl = (url) => {
-        // this will consider any change in locale, account, version (and any such other mount params)
-        let parts = this.breakUrl(url);
-        return this.buildUrl(parts.path, parts.params);
-    };
 
     this.add = (route, handler) => {
         let routePath = route.path;
@@ -268,7 +260,6 @@ Class('', function() {
             $route: '',
             $handler: '',
             $mount: '',
-            $account: '',
             $locale: '',
             $version: '',
             $path: '',
@@ -286,7 +277,6 @@ Class('', function() {
         // enrich ctx
         ctx.$locale = parts.locale;
         ctx.$version = parts.version;
-        ctx.$account = parts.account;
         if (parts.route) {
             ctx.$route = parts.route.name;
             ctx.$handler = parts.route.handler;
@@ -311,11 +301,6 @@ Class('', function() {
                     AppDomain.host().version(parts.version); // this will set only if changed
                 }
                 
-                // set account
-                if (parts.account) { 
-                    AppDomain.host().account(parts.account); // this will set only if changed
-                }                
-
                 // run handler
                 await parts.handler(ctx);
 

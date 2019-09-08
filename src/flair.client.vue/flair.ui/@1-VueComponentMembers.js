@@ -181,6 +181,10 @@ Mixin('', function() {
                 component.methods['i18n'] = (key) => { return _this.i18nValue(key); };
             } 
             
+            // built-in method: version 
+            // e.g., {{ version() }} will give: 'whatever'
+            component.methods['version'] = (value) => { return _this.version(value); };
+
             // built-in method: ctx 
             // this helps in getting context information
             // e.g., {{ ctx('<propName>', 'defaultValue') }} will give: 'value of propName OR defaultValue'
@@ -447,7 +451,10 @@ Mixin('', function() {
     this.localePath = '';    
 
     $$('protected');
-    this.locale = (value) => { return AppDomain.host().locale(value); };
+    this.locale = (value) => { return AppDomain.host().locale(value, true); };
+
+    $$('protected');
+    this.version = (value) => { return AppDomain.host().version(value, true); };
 
     $$('protected');
     this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };

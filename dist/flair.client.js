@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.18
- *  Sun, 08 Sep 2019 18:19:51 GMT
+ *  Version: 0.59.21
+ *  Sun, 08 Sep 2019 20:50:36 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -455,7 +455,6 @@
                 let parts = {
                     url: url,
                     path: '',
-                    account: '',
                     locale: '',
                     version: '',
                     params: {},
@@ -526,9 +525,8 @@
                         // set known mount params, if required
                         if (this.params) {
                             let p = '';
-                            p = '/:account'; if (this.params.indexOf(p) !== -1 && parts.params['account']) { parts.account = parts.params['account']; }
-                            p = '/:version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
-                            p = '/:locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
+                            p = ':version'; if (this.params.indexOf(p) !== -1 && parts.params['version']) { parts.version = parts.params['version']; }
+                            p = ':locale'; if (this.params.indexOf(p) !== -1 && parts.params['locale']) { parts.locale = parts.params['locale']; }
                         }
         
                         // done
@@ -556,14 +554,13 @@
                     url += mountParams;
         
                     // add known mount params value to params
-                    // Note: All unknown mount params - means other than account, locale and version, whatever is
+                    // Note: All unknown mount params - means other than locale and version, whatever is
                     // added in mount params - must be passed in params from outside
                     // Note: For known mount params, this will always overwrite from what is set in env, so new URL can be built
                     params = params || {};
                     let p = '';
-                    p = '/:account'; if (mountParams.indexOf(p) !== -1) { params['account'] = AppDomain.host().account(); }
-                    p = '/:version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
-                    p = '/:locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
+                    p = ':version'; if (mountParams.indexOf(p) !== -1) { params['version'] = AppDomain.host().version(); }
+                    p = ':locale'; if (mountParams.indexOf(p) !== -1) { params['locale'] = AppDomain.host().locale(); }
                 }
         
                 // add path after base (and mountParams, if applicable)
@@ -607,11 +604,6 @@
                 // done
                 return url;
             };
-            this.rebuildUrl = (url) => {
-                // this will consider any change in locale, account, version (and any such other mount params)
-                let parts = this.breakUrl(url);
-                return this.buildUrl(parts.path, parts.params);
-            };
         
             this.add = (route, handler) => {
                 let routePath = route.path;
@@ -645,7 +637,6 @@
                     $route: '',
                     $handler: '',
                     $mount: '',
-                    $account: '',
                     $locale: '',
                     $version: '',
                     $path: '',
@@ -663,7 +654,6 @@
                 // enrich ctx
                 ctx.$locale = parts.locale;
                 ctx.$version = parts.version;
-                ctx.$account = parts.account;
                 if (parts.route) {
                     ctx.$route = parts.route.name;
                     ctx.$handler = parts.route.handler;
@@ -688,11 +678,6 @@
                             AppDomain.host().version(parts.version); // this will set only if changed
                         }
                         
-                        // set account
-                        if (parts.account) { 
-                            AppDomain.host().account(parts.account); // this will set only if changed
-                        }                
-        
                         // run handler
                         await parts.handler(ctx);
         
@@ -729,7 +714,8 @@
         
             $$('override');
             this.construct = (base) => {
-                base('Client'); 
+                base('Client');
+                this.currentLocale = this.defaultLocale; // set default
             };
         
             this.app = {
@@ -744,7 +730,7 @@
             // localization support (start)
             $$('state');
             $$('private');
-            this.currentLocale = settings.i18n.lang.default;
+            this.currentLocale = '';
         
             this.defaultLocale = {
                 get: () => { return settings.i18n.lang.default; },
@@ -757,15 +743,15 @@
             this.locale = (newLocale, isRefresh) => {
                 // update value and refresh for changes (if required)
                 if (newLocale && this.currentLocale !== newLocale) { 
+                    let oldLocale = this.currentLocale;
                     this.currentLocale = newLocale;
         
                     // set in env props also, for api endpoint url resolver to pick it, if need be
                     env.props('api', 'locale'. newLocale);
         
                     if (isRefresh) {
-                        let app = this(window.location.hash);
-                        let updatedUrl = app.rebuildUrl(window.location.hash);
-                        this.go(updatedUrl);
+                        let newUrl = window.location.hash.replace(oldLocale, newLocale);
+                        this.go(newUrl);
                     }
                 }
         
@@ -782,44 +768,21 @@
             this.version = (newVersion, isRefresh) => {
                 // update value and refresh for changes (if required)
                 if (newVersion && this.currentVersion !== newVersion) { 
+                    let oldVersion = this.currentVersion;
                     this.currentVersion = newVersion;
         
                     // set in env props also, for api endpoint url resolver to pick it, if need be
                     env.props('api', 'version'. newVersion);
         
                     if (isRefresh) {
-                        let app = this(window.location.hash);
-                        let updatedUrl = app.rebuildUrl(window.location.hash);
-                        this.go(updatedUrl);
+                        let newUrl = window.location.hash.replace(oldVersion, newVersion);
+                        this.go(newUrl);
                     }
                 }
         
                 // return
                 return this.currentVersion;
             };
-        
-            $$('state');
-            $$('private');
-            this.currentAccount = '';
-        
-            this.account = (newAccount, isRefresh) => {
-                // update value and refresh for changes (if required)
-                if (newAccount && this.currentAccount !== newAccount) { 
-                    this.currentAccount = newAccount;
-        
-                    // set in env props also, for api endpoint url resolver to pick it, if need be
-                    env.props('api', 'account'. newAccount);
-        
-                    if (isRefresh) {
-                        let app = this(window.location.hash);
-                        let updatedUrl = app.rebuildUrl(window.location.hash);
-                        this.go(updatedUrl);
-                    }
-                }
-        
-                // return
-                return this.currentAccount;
-            };    
             // other segmentation support (end)
         
             // path support (start)
@@ -834,6 +797,7 @@
         
                 // get app
                 let app = this.mounts[routeObj.mount].app;
+        
         
                 // return
                 return app.buildUrl(routeObj.path, params);
@@ -980,13 +944,21 @@
                 // attach event handler
                 window.addEventListener('hashchange', hashChangeHandler);
         
-                // redirect to home
-                if (settings.view.routes.home) {
-                    await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                // redirect to home or open given url
+                // url can be given as: 
+                // host
+                // host/
+                // host/#/path
+                if (!window.location.hash) { // no hash is given
+                    if (settings.view.routes.home) {
+                        await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                    } else {
+                        console.log(`No home route is configured.`); // eslint-disable-line no-console
+                    }
                 } else {
-                    console.log(`No home route is configured.`); // eslint-disable-line no-console
+                    await hashChangeHandler(); // manually call it the first time
                 }
-        
+                
                 // ready
                 console.log(`${AppDomain.app().info.name}, v${AppDomain.app().info.version}`); // eslint-disable-line no-console
             };
@@ -1196,7 +1168,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.18","lupdate":"Sun, 08 Sep 2019 18:19:51 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.21","lupdate":"Sun, 08 Sep 2019 20:50:36 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
