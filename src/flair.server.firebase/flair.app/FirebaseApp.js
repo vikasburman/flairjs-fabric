@@ -2,8 +2,7 @@
  * @name FirebaseApp
  * @description Firebase specific App extensions
  */
-$$('ns', '(auto)');
-Mixin('(auto)', function() {
+Mixin('', function() {
     const fbAdmin = require('firebase-admin');
 
     $$('private');

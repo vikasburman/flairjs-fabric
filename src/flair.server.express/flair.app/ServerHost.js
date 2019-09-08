@@ -5,8 +5,7 @@ const { Host } = await ns('flair.app');
  * @description Server host implementation
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', Host, function() {
+Class('', Host, function() {
     let mountedApps = {},
         httpServer = null,
         httpsServer = null,

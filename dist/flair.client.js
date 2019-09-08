@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.12
- *  Sat, 07 Sep 2019 20:02:58 GMT
+ *  Version: 0.59.15
+ *  Sun, 08 Sep 2019 01:18:34 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -85,7 +85,7 @@
          * @description GUI View Transition
          */
         $$('ns', 'flair.ui');
-        Class('ViewTransition', function() {
+		Class('ViewTransition' ,function() {
             $$('virtual');
             $$('async');
             this.enter = noop;
@@ -105,7 +105,7 @@
          * @description GUI View Handler
          */
         $$('ns', 'flair.ui');
-        Class('ViewHandler', Handler, function() {
+		Class('ViewHandler' ,Handler, function() {
             let mainEl = '',
                 abortControllers = {};       
         
@@ -380,7 +380,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.ui');
-        Class('Page', function() {
+		Class('Page' ,function() {
             let handlers = [],
                 defaultHandler;
         
@@ -686,7 +686,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.app');
-        Class('ClientHost', Host, function() {
+		Class('ClientHost' ,Host, function() {
             let mountedApps = {},
                 hashChangeHandler = null;
         
@@ -925,7 +925,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.boot');
-        Class('ClientRouter', Bootware, function() {
+		Class('ClientRouter' ,Bootware, function() {
             let routes = null;
             
             $$('override');
@@ -1051,7 +1051,7 @@
          * @description GUI View Interceptor
          */
         $$('ns', 'flair.ui');
-        Class('ViewInterceptor', function() {
+		Class('ViewInterceptor' ,function() {
             $$('virtual');
             $$('async');
             this.run = noop;
@@ -1065,7 +1065,7 @@
          */
         $$('singleton');
         $$('ns', 'flair.ui');
-        Class('ViewState', function() {
+		Class('ViewState' ,function() {
             $$('state');
             $$('private');
             this.store = {};
@@ -1096,7 +1096,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.12","lupdate":"Sat, 07 Sep 2019 20:02:58 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.15","lupdate":"Sun, 08 Sep 2019 01:18:34 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.Page","flair.app.ClientHost","flair.boot.ClientRouter","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

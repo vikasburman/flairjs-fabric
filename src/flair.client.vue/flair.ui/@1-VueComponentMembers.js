@@ -2,8 +2,7 @@
  * @name VueComponentMembers
  * @description Vue Component Members
  */
-$$('ns', '(auto)');
-Mixin('(auto)', function() {
+Mixin('', function() {
     var _this = this,
         _thisId = guid();
 

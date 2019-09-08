@@ -5,8 +5,7 @@ const { Bootware } = await ns('flair.app');
  * @description Initialize DI Container
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', Bootware, function() {
+Class('', Bootware, function() {
     $$('override');
     this.construct = (base) => {
         base('DI Container');

@@ -4,8 +4,7 @@ const { Handler } = await ns('flair.app');
  * @name RestHandler
  * @description Restful API Handler
  */
-$$('ns', '(auto)');
-Class('(auto)', Handler, function() {
+Class('', Handler, function() {
     $$('private');
     this.run = async (fn, req, res) => {
         let result = null;

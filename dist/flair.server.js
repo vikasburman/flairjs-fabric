@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.59.12
- *  Sat, 07 Sep 2019 20:02:59 GMT
+ *  Version: 0.59.15
+ *  Sun, 08 Sep 2019 01:18:35 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -87,7 +87,7 @@
          * @description Restful API Handler
          */
         $$('ns', 'flair.api');
-        Class('RestHandler', Handler, function() {
+		Class('RestHandler' ,Handler, function() {
             $$('private');
             this.run = async (fn, req, res) => {
                 let result = null;
@@ -145,7 +145,7 @@
          * @description RESTful Service Endpoint
          */
         $$('ns', 'flair.api');
-        Class('RESTEndPoint', RestHandler, function() {
+		Class('RESTEndPoint' ,RestHandler, function() {
             // nothing specific as of now    
         });
         
@@ -156,7 +156,7 @@
          * @description Api Interceptor
          */
         $$('ns', 'flair.api');
-        Class('RestInterceptor', function() {
+		Class('RestInterceptor' ,function() {
             $$('virtual');
             $$('async');
             this.run = noop;
@@ -172,7 +172,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.boot');
-        Class('NodeEnv', Bootware, function() {
+		Class('NodeEnv' ,Bootware, function() {
             $$('override');
             this.construct = (base) => {
                 base('Node Server Environment');
@@ -205,7 +205,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.12","lupdate":"Sat, 07 Sep 2019 20:02:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.15","lupdate":"Sun, 08 Sep 2019 01:18:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

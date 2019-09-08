@@ -3,8 +3,7 @@
  * @description GUI View State Global Store
  */
 $$('singleton');
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     $$('state');
     $$('private');
     this.store = {};

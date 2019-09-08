@@ -6,8 +6,7 @@ const { ViewHandler } = await ns('flair.ui');
  *              It's purpose is mostly to define layout - so components can be places differently
  *              the html of the layout should not have anything else - no data binding etc.
  */
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     let _thisId = guid();
 
     $$('virtual');

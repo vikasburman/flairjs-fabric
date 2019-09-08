@@ -2,8 +2,7 @@
  * @name VueFilter
  * @description Vue Filter
  */
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     $$('virtual');
     $$('async');
     this.factory = noop;

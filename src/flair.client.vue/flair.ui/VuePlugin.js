@@ -2,8 +2,7 @@
  * @name VuePlugin
  * @description Vue Plugin
  */
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     $$('virtual');
     $$('async');
     this.factory = noop;

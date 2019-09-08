@@ -4,8 +4,7 @@ const { VueComponentMembers } = await ns('flair.ui');
  * @name VueComponent
  * @description Vue Component
  */
-$$('ns', '(auto)');
-Class('(auto)', [VueComponentMembers], function() {
+Class('', [VueComponentMembers], function() {
     let _this = this;
 
     this.factory = async (ctx) => {

@@ -2,8 +2,7 @@
  * @name VueDirective
  * @description Vue Directive
  */
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     $$('virtual');
     $$('async');
     this.factory = noop;

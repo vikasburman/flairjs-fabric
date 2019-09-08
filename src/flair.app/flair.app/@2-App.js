@@ -5,8 +5,7 @@ const { Bootware } = await ns('flair.app');
  * @name App
  * @description App base class
  */
-$$('ns', '(auto)');
-Class('(auto)', Bootware, [IDisposable], function() {
+Class('', Bootware, [IDisposable], function() {
     $$('override');
     this.construct = (base) => {
         // set info

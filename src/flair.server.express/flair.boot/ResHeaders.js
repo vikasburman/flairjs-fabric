@@ -5,8 +5,7 @@ const { Bootware } = await ns('flair.app');
  * @description Express Response Header Settings (Common to all routes)
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', Bootware, function() {
+Class('', Bootware, function() {
     $$('override');
     this.construct = (base) => {
         base('Server Response Headers', true); // mount specific

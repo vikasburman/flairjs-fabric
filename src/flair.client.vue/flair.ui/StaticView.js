@@ -4,8 +4,7 @@ const { VueView } = await ns('flair.ui');
  * @name StaticView
  * @description Static View
  */
-$$('ns', '(auto)');
-Class('(auto)', VueView, function() {
+Class('', VueView, function() {
     $$('override');
     this.construct = (base, staticFile) => {
         base(staticFile);

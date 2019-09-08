@@ -6,8 +6,7 @@ const { ViewHandler, Page } = await ns('flair.ui');
  * @description Client host implementation
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', Host, function() {
+Class('', Host, function() {
     let mountedApps = {},
         hashChangeHandler = null;
 

@@ -4,8 +4,7 @@ const { Bootware } = await ns('flair.app');
  * @name VueSetup
  * @description Vue initializer
  */
-$$('ns', '(auto)');
-Class('(auto)', Bootware, function() {
+Class('', Bootware, function() {
     $$('override');
     this.construct = (base) => {
         base('Vue Setup');

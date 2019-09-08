@@ -5,8 +5,7 @@ const { ViewTransition } = await ns('flair.ui');
  * @name ViewHandler
  * @description GUI View Handler
  */
-$$('ns', '(auto)');
-Class('(auto)', Handler, function() {
+Class('', Handler, function() {
     let mainEl = '',
         abortControllers = {};       
 

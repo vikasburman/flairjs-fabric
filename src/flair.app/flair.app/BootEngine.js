@@ -5,8 +5,7 @@ const { Bootware } = await ns('flair.app');
  * @description Bootstrapper functionality
  */
 $$('static');
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     this.start = async function() {
         let allBootwares = [],
             mountSpecificBootwares = [];

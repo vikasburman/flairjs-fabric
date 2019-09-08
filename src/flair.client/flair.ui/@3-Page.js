@@ -3,8 +3,7 @@
  * @description Page routing (inspired from (https://www.npmjs.com/package/page))
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     let handlers = [],
         defaultHandler;
 

@@ -5,8 +5,7 @@ const { VueComponentMembers } = await ns('flair.ui');
  * @name VueView
  * @description Vue View
  */
-$$('ns', '(auto)');
-Class('(auto)', ViewHandler, [VueComponentMembers], function() {
+Class('', ViewHandler, [VueComponentMembers], function() {
     $$('private');
     this.factory = async (ctx) => {
         let component = null,

@@ -2,8 +2,7 @@
  * @name ViewTransition
  * @description GUI View Transition
  */
-$$('ns', '(auto)');
-Class('(auto)', function() {
+Class('', function() {
     $$('virtual');
     $$('async');
     this.enter = noop;

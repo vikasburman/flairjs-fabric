@@ -2,8 +2,7 @@
  * @name IPortHandler
  * @description IPortHandler interface
  */
-$$('ns', '(auto)');
-Interface('(auto)', function() {
+Interface('', function() {
     this.port = nip;
     this.factory = nim;
 });

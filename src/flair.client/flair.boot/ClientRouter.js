@@ -6,8 +6,7 @@ const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
  * @description Client Router Configuration Setup
  */
 $$('sealed');
-$$('ns', '(auto)');
-Class('(auto)', Bootware, function() {
+Class('', Bootware, function() {
     let routes = null;
     
     $$('override');
