@@ -1,4 +1,4 @@
-const { View } = await ns('flair.ui');
+const { ViewComponent } = await ns('flair.ui');
 
 /**
  * @name ViewComponentMembers
@@ -7,14 +7,17 @@ const { View } = await ns('flair.ui');
 Mixin('', function() {
     let abortControllers = {},
         _thisId = guid(),
-        clientFileLoader =  Port('clientFile'),
+        clientFileLoader = Port('clientFile'),
         _inViewName = ''; 
 
     $$('protected');
     this.name = '';
 
     $$('readonly');
-    this.id = _thisId;
+    this.id = '';
+
+    $$('readonly');
+    this.inViewName = ''
 
     $$('protected');
     this.host = null; // for view, this is view itself; for component this is hosting component
@@ -46,6 +49,8 @@ Mixin('', function() {
     $$('private');
     this.init = async (inViewName, $mainType) => {
         _inViewName = inViewName || '';
+        this.inViewName = _inViewName;
+        this.id = _thisId;
 
         // give implementation a chance to define some of it before defaults here
         await this.beforeInit($mainType);
@@ -153,9 +158,7 @@ Mixin('', function() {
                     this.data = await clientFileLoader(this.data); // <-- this gives parsed JSON object
                 } else { // JSON string 
                     this.data = JSON.parse(this.data);
-                } else { // either not defined OR defined as object itself
-                    // nothing
-                }
+                } // else either not defined OR defined as object itself
             }
         };        
         const loadI18NResources = async () => {
@@ -218,7 +221,7 @@ Mixin('', function() {
             cObj = null;
         for (let comp of components) {
             if (!this.components[comp.name]) { // ignore duplicates
-                let cEl = el.getElementById(comp.id);
+                cEl = el.getElementById(comp.id);
                 if (cEl) { 
                     cType = as(await include(comp.type), ViewComponent);
                     if (cType) { 
@@ -281,7 +284,7 @@ Mixin('', function() {
                     components: [], 
                     view: null
                 },
-                updatedHtml = () => { return doc.body.innerHTML; }
+                updatedHtml: () => { return doc.body.innerHTML; }
             };
 
         // an html definition can be of multiple forms
@@ -315,7 +318,7 @@ Mixin('', function() {
         // delete all script tags, so nothing left inside body
         let scripts = doc.getElementsByTagName('script');
         if (scripts) {
-            for(s of scripts) { s.parentNode.remove(s); }
+            for(let s of scripts) { s.parentNode.remove(s); }
         }
 
         // pick first style and then delete all style tags, so nothing left inside
@@ -323,7 +326,7 @@ Mixin('', function() {
         if (styles) {
             if (styles.length > 0) {
                 content.style = styles[0].innerHTML;
-                for(s of styles) { s.parentNode.remove(s); }
+                for(let s of styles) { s.parentNode.remove(s); }
             }
         }
 
@@ -332,7 +335,7 @@ Mixin('', function() {
         if (data) {
             if (data.length > 0) {
                 content.data = data[0].innerHTML;
-                for(d of data) { d.parentNode.remove(d); }
+                for(let d of data) { d.parentNode.remove(d); }
             }
         }
 
@@ -359,7 +362,7 @@ Mixin('', function() {
         if (comps) {
             let typeValue = '',
                 viewContainerTypeValue = settings.view.viewEl || 'view';
-            for(cm of comps) { 
+            for(let cm of comps) { 
                 typeValue = cm.getAttribute('type');
                 if (typeValue !== '') {
                     if (typeValue === viewContainerTypeValue) {

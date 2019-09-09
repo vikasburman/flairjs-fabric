@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.59.21
- *  Sun, 08 Sep 2019 20:50:37 GMT
+ *  Version: 0.59.31
+ *  Mon, 09 Sep 2019 23:49:56 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -450,13 +450,13 @@
                         if (req.$stop) { break; } // break, if someone forced to stop 
                     }
                 };
-                const runHandler = async (routeHandler, verb, req, res) => {
+                const runHandler = async (route, routeHandler, verb, req, res) => {
                     let RouteHandler = as(await include(routeHandler), RestHandler);
                     if (RouteHandler) {
                         // req.params has all the route parameters.
                         // e.g., for route "/users/:userId/books/:bookId" req.params will 
                         // have "req.params: { "userId": "34", "bookId": "8989" }"
-                        let rh = new RouteHandler();
+                        let rh = new RouteHandler(route);
                         return await rh[verb](req, res);
                     } else {
                         throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -488,7 +488,7 @@
                             //          anything else
                             //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                             let routeHandler = chooseRouteHandler(route);
-                            return await runHandler(routeHandler, verb, req, res);
+                            return await runHandler(route, routeHandler, verb, req, res);
                         };
         
                         // add special properties to req
@@ -529,7 +529,10 @@
                 for (let route of routes) {
                     // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
                     if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
-                        route.verbs.forEach(verb => { // verb could be get/set/delete/put/, etc.
+                        let routeVerbs = [];
+                        if (route.verbs && route.verbs.length !== 0) { routeVerbs.push(...route.verbs); }
+                        if (routeVerbs.length === 0) { routeVerbs.push('get'); } // by default get verb is used
+                        routeVerbs.forEach(verb => { // verb could be get/set/delete/put/, etc.
                             addHandler(verb, route);
                         });
                     }
@@ -587,7 +590,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.21","lupdate":"Sun, 08 Sep 2019 20:50:37 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.31","lupdate":"Mon, 09 Sep 2019 23:49:56 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

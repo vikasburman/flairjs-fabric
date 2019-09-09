@@ -1,4 +1,4 @@
-const { ViewHandler, ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
+const { ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
 const Vue = await include('vue/vue{.min}.js');  
 
 /**
@@ -85,13 +85,13 @@ Mixin('', function() {
                 isDefined = false;
             for (let comp of components) {
                 if (!Vue.options.components[comp.name] && !this.components[comp.name]) { // ignore global and local duplicates
-                    let cEl = el.getElementById(comp.id);
+                    cEl = el.getElementById(comp.id);
                     if (cEl) { 
                         cType = as(await include(comp.type), VueComponent);
                         if (cType) { 
                             cObj = new cType();
                             if (cObj) { 
-                                this.components[comp.name] = cObj.view(_inViewName, ctx, cEl, comp.params); 
+                                this.components[comp.name] = cObj.view(this.inViewName, ctx, cEl, comp.params); 
                                 
                                 // insert component's tag in cEl
                                 cEl.innerHTML = `<component is="${comp.name}"></component>`;
@@ -156,7 +156,7 @@ Mixin('', function() {
                         FilterType = as(await include(item.type), VueFilter);
                         filter = new FilterType();
                         vueComponent.filters = vueComponent.filters || {};
-                        vueComponent.filters[item.name] = await filters.factory();
+                        vueComponent.filters[item.name] = await filter.factory();
                     }
                 } 
             }

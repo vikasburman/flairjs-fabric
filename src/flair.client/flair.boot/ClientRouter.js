@@ -1,5 +1,5 @@
 const { Bootware } = await ns('flair.app');
-const { ViewTypes, ViewHandler, View, ViewInterceptor } = await ns('flair.ui');
+const { ViewTypes, ViewHandler, ViewInterceptor } = await ns('flair.ui');
 
 /**
  * @name ClientRouter

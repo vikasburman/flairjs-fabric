@@ -1,4 +1,4 @@
-const { ViewTypes, ViewHandler, ViewTransition, ViewComponent, ViewComponentMembers } = await ns('flair.ui');
+const { ViewTypes, ViewHandler, ViewTransition, ViewComponentMembers } = await ns('flair.ui');
 
 /**
  * @name View
@@ -86,7 +86,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
                     }
                 }
             }
-        };
+        }
     
         // reset
         this.$static.outView = null;
@@ -95,11 +95,12 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
 
     $$('protected');
     this.assembleView = async () => {
+        let clientFileLoader = Port('clientFile');
         const autoWireAndLoadLayout = async () => {
             // layout will always be an html (direct) OR an html file as asset or embedded resource
             // with embedded styles in itself having SCOPED styles
             if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings
-                switch(type) {
+                switch(this.type) {
                     case ViewTypes.Client: settings.view.layout.client || ''; break;
                     case ViewTypes.Server: settings.view.layout.server || ''; break;
                     case ViewTypes.Static: settings.view.layout.static || ''; break;
@@ -146,7 +147,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
                 let layoutStyleId = `${this.$static.inView.name}_${this.id}_LAYOUT`;
                 let style = replaceAll(content.style, '#SCOPE_ID', `#${layoutStyleId}`); // replace all #SCOPE_ID with #<this_view_unique_id>_LAYOUT
                 this.addStyle(style, layoutStyleId);
-            };
+            }
 
             // embed view's html inside layout html
             if (content.html) {
@@ -224,7 +225,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
 
     $$('protected');
     $$('virtual');
-    this.beforeInit = async ($mainType) => {
+    this.beforeInit = async ($mainType) => { // eslint-disable-line no-unused-vars
         // load view transition
         if (this.viewTransition) {
             let ViewTransitionType = as(await include(this.viewTransition), ViewTransition);
@@ -273,7 +274,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
 
     $$('protected');
     $$('virtual');
-    this.afterInit = async ($mainType) => {
+    this.afterInit = async ($mainType) => { // eslint-disable-line no-unused-vars
         const loadStaticFile = async () => {
             let clientFileLoader =  Port('clientFile'),
                 fileContent = '';
@@ -301,9 +302,9 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         // fetch, parse and load content here
         let rawContent = '';
         if (this.type === ViewTypes.Static) { 
-            rawContent = await this.loadStaticFile(); 
+            rawContent = await loadStaticFile(); 
         } else if (this.type === ViewTypes.Server) { 
-            rawContent = await this.loadServerView(); 
+            rawContent = await loadServerView(); 
         }
         let content = this.extractContent(rawContent);
         if (content.style) { this.style = content.style; }
