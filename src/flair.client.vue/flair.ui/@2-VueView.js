@@ -129,12 +129,11 @@ Class('', ViewHandler, [VueComponentMembers], function() {
         new Vue(component);
     };
 
-    $$('protected');
-    this.el = null;
+    // $$('protected');
+    // this.el = null;
+    // NOT NEEDED, IT SEEMS
 
     $$('protected');
     this.propsData = null;
 
-    $$('protected');
-    this.layout = null;
 });

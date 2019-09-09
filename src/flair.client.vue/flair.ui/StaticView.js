@@ -5,28 +5,6 @@ const { VueView } = await ns('flair.ui');
  * @description Static View
  */
 Class('', VueView, function() {
-    $$('override');
-    this.construct = (base, staticFile) => {
-        base(staticFile);
-
-        // if identified as static by base class
-        if (this.isStatic) { 
-            // set layout
-            this.layout = settings.layout.static || null;
-
-            // set paths
-            this.basePath = this.staticRoot;
-            this.localePath = this.basePath + 'locales/';
-
-            // static file can be localized as well, hence its name can be:
-            // ./path/file.xml : Will be resolved with ./path/file.xml
-            // OR 
-            // ./path/file{.en}.xml <-- yes: {.en} is a placeholder for chosen locale: Will be resolved with ./path/file.<locale>.xml
-            if (this.staticFile.indexOf('{.en}') !== -1) {
-                this.staticFile = this.staticFile.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
-            }
-        }
-    };
 
     $$('protected');
     $$('override');

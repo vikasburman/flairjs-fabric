@@ -125,7 +125,10 @@ Class('', Bootware, function() {
         for (let route of routes) {
             // route.mount can be one string or an array of strings - in that case, same route will be mounted to multiple mounts
             if ((typeof route.mount === 'string' && route.mount === mount.name) || (route.mount.indexOf(mount.name) !== -1)) { // add route-handler
-                route.verbs.forEach(verb => { // verb could be get/set/delete/put/, etc.
+                let routeVerbs = [];
+                if (route.verbs && route.verbs.length !== 0) { routeVerbs.push(...route.verbs); }
+                if (routeVerbs.length === 0) { routeVerbs.push('get'); } // by default get verb is used
+                routeVerbs.forEach(verb => { // verb could be get/set/delete/put/, etc.
                     addHandler(verb, route);
                 });
             }

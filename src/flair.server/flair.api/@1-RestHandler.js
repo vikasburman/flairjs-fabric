@@ -36,7 +36,6 @@ Class('', Handler, function() {
     $$('async');
     this.onPost = noop;
 
-
     $$('protected');
     $$('virtual');
     $$('async');

@@ -1,5 +1,5 @@
 const { Bootware } = await ns('flair.app');
-const { ViewHandler, ViewInterceptor } = await ns('flair.ui');
+const { ViewHandler, View, ViewInterceptor } = await ns('flair.ui');
 
 /**
  * @name ClientRouter
@@ -47,13 +47,18 @@ Class('', Bootware, function() {
             }
         };
         const runHandler = async (routeHandler, ctx) => {
-            // static handler
+            // check if handler is a static file
+            // static file is identified when routeHandler ends with '.<any known static file ext>'
             let staticFile = null;
-            if (routeHandler.endsWith('.' + (settings.view.static.fileExt || 'xml'))) { // static
-                staticFile = routeHandler;
-                routeHandler = settings.view.static.handler || '';
-            }
+            settings.view.static.ext.array.forEach(ext => {
+                if (routeHandler.endsWith('.' + ext)) { 
+                    staticFile = routeHandler; 
+                    routeHandler = settings.view.static.handler || '';
+                    break; 
+                }
+            });
 
+            // get route handler
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {
                 let rh = (staticFile ? new RouteHandler(staticFile) : new RouteHandler());

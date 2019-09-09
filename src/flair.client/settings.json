@@ -1,11 +1,14 @@
 {
     "view": {
-        "el": "main",
+        "mainEl": "main",
+        "viewEl": "view",
         "transition": "",
+        "layout": "",
         "static": {
-            "fileExt": "xml",
+            "ext": ["html", "md", "xml"],
             "root": "./pages/",
-            "handler": "flair.ui.StaticView"
+            "layout": "",
+            "handler": "flair.ui.vue.VueView"
         },
         "routes": {
             "home": "",

@@ -3,8 +3,7 @@
  * @description Vue Component Members
  */
 Mixin('', function() {
-    var _this = this,
-        _thisId = guid();
+    var _this = this;
 
     $$('private');
     this.define = async (ctx) => {
@@ -16,22 +15,7 @@ Mixin('', function() {
             clientFileLoader = Port('clientFile'); 
 
         const setBase = async () => {
-            // set base, if not set already
-            // (generally in context of a derived class such as StaticView)
-
-            if (!this.baseName) {
-                let typeQualifiedName = this.$Type.getName(),
-                    baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1);
-                this.baseName = baseName;
-            }
-
-            if (!this.basePath) {
-                this.basePath = this.$Type.getAssembly().assetsPath();
-            }
-
-            if (!this.localePath) {
-                this.localePath = this.$Type.getAssembly().localesPath(); // note: this is without any specific locale
-            }
+            // moved
         };
         const autoWireHtmlCssAndData = async () => {
             const getResIfDefined = (defString) => {
@@ -438,62 +422,7 @@ Mixin('', function() {
         return component;
     };    
     
-    $$('readonly');
-    this.id = _thisId;
 
-    $$('protected');
-    this.baseName = '';
-
-    $$('protected');
-    this.basePath = '';
-
-    $$('protected');
-    this.localePath = '';    
-
-    $$('protected');
-    this.locale = (value) => { return AppDomain.host().locale(value, true); };
-
-    $$('protected');
-    this.version = (value) => { return AppDomain.host().version(value, true); };
-
-    $$('protected');
-    this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
-    
-    $$('protected');
-    this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
-
-    $$('protected');
-    this.i18n = null;
-
-    $$('protected');
-    this.i18nValue = (key) => {
-        let value = key || '',
-            notFoundRepresentative = (env.isDebug ? ':' : '');
-
-        // key can also be defined as: 
-        //  @i18nNs.keyName | default value
-        //  the value
-        if (key && key.startsWith('@')) {
-            key = key.substr(1); // remove @
-            let keyItems = key.split('|');
-            key = keyItems[0].trim();
-            value = keyItems[1].trim() || '';
-            if (this.i18n) {
-                value = lens(this.i18n, key) || (notFoundRepresentative + value + notFoundRepresentative);
-                // Note: notFoundRepresentative is added, to visually display in debug mode that key was defined, but key not found in json
-            }
-        }
-        return value || '(i18n: 404)'; // finally if no default was defined
-    };
-
-    $$('protected');
-    this.style = null;
-
-    $$('protected');
-    this.html = null; 
-
-    $$('protected');
-    this.data = null;
 
     $$('protected');
     this.template = null;

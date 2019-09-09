@@ -73,9 +73,6 @@ Class('', [VueComponentMembers], function() {
         return component;
     };
 
-    $$('protectedSet');
-    this.name = '';
-
     $$('protected');
     this.props = null;
 
