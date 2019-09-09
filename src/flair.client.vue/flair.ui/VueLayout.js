@@ -138,7 +138,25 @@ Class('', function() {
             // put entire html into a unique id div
             // even empty html will become an empty div here with ID - so it ensures that all components have a root div
             this.html = `<div id="${_thisId}">${this.html}</div>`;
-        };      
+
+
+
+
+        };              
+            // merge layout's components
+            // each area here can be as:
+            // { "area: "", component": "", "type": "" } 
+            // "area" is the div-id (in defined html) where the component needs to be placed
+            // "component" is the name of the component
+            // "type" is the qualified component type name      
+            if (this.layout && this.layout.areas && Array.isArray(this.layout.areas)) {
+                this.components = this.components || [];
+                for(let area of this.layout.areas) {
+                    // each component array item is: { "name": "name", "type": "ns.typeName" }
+                    this.components.push({ name: area.component, type: area.type });
+                }
+            }
+    
         const injectComponents = async () => {
             // inject components
             layoutHtml = this.html;

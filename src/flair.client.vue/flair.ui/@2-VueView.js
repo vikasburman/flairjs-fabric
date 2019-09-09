@@ -1,139 +1,62 @@
-const { ViewHandler } = await ns('flair.ui');
-const { VueComponentMembers } = await ns('flair.ui');
+const { View, VueComponentMembers } = await ns('flair.ui');
+const Vue = await include('vue/vue{.min}.js');
 
 /**
  * @name VueView
  * @description Vue View
  */
-Class('', ViewHandler, [VueComponentMembers], function() {
+Class('', View, [VueComponentMembers], function() {
     $$('private');
-    this.factory = async (ctx) => {
-        let component = null,
-            clientFileLoader = Port('clientFile');
+    this.factory = async (ctx, el) => {
+        let vueComponent = null;
 
-        const autoWireAndLoadLayout = async () => {
-            let isHtml = false,
-                htmlContent = '';
-            if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings, if required
-                this.layout = settings.layout.default || null; // the qualified type name
-            } else if (typeof this.layout === 'string') {
-                if (this.layout.startsWith('res:')) { // its an embedded resource (html) - res:<resTypeName>
-                    let resTypeName = this.layout.substr(4); // remove res:
-                    let res = AppDomain.context.current().getResource(resTypeName) || null;
-                    isHtml = res && res.data;
-                    if (isHtml) {
-                        htmlContent = res.data;
-                        this.layout = settings.layout.html2Layout; // default type, which will load given html
-                    }
-                } else if (this.layout.endsWith('.html')) { // its an asset file
-                    isHtml = true;
-                    let htmlFile = which(this.layout.replace('./', this.basePath), true);
-                    htmlContent = await clientFileLoader(htmlFile);
-                    this.layout = settings.layout.html2Layout; // default type, which will load given html
-                } else { // its qualified type name
-                    // let it be as is
-                }
-            }
-            // load layout first, if only layout type name is given (e.g., in case it was picked from settings as above)
-            if (typeof this.layout === 'string') {
-                let layoutType = await include(this.layout);
-                if (layoutType) {
-                    if (isHtml) {
-                        this.layout = new layoutType(htmlContent);
-                    } else {
-                        this.layout = new layoutType(); // note: this means only those layouts which do not require constructor arguments are suitable for this auto-wiring
-                    }
-                } else {
-                    throw Exception.NotFound(`Layout not found. (${this.layout})`);
-                }
-            }
+        // shared between view and component both
+        // coming from VueComponentMembers mixin
+        vueComponent = await this.define(ctx, el);
 
-            // merge layout's components
-            // each area here can be as:
-            // { "area: "", component": "", "type": "" } 
-            // "area" is the div-id (in defined html) where the component needs to be placed
-            // "component" is the name of the component
-            // "type" is the qualified component type name      
-            if (this.layout && this.layout.areas && Array.isArray(this.layout.areas)) {
-                this.components = this.components || [];
-                for(let area of this.layout.areas) {
-                    // each component array item is: { "name": "name", "type": "ns.typeName" }
-                    this.components.push({ name: area.component, type: area.type });
-                }
-            }
-        };
-        const factory_component = async () => {
-            // shared between view and component both
-            // coming from VueComponentMembers mixin
-            component = await this.define(ctx);
-        };
-        const setTitle = async () => {
-            // set title 
-            this.title = this.i18nValue(this.title);
-        };
-        const factory_el = async () => {
-            // el
-            // https://vuejs.org/v2/api/#el
-            component.el = '#' + this.name;
-        };
-        const factory_propsData = async () => {
-            // propsData
-            // https://vuejs.org/v2/api/#propsData
-            if (this.propsData) {
-                component.propsData = this.propsData;
-            }
-        };
-        const factory_data = async () => {
-            // data
-            // https://vuejs.org/v2/api/#data
-            if (this.data) {
-                if (typeof this.data === 'function') {
-                    component.data = this.data();
-                } else {
-                    component.data = this.data;
-                }
-            }
-        };
+        // el
+        // https://vuejs.org/v2/api/#el
+        vueComponent.el = '#' + this.name;
 
-        await autoWireAndLoadLayout();
-        await factory_component();
-        await setTitle();
-        await factory_el();
-        await factory_propsData();
-        await factory_data();
+        // propsData
+        // https://vuejs.org/v2/api/#propsData
+        if (this.propsData) {
+            vueComponent.propsData = this.propsData;
+        }
+
+        // data
+        // https://vuejs.org/v2/api/#data
+        if (this.data) {
+            if (typeof this.data === 'function') {
+                vueComponent.data = this.data();
+            } else {
+                vueComponent.data = this.data;
+            }
+        }
 
         // done
-        return component;
+        return vueComponent;
     };    
     
     $$('protected');
     $$('override');
     $$('sealed');
-    this.onView = async (base, ctx, el) => {
-        base();
+    this.onLoad = async (base, ctx, el) => {
+        // don't call base, as that base functionality is defined here differently
 
-        const Vue = await include('vue/vue{.min}.js');
+        // load html into element
+        el.innerHTML = this.html;
 
-        // get component
-        let component = await this.factory(ctx);
+        // setup vue component
+        let vueComponent = await this.factory(ctx, el);
 
-        // set view Html
-        let viewHtml = this.html || '';
-        if (this.layout) {
-            el.innerHTML = await this.layout.merge(viewHtml);
-        } else {
-            el.innerHTML = viewHtml;
-        }            
+        // load html
+        this.html = el.innerHTML; // since components might have updated the html
 
-        // setup Vue view instance
-        new Vue(component);
+        // initiate vue view
+        new Vue(vueComponent);
     };
-
-    // $$('protected');
-    // this.el = null;
-    // NOT NEEDED, IT SEEMS
 
     $$('protected');
     this.propsData = null;
-
 });

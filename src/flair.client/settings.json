@@ -3,12 +3,11 @@
         "mainEl": "main",
         "viewEl": "view",
         "transition": "",
-        "layout": "",
-        "static": {
-            "ext": ["html", "md", "xml"],
-            "root": "./pages/",
-            "layout": "",
-            "handler": "flair.ui.vue.VueView"
+        "handler": "flair.ui.vue.VueView",
+        "layout": {
+            "client": "",
+            "server": "",
+            "static": ""
         },
         "routes": {
             "home": "",

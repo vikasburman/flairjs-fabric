@@ -1,5 +1,5 @@
 const { Bootware } = await ns('flair.app');
-const { ViewHandler, View, ViewInterceptor } = await ns('flair.ui');
+const { ViewTypes, ViewHandler, View, ViewInterceptor } = await ns('flair.ui');
 
 /**
  * @name ClientRouter
@@ -46,22 +46,15 @@ Class('', Bootware, function() {
                 if (ctx.$stop) { break; } // break, if someone forced to stop 
             }
         };
-        const runHandler = async (routeHandler, ctx) => {
-            // check if handler is a static file
-            // static file is identified when routeHandler ends with '.<any known static file ext>'
-            let staticFile = null;
-            settings.view.static.ext.array.forEach(ext => {
-                if (routeHandler.endsWith('.' + ext)) { 
-                    staticFile = routeHandler; 
-                    routeHandler = settings.view.static.handler || '';
-                    break; 
-                }
-            });
+        const runHandler = async (route, routeHandler, ctx) => {
+            if (route.type && route.type !== ViewTypes.Client) {
+                routeHandler = settings.view.handler || ''; // use default handler
+            }
 
             // get route handler
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {
-                let rh = (staticFile ? new RouteHandler(staticFile) : new RouteHandler());
+                let rh = new RouteHandler(route);
                 await rh.view(ctx);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -100,7 +93,7 @@ Class('', Bootware, function() {
                     //          anything else
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
-                    await runHandler(routeHandler, ctx);
+                    await runHandler(route, routeHandler, ctx);
                 }
             };
         };

@@ -1,4 +1,6 @@
 const { Bootware } = await ns('flair.app');
+const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
+const Vue = await include('vue/vue{.min}.js');
 
 /**
  * @name VueSetup
@@ -14,14 +16,11 @@ Class('', Bootware, function() {
     this.boot = async (base) => {
         base();
 
-        const Vue = await include('vue/vue{.min}.js');
-        const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
-
         // setup Vue configuration, if any
         // TODO: (if any)
 
         // load Vue extensions
-        // each plugin in array is defined as:
+        // each extension in array is defined as:
         // { "name": "name", "type": "ns.typeName", "options": {} }
         let extensions = settings.vue.extensions,
             ExtType = null,
@@ -35,7 +34,7 @@ Class('', Bootware, function() {
                 try {
                     ext = new ExtType();
                     if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
-                    Vue.component(item.name, await ext.factory()); // register globally (without any context)
+                    Vue.component(item.name, await ext.view('', null, null, item.options)); // register globally (without any context)
                 } catch (err) {
                     throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
                 }

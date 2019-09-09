@@ -46,13 +46,13 @@ Class('', Bootware, function() {
                 if (req.$stop) { break; } // break, if someone forced to stop 
             }
         };
-        const runHandler = async (routeHandler, verb, req, res) => {
+        const runHandler = async (route, routeHandler, verb, req, res) => {
             let RouteHandler = as(await include(routeHandler), RestHandler);
             if (RouteHandler) {
                 // req.params has all the route parameters.
                 // e.g., for route "/users/:userId/books/:bookId" req.params will 
                 // have "req.params: { "userId": "34", "bookId": "8989" }"
-                let rh = new RouteHandler();
+                let rh = new RouteHandler(route);
                 return await rh[verb](req, res);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -84,7 +84,7 @@ Class('', Bootware, function() {
                     //          anything else
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
-                    return await runHandler(routeHandler, verb, req, res);
+                    return await runHandler(route, routeHandler, verb, req, res);
                 };
 
                 // add special properties to req
