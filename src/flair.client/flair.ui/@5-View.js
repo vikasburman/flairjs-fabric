@@ -46,7 +46,8 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         base(ctx);
 
         // initialize in context of this type
-        await this.init(this.$static.inView.name, this.$Type);
+        let result = await this.init(this.$static.inView.name, this.$Type);
+        if (result && result.title) { this.title = result.title; }
 
         // add view el to parent
         let el = null,
@@ -94,7 +95,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     };
 
     $$('protected');
-    this.assembleView = async () => {
+    this.assembleView = async ($mainType) => {
         let clientFileLoader = Port('clientFile');
         const autoWireAndLoadLayout = async () => {
             // layout will always be an html (direct) OR an html file as asset or embedded resource
@@ -310,6 +311,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         if (content.style) { this.style = content.style; }
         if (content.data) { this.data = content.data; }
         if (content.html) { this.html = content.html; }
+        if (content.title) { this.title = content.title; }
     };
 
     $$('static');

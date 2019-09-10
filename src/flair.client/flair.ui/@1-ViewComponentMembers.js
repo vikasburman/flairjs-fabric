@@ -13,14 +13,11 @@ Mixin('', function() {
     $$('protected');
     this.name = '';
 
-    $$('readonly');
+    $$('protected');
     this.id = '';
 
-    $$('readonly');
-    this.inViewName = ''
-
     $$('protected');
-    this.host = null; // for view, this is view itself; for component this is hosting component
+    this.inViewName = ''
 
     $$('protected');
     this.html = null;
@@ -48,6 +45,8 @@ Mixin('', function() {
     
     $$('private');
     this.init = async (inViewName, $mainType) => {
+        let result = null;
+        
         _inViewName = inViewName || '';
         this.inViewName = _inViewName;
         this.id = _thisId;
@@ -77,14 +76,19 @@ Mixin('', function() {
         await this.afterInit($mainType);
 
         // initialize html/style/json content
-        this.initContent();
+        result = await this.initContent($mainType);
 
         // initialize layout and merge view with layout
-        await this.assembleView();        
+        await this.assembleView($mainType);  
+        
+        return result;
     };
 
     $$('private');
-    this.initContent = async () => {
+    this.initContent = async ($mainType) => {
+        let result = {
+            title: null
+        };
         const autoWireHtmlCssAndJson = async () => {
             // auto wire html and styles, if configured as 'true' - for making 
             // it ready to pick from assets folder
@@ -93,15 +97,21 @@ Mixin('', function() {
             } else { // its an embedded resource - res:<resTypeName> OR direct string or null
                 this.style = this.getResIfDefined(this.style);
             }
+            if (typeof this.data === 'boolean' && this.data === true) {
+                this.data = which(`./${this.baseName}/index{.min}.json`, true);
+            } else { // its an embedded resource - res:<resTypeName> OR direct string or null
+                this.data = this.getResIfDefined(this.data);
+            }
             if (typeof this.html === 'boolean' && this.html === true) {
                 this.html = which(`./${this.baseName}/index{.min}.html`, true);
             } else { // its an embedded resource - res:<resTypeName> OR direct string or null
                 this.html = this.getResIfDefined(this.html);
             }
-            if (typeof this.data === 'boolean' && this.data === true) {
-                this.data = which(`./${this.baseName}/index{.min}.json`, true);
-            } else { // its an embedded resource - res:<resTypeName> OR direct string or null
-                this.data = this.getResIfDefined(this.data);
+
+            // check if still html is not defined, means html is to be picked from assets folder 
+            // under viewsRoot folder having file name format: <qualified typename>.html
+            if (!this.html) {
+                this.html = which(`./${config.viewsRoot}/${$mainType.getName()}{.min}.html`, true);
             }
         };
         const loadHtml = async () => {
@@ -119,7 +129,9 @@ Mixin('', function() {
                 let content = this.extractContent(this.html);
                 if (content.data) { this.data = content.data; } // if data was defined inside html give it a precedence and overwrite, even if defined earlier
                 if (content.style) { this.style = content.style; } // if style was defined inside html give it a precedence and overwrite, even if defined earlier
-                this.html = content.html || ''; // set just the html as defined
+                if (content.html) { this.html = content.html; } 
+                if (content.title) { result.title = content.title; } // put title to be set later
+                if (content.i18n && !this.i18n) { this.i18n = content.i18n; } // load i18n if not already defined
             }
 
             // put entire html into a unique id div
@@ -194,6 +206,8 @@ Mixin('', function() {
         await loadStyle();
         await loadJson();
         await loadI18NResources();
+
+        return result;
     };
 
     $$('private');
@@ -277,6 +291,8 @@ Mixin('', function() {
     this.extractContent = (html) => {
         let doc = null,
             content = {
+                title: null,
+                i18n: null,
                 html: null,
                 style: null,
                 data: null,
@@ -291,25 +307,29 @@ Mixin('', function() {
         // 1. standard html
         //  <!doctype html>
         //  <html>
-        //      <head>...</head>
-        //      <body>...</body>
+        //      <head>
+        //          <style></style>
+        //          <data></data>
+        //      </head>
+        //      <body>
+        //      </body>
         //  </html>
         //
-        // 2. view fragments in assets or embedded resource
+        // 2. bare minimum
         //  <html>...</html>
         //  OR
         //  direct any tag
         //
-        // 3. static views
+        // 3. scattered
         //  <style>...</style>
         //  <data>...</data>
         //  <html>...</html>
         //  
-        // 4. layout structure
+        // 4. partial
         //  <style>...</style>
         //  <html>...</html>
         //
-        // 5. markdown / text
+        // 5. free flow
         //  ...text...
 
         let docParser = new window.DOMParser();
@@ -321,11 +341,23 @@ Mixin('', function() {
             for(let s of scripts) { s.parentNode.remove(s); }
         }
 
+        // delete all link tags, so nothing left inside body
+        let links = doc.getElementsByTagName('link');
+        if (links) {
+            for(let l of links) { l.parentNode.remove(l); }
+        }        
+
         // pick first style and then delete all style tags, so nothing left inside
         let styles = doc.getElementsByTagName('style');
         if (styles) {
             if (styles.length > 0) {
-                content.style = styles[0].innerHTML;
+                let style = styles[0],
+                    styleSrc = styles.getAttribute('src');
+                if (styleSrc) { // give pref to defined source
+                    content.style = styleSrc;
+                } else {
+                    content.style = style.innerHTML;
+                }
                 for(let s of styles) { s.parentNode.remove(s); }
             }
         }
@@ -334,9 +366,26 @@ Mixin('', function() {
         let data = doc.getElementsByTagName('data');
         if (data) {
             if (data.length > 0) {
-                content.data = data[0].innerHTML;
+                let dt = data[0],
+                    dtSrc = dt.getAttribute('src');
+                if (dtSrc) { // give pref to defined source
+                    content.data = dtSrc;
+                } else {
+                    content.data = dtSrc.innerHTML;
+                }                
                 for(let d of data) { d.parentNode.remove(d); }
             }
+        }
+
+        // pick title
+        // title may have pattern like this: {{ i18n('@titles.home | Home') }}
+        // just to match everything else in document, but here it is not needed like this
+        // instead needed is just: '@titles.home | Home'
+        // so remove other known parts: {{ }} and i18n( and )
+        let docTitle = doc.title || null;
+        if (docTitle) {
+            docTitle = replaceAll(docTitle, '{{', ''); docTitle = replaceAll(docTitle, '}}', ''); docTitle = replaceAll(docTitle, 'i18n', ''); docTitle = replaceAll(docTitle, '(', ''); docTitle = replaceAll(docTitle, ')', '');
+            content.title = docTitle;
         }
 
         // find all component holders
@@ -345,8 +394,18 @@ Mixin('', function() {
         // pick clean html from body
         content.html = doc.body.innerHTML;
 
+        // pick all usage of i18n string
+        // i18n strings will generally be written as {{ i18n('@fileName.stringName | defaultValue') }}
+        // it looks for '@fileName. pattern via /('|")@\w*./ regex and extract 'fileName' to build a comma delimited string
+        // of required i18n resources
+        let matched = content.html.match(/('|")@\w*./g);
+        if (matched && Array.isArray(matched) && matched.length > 0) {
+            matched.forEach((m) => { content.i18n += ',' + m.substr(2, m.length - 3); });
+            if (content.i18n.startsWith(',')) { content.i18n = content.i18n.substr(1); }
+        }
+
         return content;
-    };  
+    };
     
     $$('private');
     this.extractComponents = (el) => {
