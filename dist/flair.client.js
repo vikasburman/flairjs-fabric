@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.31
- *  Mon, 09 Sep 2019 23:49:55 GMT
+ *  Version: 0.59.32
+ *  Tue, 10 Sep 2019 00:51:24 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -87,7 +87,7 @@
          * @description View Component Members
          */
         $$('ns', 'flair.ui');
-		Mixin('ViewComponentMembers' ,function() {
+		Mixin('ViewComponentMembers', function() {
             let abortControllers = {},
                 _thisId = guid(),
                 clientFileLoader = Port('clientFile'),
@@ -566,7 +566,7 @@
          * @description GUI View Transition
          */
         $$('ns', 'flair.ui');
-		Class('ViewTransition' ,function() {
+		Class('ViewTransition', function() {
             $$('virtual');
             $$('async');
             this.enter = noop;
@@ -583,7 +583,7 @@
          * @description ViewTypes enum
          */
         $$('ns', 'flair.ui');
-		Enum('ViewTypes' ,function() {
+		Enum('ViewTypes', function() {
             this.Client = 0;
             this.Server = 1;
             this.Static = 2;
@@ -598,7 +598,7 @@
          * @description GUI View Handler
          */
         $$('ns', 'flair.ui');
-		Class('ViewHandler' ,Handler, function() {
+		Class('ViewHandler', Handler, function() {
             $$('override');
             this.construct = (base, route) => {
                 base(route);
@@ -639,7 +639,7 @@
          * @description GUI View
          */
         $$('ns', 'flair.ui');
-		Class('View' ,ViewHandler, [ViewComponentMembers], function() {
+		Class('View', ViewHandler, [ViewComponentMembers], function() {
             let mainEl = '',
                 viewEl = '';
         
@@ -966,7 +966,7 @@
          * @description View Component
          */
         $$('ns', 'flair.ui');
-		Class('ViewComponent' ,[ViewComponentMembers], function() {
+		Class('ViewComponent', [ViewComponentMembers], function() {
             let _inViewName = '';
         
             this.view = async (inViewName, ctx, el, params) => { 
@@ -1046,7 +1046,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.ui');
-		Class('Page' ,function() {
+		Class('Page', function() {
             let handlers = [],
                 defaultHandler;
         
@@ -1374,7 +1374,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.boot');
-		Class('ClientRouter' ,Bootware, function() {
+		Class('ClientRouter', Bootware, function() {
             let routes = null;
             
             $$('override');
@@ -1509,7 +1509,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.app');
-		Class('ClientHost' ,Host, function() {
+		Class('ClientHost', Host, function() {
             let mountedApps = {},
                 hashChangeHandler = null;
         
@@ -1787,7 +1787,7 @@
          * @description GUI View Interceptor
          */
         $$('ns', 'flair.ui');
-		Class('ViewInterceptor' ,function() {
+		Class('ViewInterceptor', function() {
             $$('virtual');
             $$('async');
             this.run = noop;
@@ -1801,7 +1801,7 @@
          */
         $$('singleton');
         $$('ns', 'flair.ui');
-		Class('ViewState' ,function() {
+		Class('ViewState', function() {
             $$('state');
             $$('private');
             this.store = {};
@@ -1832,7 +1832,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.31","lupdate":"Mon, 09 Sep 2019 23:49:55 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewTypes","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewTypes","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

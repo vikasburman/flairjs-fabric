@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.59.31
- *  Mon, 09 Sep 2019 23:49:54 GMT
+ *  Version: 0.59.32
+ *  Tue, 10 Sep 2019 00:51:23 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -86,7 +86,7 @@
          */
         $$('abstract');
         $$('ns', 'flair.app');
-		Class('Bootware' ,function() {
+		Class('Bootware', function() {
             /**  
              * @name construct
              * @arguments
@@ -216,7 +216,7 @@
          * @description Handler base class
          */
         $$('ns', 'flair.app');
-		Class('Handler' ,[IDisposable], function() {
+		Class('Handler', [IDisposable], function() {
             $$('virtual');
             this.construct = (route) => {
                 // convert this route (coming from routes.json) to registered route (Route)
@@ -240,7 +240,7 @@
          * @description App base class
          */
         $$('ns', 'flair.app');
-		Class('App' ,Bootware, [IDisposable], function() {
+		Class('App', Bootware, [IDisposable], function() {
             $$('override');
             this.construct = (base) => {
                 // set info
@@ -328,7 +328,7 @@
          * @description App base class
          */
         $$('ns', 'flair.app');
-		Class('Host' ,Bootware, [IDisposable], function() {
+		Class('Host', Bootware, [IDisposable], function() {
             $$('virtual');
             $$('async');
             this.start = noop;
@@ -356,7 +356,7 @@
          */
         $$('static');
         $$('ns', 'flair.app');
-		Class('BootEngine' ,function() {
+		Class('BootEngine', function() {
             this.start = async function() {
                 let allBootwares = [],
                     mountSpecificBootwares = [];
@@ -615,7 +615,7 @@
          * @description IPortHandler interface
          */
         $$('ns', 'flair.app');
-		Interface('IPortHandler' ,function() {
+		Interface('IPortHandler', function() {
             this.port = nip;
             this.factory = nim;
         });
@@ -630,7 +630,7 @@
          */
         $$('sealed');
         $$('ns', 'flair.boot');
-		Class('DIContainer' ,Bootware, function() {
+		Class('DIContainer', Bootware, function() {
             $$('override');
             this.construct = (base) => {
                 base('DI Container');
@@ -660,7 +660,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.31","lupdate":"Mon, 09 Sep 2019 23:49:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

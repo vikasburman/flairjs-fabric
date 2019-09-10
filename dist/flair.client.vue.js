@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.31
- *  Mon, 09 Sep 2019 23:49:56 GMT
+ *  Version: 0.59.32
+ *  Tue, 10 Sep 2019 00:51:24 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -88,7 +88,7 @@
          * @description Vue Component Members
          */
         $$('ns', 'flair.ui');
-		Mixin('VueComponentMembers' ,function() {
+		Mixin('VueComponentMembers', function() {
             var _this = this,
                 viewState = new ViewState(),
                 vueComponent = {};        
@@ -390,7 +390,7 @@
          * @description Vue View
          */
         $$('ns', 'flair.ui');
-		Class('VueView' ,View, [VueComponentMembers], function() {
+		Class('VueView', View, [VueComponentMembers], function() {
             $$('private');
             this.factory = async (ctx, el) => {
                 let vueComponent = null;
@@ -455,7 +455,7 @@
          * @description Vue Component
          */
         $$('ns', 'flair.ui');
-		Class('VueComponent' ,ViewComponent, [VueComponentMembers], function() {
+		Class('VueComponent', ViewComponent, [VueComponentMembers], function() {
             let _this = this;
         
             $$('private');
@@ -550,7 +550,7 @@
          * @description Vue Directive
          */
         $$('ns', 'flair.ui');
-		Class('VueDirective' ,function() {
+		Class('VueDirective', function() {
             $$('virtual');
             $$('async');
             this.factory = noop;
@@ -563,7 +563,7 @@
          * @description Vue Filter
          */
         $$('ns', 'flair.ui');
-		Class('VueFilter' ,function() {
+		Class('VueFilter', function() {
             $$('virtual');
             $$('async');
             this.factory = noop;
@@ -580,7 +580,7 @@
          *              the html of the layout should not have anything else - no data binding etc.
          */
         $$('ns', 'flair.ui');
-		Class('VueLayout' ,function() {
+		Class('VueLayout', function() {
             let _thisId = guid();
         
             $$('virtual');
@@ -795,7 +795,7 @@
          * @description Vue Mixin
          */
         $$('ns', 'flair.ui');
-		Class('VueMixin' ,function() {
+		Class('VueMixin', function() {
             $$('virtual');
             $$('async');
             this.factory = noop;
@@ -808,7 +808,7 @@
          * @description Vue Plugin
          */
         $$('ns', 'flair.ui');
-		Class('VuePlugin' ,function() {
+		Class('VuePlugin', function() {
             $$('virtual');
             $$('async');
             this.factory = noop;
@@ -825,7 +825,7 @@
          * @description Vue initializer
          */
         $$('ns', 'flair.boot');
-		Class('VueSetup' ,Bootware, function() {
+		Class('VueSetup', Bootware, function() {
             $$('override');
             this.construct = (base) => {
                 base('Vue Setup');
@@ -904,7 +904,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.31","lupdate":"Mon, 09 Sep 2019 23:49:56 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

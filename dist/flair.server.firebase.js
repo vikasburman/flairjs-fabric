@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.firebase
  *     File: ./flair.server.firebase.js
- *  Version: 0.59.31
- *  Mon, 09 Sep 2019 23:49:57 GMT
+ *  Version: 0.59.32
+ *  Tue, 10 Sep 2019 00:51:25 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -85,7 +85,7 @@
          * @description Firebase specific App extensions
          */
         $$('ns', 'flair.app');
-		Mixin('FirebaseApp' ,function() {
+		Mixin('FirebaseApp', function() {
             const fbAdmin = require('firebase-admin');
         
             $$('private');
@@ -157,7 +157,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.firebase","file":"./flair.server.firebase{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.31","lupdate":"Mon, 09 Sep 2019 23:49:57 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.FirebaseApp"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.firebase","file":"./flair.server.firebase{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:25 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.FirebaseApp"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 
