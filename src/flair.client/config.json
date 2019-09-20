@@ -1,3 +1,9 @@
 {
-    "viewsRoot": "views"
+    "assetRoots": {
+        "view": "views",
+        "layout": "layouts",
+        "content": "content",
+        "data": "data",
+        "style": "css"
+    }
 }

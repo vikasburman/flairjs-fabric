@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.59.32
- *  Tue, 10 Sep 2019 00:51:23 GMT
+ *  Version: 0.59.35
+ *  Fri, 20 Sep 2019 23:52:44 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -27,7 +27,7 @@
 })(this, async function(flair, __asmFile) {
     'use strict';
 
-    // assembly closure init (start)
+    // assembly closure: init (start)
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
@@ -40,11 +40,6 @@
     const { guid, stuff, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
             deepMerge, getLoadedScript, b64EncodeUnicode, b64DecodeUnicode, lens, globalSetting } = flair.utils;
     
-    // inbuilt modifiers and attributes compile-time-safe support
-    const { $$static, $$abstract, $$virtual, $$override, $$sealed, $$private, $$privateSet, $$protected, $$protectedSet, $$readonly, $$async,
-            $$overload, $$enumerate, $$dispose, $$post, $$on, $$timer, $$type, $$args, $$inject, $$resource, $$asset, $$singleton, $$serialize,
-            $$deprecate, $$session, $$state, $$conditional, $$noserialize, $$ns } = $$;
-    
     // access to DOC
     const DOC = ((env.isServer || env.isWorker) ? null : window.document);
     
@@ -56,7 +51,7 @@
     
     // settings of this assembly
     let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":false,"isExpress":false,"isServerless":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"ports":{},"bootwares":[],"coreAssemblies":["./flair.app.js","isServer: ./flair.server.js","isClient: ./flair.client.js","isVue: ./flair.client.vue.js","isExpress: ./flair.server.express.js","isFirebase: ./flair.server.firebase.js"],"assemblies":[]},"di":{"container":{}}}');
-    let settingsReader = flair.Port('settingsReader');
+    let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
         if (externalSettings) { settings = deepMerge([settings, externalSettings], false); }
@@ -68,16 +63,16 @@
     config = Object.freeze(config);
     
     /* eslint-enable no-unused-vars */
-    // assembly closure init (end)
+    // assembly closure: init (end)
     
-    // assembly global functions (start)
+    // assembly closure: global functions (start)
     // (not defined)
-    // assembly global functions (end)
+    // assembly closure: global functions (end)
     
     // set assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded('./flair.app{.min}.js');
     
-    // assembly types (start)
+    // assembly closure: types (start)
         
     await (async () => { // type: ./src/flair.app/flair.app/@1-Bootware.js
         /**
@@ -650,17 +645,17 @@
         });
         
     })();
-    // assembly types (end)
+    // assembly closure: types (end)
     
-    // assembly embedded resources (start)
+    // assembly closure: embedded resources (start)
     // (not defined)
-    // assembly embedded resources (end)        
+    // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:23 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.35","lupdate":"Fri, 20 Sep 2019 23:52:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

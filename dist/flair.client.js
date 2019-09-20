@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.32
- *  Tue, 10 Sep 2019 00:51:24 GMT
+ *  Version: 0.59.35
+ *  Fri, 20 Sep 2019 23:52:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -27,7 +27,7 @@
 })(this, async function(flair, __asmFile) {
     'use strict';
 
-    // assembly closure init (start)
+    // assembly closure: init (start)
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
@@ -40,11 +40,6 @@
     const { guid, stuff, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
             deepMerge, getLoadedScript, b64EncodeUnicode, b64DecodeUnicode, lens, globalSetting } = flair.utils;
     
-    // inbuilt modifiers and attributes compile-time-safe support
-    const { $$static, $$abstract, $$virtual, $$override, $$sealed, $$private, $$privateSet, $$protected, $$protectedSet, $$readonly, $$async,
-            $$overload, $$enumerate, $$dispose, $$post, $$on, $$timer, $$type, $$args, $$inject, $$resource, $$asset, $$singleton, $$serialize,
-            $$deprecate, $$session, $$state, $$conditional, $$noserialize, $$ns } = $$;
-    
     // access to DOC
     const DOC = ((env.isServer || env.isWorker) ? null : window.document);
     
@@ -56,7 +51,7 @@
     
     // settings of this assembly
     let settings = JSON.parse('{"view":{"mainEl":"main","viewEl":"view","transition":"","handler":"flair.ui.vue.VueView","layout":{"client":"","server":"","static":""},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
-    let settingsReader = flair.Port('settingsReader');
+    let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
         if (externalSettings) { settings = deepMerge([settings, externalSettings], false); }
@@ -64,20 +59,20 @@
     settings = Object.freeze(settings);
     
     // config of this assembly
-    let config = JSON.parse('{}');
+    let config = JSON.parse('{"assetRoots":{"view":"views","layout":"layouts","content":"content","data":"data","style":"css"}}');
     config = Object.freeze(config);
     
     /* eslint-enable no-unused-vars */
-    // assembly closure init (end)
+    // assembly closure: init (end)
     
-    // assembly global functions (start)
+    // assembly closure: global functions (start)
     // (not defined)
-    // assembly global functions (end)
+    // assembly closure: global functions (end)
     
     // set assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded('./flair.client{.min}.js');
     
-    // assembly types (start)
+    // assembly closure: types (start)
         
     await (async () => { // type: ./src/flair.client/flair.ui/@1-ViewComponentMembers.js
         const { ViewComponent } = await ns('flair.ui');
@@ -96,14 +91,11 @@
             $$('protected');
             this.name = '';
         
-            $$('readonly');
+            $$('protected');
             this.id = '';
         
-            $$('readonly');
-            this.inViewName = ''
-        
             $$('protected');
-            this.host = null; // for view, this is view itself; for component this is hosting component
+            this.inViewName = ''
         
             $$('protected');
             this.html = null;
@@ -130,7 +122,9 @@
             this.i18n = null;
             
             $$('private');
-            this.init = async (inViewName, $mainType) => {
+            this.init = async (inViewName, $mainType) => { // eslint-disable-line no-unused-vars
+                let result = null;
+                
                 _inViewName = inViewName || '';
                 this.inViewName = _inViewName;
                 this.id = _thisId;
@@ -144,7 +138,7 @@
                 // set baseName
                 if (!this.baseName) {
                     let typeQualifiedName = $mainType.getName(),
-                        baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1);
+                        baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1); // namespace name
                     this.baseName = baseName;
                 }
         
@@ -160,49 +154,172 @@
                 await this.afterInit($mainType);
         
                 // initialize html/style/json content
-                this.initContent();
+                result = await this.initContent($mainType);
         
                 // initialize layout and merge view with layout
-                await this.assembleView();        
+                await this.assembleView($mainType);  
+                
+                return result;
             };
         
             $$('private');
-            this.initContent = async () => {
-                const autoWireHtmlCssAndJson = async () => {
-                    // auto wire html and styles, if configured as 'true' - for making 
-                    // it ready to pick from assets folder
-                    if (typeof this.style === 'boolean' && this.style === true) {
-                        this.style = which(`./${this.baseName}/index{.min}.css`, true);
-                    } else { // its an embedded resource - res:<resTypeName> OR direct string or null
-                        this.style = this.getResIfDefined(this.style);
+            this.initContent = async ($mainType) => { // eslint-disable-line no-unused-vars
+                let result = {
+                    title: null
+                };
+                const autoWireHtml = async () => {
+                    // html
+                    // html will always be a html (direct) OR a html file as asset or embedded resource
+                    // auto-wire logic works like this:
+                    // this.html can be:
+                    //  undefined/null (default):
+                    //      it assumes an empty string and follows the 'string' approach below
+                    //  object:
+                    //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
+                    //      any other type of object is treated as empty string
+                    //  anything else is treated as empty string
+                    //  string:
+                    //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
+                    //      it can end with '.html' to have a file name, and filename can be:
+                    //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
+                    //          './file.view.html' that is assumed to be in-place namespaced asset file and it will be located as: ./views/<namespaceOfType>.file.html
+                    //      any other non-empty string is treated as html string itself
+                    //      if empty string, is left as is and assumed no html is defined and so nothing is loaded
+                    if (typeof this.html !== 'string') { // undefined/null/object/anything else
+                        if (this.html && typeof this.html === 'object' && this.html.data) { // resource object
+                            let resData = this.html.data;
+                            this.html = resData; // set it as its data
+                        } else {
+                            this.html = ''; // set as empty string
+                        }   
                     }
-                    if (typeof this.html === 'boolean' && this.html === true) {
-                        this.html = which(`./${this.baseName}/index{.min}.html`, true);
-                    } else { // its an embedded resource - res:<resTypeName> OR direct string or null
-                        this.html = this.getResIfDefined(this.html);
-                    }
-                    if (typeof this.data === 'boolean' && this.data === true) {
-                        this.data = which(`./${this.baseName}/index{.min}.json`, true);
-                    } else { // its an embedded resource - res:<resTypeName> OR direct string or null
-                        this.data = this.getResIfDefined(this.data);
+                    if (typeof this.html === 'string') {
+                        if (this.html.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
+                            this.html = this.getResIfDefined(this.html);
+                            if (this.html.startsWith('res:')) { // embedded resource could not resolved
+                                this.html = '';
+                            }
+                        }
+                        if (this.html.endsWith('.view.html') || this.html.endsWith('.view{.min}.html')) { // its namespaced in-place asset html file
+                            // build proper name of the file
+                            this.html = which(`./${config.assetRoots.view}/${this.baseName}.${this.html.replace('.view', '')}`, true);
+                        }
+                        if (this.html.endsWith('.html')) { // its html file
+                            // pick file from base path
+                            // file is generally defined as ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
+                            this.html = this.html.replace('./', this.basePath);
+                            this.html = await clientFileLoader(this.html); // load file content
+                        }
+                        // else this is assumed to be html string itself
                     }
                 };
+                const autoWireStyle = async () => {
+                    // style
+                    // style will always be a css (direct) OR a css file as asset or embedded resource
+                    // auto-wire logic works like this:
+                    // this.style can be:
+                    //  undefined/null (default):
+                    //      it assumes an empty string and follows the 'string' approach below
+                    //  object:
+                    //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
+                    //      any other type of object is treated as empty string
+                    //  anything else is treated as empty string
+                    //  string:
+                    //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
+                    //      it can end with '.css' to have a file name, and filename can be:
+                    //          './path/file.css' to define a css file inside assets folder - in relation to root of the asset folder
+                    //          './file.style.css' that is assumed to be in-place namespaced asset file and it will be located as: ./css/<namespaceOfType>.file.css
+                    //      any other non-empty string is treated as css string itself
+                    //      if empty string, is left as is and assumed no style is defined and so nothing is loaded
+                    if (typeof this.style !== 'string') { // undefined/null/object/anything else
+                        if (this.style && typeof this.style === 'object' && this.style.data) { // resource object
+                            let resData = this.style.data;
+                            this.style = resData; // set it as its data
+                        } else {
+                            this.style = ''; // set as empty string
+                        }   
+                    }
+                    if (typeof this.style === 'string') {
+                        if (this.style.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
+                            this.style = this.getResIfDefined(this.style);
+                            if (this.style.startsWith('res:')) { // embedded resource could not resolved
+                                this.style = '';
+                            }
+                        }
+                        if (this.style.endsWith('.style.css') || this.style.endsWith('.style{.min}.css')) { // its namespaced in-place asset css file
+                            // build proper name of the file
+                            this.style = which(`./${config.assetRoots.style}/${this.baseName}.${this.style.replace('.style', '')}`, true);
+                        }
+                        if (this.style.endsWith('.css')) { // its css file
+                            // pick file from base path
+                            // file is generally defined as ./path/fileName.css and this will replace it as: ./<basePath>/path/fileName.css
+                            this.style = this.style.replace('./', this.basePath);
+                            this.style = await clientFileLoader(this.style); // load file content
+                        }
+                        // else this is assumed to be css string itself
+                    }
+                };
+                const autoWireData = async () => {
+                    // data
+                    // data will always be a json (direct) OR a json file as asset or embedded resource
+                    // auto-wire logic works like this:
+                    // this.data can be:
+                    //  undefined/null (default):
+                    //      it assumes an empty string and follows the 'string' approach below
+                    //  object:
+                    //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
+                    //      any other type of object is treated as empty string
+                    //  anything else is treated as empty string
+                    //  string:
+                    //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
+                    //      it can end with '.json' to have a file name, and filename can be:
+                    //          './path/file.json' to define a json file inside assets folder - in relation to root of the asset folder
+                    //          './file.data.json' that is assumed to be in-place namespaced asset file and it will be located as: ./data/<namespaceOfType>.file.json
+                    //      any other non-empty string is treated as json string itself
+                    //      if empty string, is left as is and assumed no data is defined and so nothing is loaded
+                    if (typeof this.data !== 'string') { // undefined/null/object/anything else
+                        if (this.data && typeof this.data === 'object' && this.data.data) { // resource object
+                            let resData = this.data.data;
+                            this.data = resData; // set it as its data
+                        } else {
+                            this.data = ''; // set as empty string
+                        }   
+                    }
+                    if (typeof this.data === 'string') {
+                        if (this.data.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
+                            this.data = this.getResIfDefined(this.data);
+                            if (this.data.startsWith('res:')) { // embedded resource could not resolved
+                                this.data = '';
+                            }
+                        }
+                        if (this.data.endsWith('.data.json') || this.style.endsWith('.data{.min}.json')) { // its namespaced in-place asset json file
+                            // build proper name of the file
+                            this.data = which(`./${config.assetRoots.data}/${this.baseName}.${this.data.replace('.data', '')}`, true);
+                        }
+                        if (this.data.endsWith('.json')) { // its json file
+                            // pick file from base path
+                            // file is generally defined as ./path/fileName.json and this will replace it as: ./<basePath>/path/fileName.json
+                            this.data = this.data.replace('./', this.basePath);
+                            this.data = await clientFileLoader(this.data); // <-- this gives parsed JSON object
+                        }
+                        // else this is assumed to be json string itself
+                    }
+                };
+        
                 const loadHtml = async () => {
-                    // load html content in property
-                    // if html file is defined as text
-                    if (typeof this.html === 'string' && this.html.endsWith('.html')) { 
-                        // pick file from base path
-                        // file is generally defined as ./fileName.html and this will replace it as: ./<basePath>/fileName.html
-                        this.html = this.html.replace('./', this.basePath);
-        
-                        // load file content
-                        this.html = await clientFileLoader(this.html);
-        
-                        // extract content from loaded html
-                        let content = this.extractContent(this.html);
-                        if (content.data) { this.data = content.data; } // if data was defined inside html give it a precedence and overwrite, even if defined earlier
-                        if (content.style) { this.style = content.style; } // if style was defined inside html give it a precedence and overwrite, even if defined earlier
-                        this.html = content.html || ''; // set just the html as defined
+                    if (this.html) { // if some string is defined
+                        let content = this.extractContent(this.html); // extract content from loaded html
+                        if (content.html) { this.html = content.html; } 
+                        if (content.title) { result.title = content.title; } // put title to be set later
+                        if (content.i18n && !this.i18n) { this.i18n = content.i18n; } // load i18n if not already defined
+                        if (content.style) { // if style was defined inside html give it a precedence and overwrite, even if defined earlier
+                            this.style = content.style; 
+                            await autoWireStyle(); // re-wire                    
+                        } 
+                        if (content.data) { // if data was defined inside html give it a precedence and overwrite, even if defined earlier
+                            this.data = content.data; 
+                            await autoWireData(); // re-wire
+                        }
                     }
         
                     // put entire html into a unique id div
@@ -210,17 +327,6 @@
                     this.html = `<div id="${_thisId}">${this.html}</div>`;
                 };        
                 const loadStyle = async () => {
-                    // load style content in property
-                    // if style file name is defined as text
-                    if (typeof this.style === 'string' && this.style.endsWith('.css')) { 
-                        // pick file from base path
-                        // file is generally defined as ./fileName.css and this will replace it as: ./<basePath>/fileName.css
-                        this.style = this.style.replace('./', this.basePath);
-                        
-                        // load file content
-                        this.style = await clientFileLoader(this.style);
-                    }
-        
                     // load styles in dom - as scoped style
                     if (this.style) {
                         let styleId = `${_inViewName}_${_thisId}`;
@@ -230,19 +336,9 @@
                 };
                 const loadJson = async () => {
                     // load static data in property
-                    // if json file is defined as text
-                    if (typeof this.data === 'string') { 
-                        if (this.data.endsWith('.json')) {
-                            // pick file from base path
-                            // file is generally defined as ./fileName.json and this will replace it as: ./<basePath>/fileName.json
-                            this.data = this.data.replace('./', this.basePath);
-        
-                            // load file content
-                            this.data = await clientFileLoader(this.data); // <-- this gives parsed JSON object
-                        } else { // JSON string 
-                            this.data = JSON.parse(this.data);
-                        } // else either not defined OR defined as object itself
-                    }
+                    if (typeof this.data === 'string') { // json string
+                        this.data = JSON.parse(this.data);
+                    } // else either not defined OR defined as object itself
                 };        
                 const loadI18NResources = async () => {
                     // load i18n resources
@@ -272,11 +368,15 @@
                     }
                 };
         
-                await autoWireHtmlCssAndJson();
+                await autoWireHtml();
+                await autoWireStyle();
+                await autoWireData();
                 await loadHtml();
                 await loadStyle();
                 await loadJson();
                 await loadI18NResources();
+        
+                return result;
             };
         
             $$('private');
@@ -360,6 +460,8 @@
             this.extractContent = (html) => {
                 let doc = null,
                     content = {
+                        title: null,
+                        i18n: null,
                         html: null,
                         style: null,
                         data: null,
@@ -374,25 +476,29 @@
                 // 1. standard html
                 //  <!doctype html>
                 //  <html>
-                //      <head>...</head>
-                //      <body>...</body>
+                //      <head>
+                //          <style></style>
+                //          <data></data>
+                //      </head>
+                //      <body>
+                //      </body>
                 //  </html>
                 //
-                // 2. view fragments in assets or embedded resource
+                // 2. bare minimum
                 //  <html>...</html>
                 //  OR
                 //  direct any tag
                 //
-                // 3. static views
+                // 3. scattered
                 //  <style>...</style>
                 //  <data>...</data>
                 //  <html>...</html>
                 //  
-                // 4. layout structure
+                // 4. partial
                 //  <style>...</style>
                 //  <html>...</html>
                 //
-                // 5. markdown / text
+                // 5. free flow
                 //  ...text...
         
                 let docParser = new window.DOMParser();
@@ -404,11 +510,23 @@
                     for(let s of scripts) { s.parentNode.remove(s); }
                 }
         
+                // delete all link tags, so nothing left inside body
+                let links = doc.getElementsByTagName('link');
+                if (links) {
+                    for(let l of links) { l.parentNode.remove(l); }
+                }        
+        
                 // pick first style and then delete all style tags, so nothing left inside
                 let styles = doc.getElementsByTagName('style');
                 if (styles) {
                     if (styles.length > 0) {
-                        content.style = styles[0].innerHTML;
+                        let style = styles[0],
+                            styleSrc = styles.getAttribute('src');
+                        if (styleSrc) { // give pref to defined source
+                            content.style = styleSrc;
+                        } else {
+                            content.style = style.innerHTML;
+                        }
                         for(let s of styles) { s.parentNode.remove(s); }
                     }
                 }
@@ -417,9 +535,26 @@
                 let data = doc.getElementsByTagName('data');
                 if (data) {
                     if (data.length > 0) {
-                        content.data = data[0].innerHTML;
+                        let dt = data[0],
+                            dtSrc = dt.getAttribute('src');
+                        if (dtSrc) { // give pref to defined source
+                            content.data = dtSrc;
+                        } else {
+                            content.data = dtSrc.innerHTML;
+                        }                
                         for(let d of data) { d.parentNode.remove(d); }
                     }
+                }
+        
+                // pick title
+                // title may have pattern like this: {{ i18n('@titles.home | Home') }}
+                // just to match everything else in document, but here it is not needed like this
+                // instead needed is just: '@titles.home | Home'
+                // so remove other known parts: {{ }} and i18n( and )
+                let docTitle = doc.title || null;
+                if (docTitle) {
+                    docTitle = replaceAll(docTitle, '{{', ''); docTitle = replaceAll(docTitle, '}}', ''); docTitle = replaceAll(docTitle, 'i18n', ''); docTitle = replaceAll(docTitle, '(', ''); docTitle = replaceAll(docTitle, ')', '');
+                    content.title = docTitle;
                 }
         
                 // find all component holders
@@ -428,8 +563,18 @@
                 // pick clean html from body
                 content.html = doc.body.innerHTML;
         
+                // pick all usage of i18n string
+                // i18n strings will generally be written as {{ i18n('@fileName.stringName | defaultValue') }}
+                // it looks for '@fileName. pattern via /('|")@\w*./ regex and extract 'fileName' to build a comma delimited string
+                // of required i18n resources
+                let matched = content.html.match(/('|")@\w*./g);
+                if (matched && Array.isArray(matched) && matched.length > 0) {
+                    matched.forEach((m) => { content.i18n += ',' + m.substr(2, m.length - 3); });
+                    if (content.i18n.startsWith(',')) { content.i18n = content.i18n.substr(1); }
+                }
+        
                 return content;
-            };  
+            };
             
             $$('private');
             this.extractComponents = (el) => {
@@ -681,7 +826,8 @@
                 base(ctx);
         
                 // initialize in context of this type
-                await this.init(this.$static.inView.name, this.$Type);
+                let result = await this.init(this.$static.inView.name, this.$Type);
+                if (result && result.title) { this.title = result.title; }
         
                 // add view el to parent
                 let el = null,
@@ -729,31 +875,60 @@
             };
         
             $$('protected');
-            this.assembleView = async () => {
+            this.assembleView = async ($mainType) => { // eslint-disable-line no-unused-vars
                 let clientFileLoader = Port('clientFile');
                 const autoWireAndLoadLayout = async () => {
                     // layout will always be an html (direct) OR an html file as asset or embedded resource
                     // with embedded styles in itself having SCOPED styles
-                    if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings
-                        switch(this.type) {
-                            case ViewTypes.Client: settings.view.layout.client || ''; break;
-                            case ViewTypes.Server: settings.view.layout.server || ''; break;
-                            case ViewTypes.Static: settings.view.layout.static || ''; break;
-                        }
+                    // auto-wire logic works like this:
+                    // this.layout can be:
+                    //  undefined/null (default):
+                    //      it assumes an empty string and follows the 'string' approach below
+                    //  object:
+                    //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
+                    //      any other type of object is treated as empty string
+                    //  anything else is treated as empty string
+                    //  string:
+                    //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
+                    //      it can end with '.html' to have a file name, and filename can be:
+                    //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
+                    //          './file.layout.html' that is assumed to be in-place namespaced asset file and it will be located as: ./layouts/<namespaceOfType>.file.html
+                    //      any other non-empty string is treated as html string itself
+                    //      if empty string, it picks the default layout setting value based on the view type and then follows the string approach from start
+                    //      if still empty string, it builds a default layout as: <div type="${viewEl}"></div>
+                    if (typeof this.layout !== 'string') { // undefined/null/object/anything else
+                        if (this.layout && typeof this.layout === 'object' && this.layout.data) { // resource object
+                            let resData = this.layout.data;
+                            this.layout = resData; // set it as its data
+                        } else {
+                            this.layout = ''; // set as empty string
+                        }   
                     }
                     if (typeof this.layout === 'string') {
+                        if (this.layout === '') { // if empty string
+                            switch(this.type) {
+                                case ViewTypes.Client: this.layout = settings.view.layout.client || ''; break;
+                                case ViewTypes.Server: this.layout = settings.view.layout.server || ''; break;
+                                case ViewTypes.Static: this.layout = settings.view.layout.static || ''; break;
+                            }
+                        }
                         if (this.layout.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
                             this.layout = this.getResIfDefined(this.layout);
-                        } else if (this.layout.endsWith('.html')) { // its html file
-                            // pick file from base path
-                            // file is generally defined as ./fileName.html and this will replace it as: ./<basePath>/fileName.html
-                            this.layout = this.layout.replace('./', this.basePath);
-                            
-                            // load file content
-                            this.layout = await clientFileLoader(this.layout);
-                        } else { // direct string
-                            // already loaded
+                            if (this.layout.startsWith('res:')) { // embedded resource could not resolved
+                                this.layout = '';
+                            }
                         }
+                        if (this.layout.endsWith('.layout.html') || this.layout.endsWith('.layout{.min}.html')) { // its namespaced in-place asset html file
+                            // build proper name of the file
+                            this.layout = which(`./${config.assetRoots.layout}/${this.baseName}.${this.layout.replace('.layout', '')}`, true);
+                        }
+                        if (this.layout.endsWith('.html')) { // its html file
+                            // pick file from base path
+                            // file is generally defined as ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
+                            this.layout = this.layout.replace('./', this.basePath);
+                            this.layout = await clientFileLoader(this.layout); // load file content
+                        }
+                        // else this is assumed to be html string itself
                     }
                     if (!this.layout) { // nothing defined
                         this.layout = `<div type="${viewEl}"></div>`; // bare minimum layout, so at least view is loaded 
@@ -761,17 +936,22 @@
                 };
                 const mergeLayoutWithView = async () => {
                     // a layout html is defined as (sample):
-                    // <style>
-                    //  #SCOPE_ID .div {
-                    //      ...  
-                    //  }
-                    // </style>
+                    // <!DOCTYPE html>
                     // <html>
-                    //  <div type="ns.Header" "params"=""></div>
-                    //  <div class="container">
-                    //      <div type="<viewEl>"></div>
-                    //  </div>
-                    //  <div type="ns.Footer"></div>
+                    //  <head>
+                    //      <style>
+                    //          #SCOPE_ID .div {
+                    //              ...  
+                    //          }
+                    //      </style>
+                    //  </head>
+                    //  <body>
+                    //      <div type="ns.Header" "params"=""></div>
+                    //      <div class="container">
+                    //          <div type="<viewEl>"></div>
+                    //      </div>
+                    //      <div type="ns.Footer"></div>
+                    //  </body>
                     // </html>
         
                     // extract content from htmls
@@ -888,6 +1068,7 @@
                     // which essentially tells which assembly this static file / server view is part of and hence 
                     // assets and locales are to be here available locally itself
         
+                    // TODO: In case of static view - set path to config.assetRoots.content
                     // baseName
                     if (!this.baseName) {
                         let typeQualifiedName = this.route.name,
@@ -945,6 +1126,7 @@
                 if (content.style) { this.style = content.style; }
                 if (content.data) { this.data = content.data; }
                 if (content.html) { this.html = content.html; }
+                if (content.title) { this.title = content.title; }
             };
         
             $$('static');
@@ -1822,17 +2004,17 @@
         });
         
     })();
-    // assembly types (end)
+    // assembly closure: types (end)
     
-    // assembly embedded resources (start)
+    // assembly closure: embedded resources (start)
     // (not defined)
-    // assembly embedded resources (end)        
+    // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewTypes","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.35","lupdate":"Fri, 20 Sep 2019 23:52:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewTypes","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

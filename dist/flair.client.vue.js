@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.32
- *  Tue, 10 Sep 2019 00:51:24 GMT
+ *  Version: 0.59.35
+ *  Fri, 20 Sep 2019 23:52:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -27,7 +27,7 @@
 })(this, async function(flair, __asmFile) {
     'use strict';
 
-    // assembly closure init (start)
+    // assembly closure: init (start)
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
@@ -40,11 +40,6 @@
     const { guid, stuff, replaceAll, splitAndTrim, findIndexByProp, findItemByProp, which, isArrowFunc, isASyncFunc, sieve,
             deepMerge, getLoadedScript, b64EncodeUnicode, b64DecodeUnicode, lens, globalSetting } = flair.utils;
     
-    // inbuilt modifiers and attributes compile-time-safe support
-    const { $$static, $$abstract, $$virtual, $$override, $$sealed, $$private, $$privateSet, $$protected, $$protectedSet, $$readonly, $$async,
-            $$overload, $$enumerate, $$dispose, $$post, $$on, $$timer, $$type, $$args, $$inject, $$resource, $$asset, $$singleton, $$serialize,
-            $$deprecate, $$session, $$state, $$conditional, $$noserialize, $$ns } = $$;
-    
     // access to DOC
     const DOC = ((env.isServer || env.isWorker) ? null : window.document);
     
@@ -56,7 +51,7 @@
     
     // settings of this assembly
     let settings = JSON.parse('{"vue":{"extensions":[]},"showdown":{}}');
-    let settingsReader = flair.Port('settingsReader');
+    let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client.vue');
         if (externalSettings) { settings = deepMerge([settings, externalSettings], false); }
@@ -68,16 +63,16 @@
     config = Object.freeze(config);
     
     /* eslint-enable no-unused-vars */
-    // assembly closure init (end)
+    // assembly closure: init (end)
     
-    // assembly global functions (start)
+    // assembly closure: global functions (start)
     // (not defined)
-    // assembly global functions (end)
+    // assembly closure: global functions (end)
     
     // set assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded('./flair.client.vue{.min}.js');
     
-    // assembly types (start)
+    // assembly closure: types (start)
         
     await (async () => { // type: ./src/flair.client.vue/flair.ui/@1-VueComponentMembers.js
         const { ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
@@ -894,17 +889,17 @@
         });
         
     })();
-    // assembly types (end)
+    // assembly closure: types (end)
     
-    // assembly embedded resources (start)
+    // assembly closure: embedded resources (start)
     // (not defined)
-    // assembly embedded resources (end)        
+    // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.32","lupdate":"Tue, 10 Sep 2019 00:51:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.35","lupdate":"Fri, 20 Sep 2019 23:52:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

@@ -95,31 +95,60 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     };
 
     $$('protected');
-    this.assembleView = async ($mainType) => {
+    this.assembleView = async ($mainType) => { // eslint-disable-line no-unused-vars
         let clientFileLoader = Port('clientFile');
         const autoWireAndLoadLayout = async () => {
             // layout will always be an html (direct) OR an html file as asset or embedded resource
             // with embedded styles in itself having SCOPED styles
-            if (typeof this.layout === 'boolean' && this.layout === true) { // pick default layout from settings
-                switch(this.type) {
-                    case ViewTypes.Client: settings.view.layout.client || ''; break;
-                    case ViewTypes.Server: settings.view.layout.server || ''; break;
-                    case ViewTypes.Static: settings.view.layout.static || ''; break;
-                }
+            // auto-wire logic works like this:
+            // this.layout can be:
+            //  undefined/null (default):
+            //      it assumes an empty string and follows the 'string' approach below
+            //  object:
+            //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
+            //      any other type of object is treated as empty string
+            //  anything else is treated as empty string
+            //  string:
+            //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
+            //      it can end with '.html' to have a file name, and filename can be:
+            //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
+            //          './file.layout.html' that is assumed to be in-place namespaced asset file and it will be located as: ./layouts/<namespaceOfType>.file.html
+            //      any other non-empty string is treated as html string itself
+            //      if empty string, it picks the default layout setting value based on the view type and then follows the string approach from start
+            //      if still empty string, it builds a default layout as: <div type="${viewEl}"></div>
+            if (typeof this.layout !== 'string') { // undefined/null/object/anything else
+                if (this.layout && typeof this.layout === 'object' && this.layout.data) { // resource object
+                    let resData = this.layout.data;
+                    this.layout = resData; // set it as its data
+                } else {
+                    this.layout = ''; // set as empty string
+                }   
             }
             if (typeof this.layout === 'string') {
+                if (this.layout === '') { // if empty string
+                    switch(this.type) {
+                        case ViewTypes.Client: this.layout = settings.view.layout.client || ''; break;
+                        case ViewTypes.Server: this.layout = settings.view.layout.server || ''; break;
+                        case ViewTypes.Static: this.layout = settings.view.layout.static || ''; break;
+                    }
+                }
                 if (this.layout.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
                     this.layout = this.getResIfDefined(this.layout);
-                } else if (this.layout.endsWith('.html')) { // its html file
-                    // pick file from base path
-                    // file is generally defined as ./fileName.html and this will replace it as: ./<basePath>/fileName.html
-                    this.layout = this.layout.replace('./', this.basePath);
-                    
-                    // load file content
-                    this.layout = await clientFileLoader(this.layout);
-                } else { // direct string
-                    // already loaded
+                    if (this.layout.startsWith('res:')) { // embedded resource could not resolved
+                        this.layout = '';
+                    }
                 }
+                if (this.layout.endsWith('.layout.html') || this.layout.endsWith('.layout{.min}.html')) { // its namespaced in-place asset html file
+                    // build proper name of the file
+                    this.layout = which(`./${config.assetRoots.layout}/${this.baseName}.${this.layout.replace('.layout', '')}`, true);
+                }
+                if (this.layout.endsWith('.html')) { // its html file
+                    // pick file from base path
+                    // file is generally defined as ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
+                    this.layout = this.layout.replace('./', this.basePath);
+                    this.layout = await clientFileLoader(this.layout); // load file content
+                }
+                // else this is assumed to be html string itself
             }
             if (!this.layout) { // nothing defined
                 this.layout = `<div type="${viewEl}"></div>`; // bare minimum layout, so at least view is loaded 
@@ -127,17 +156,22 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         };
         const mergeLayoutWithView = async () => {
             // a layout html is defined as (sample):
-            // <style>
-            //  #SCOPE_ID .div {
-            //      ...  
-            //  }
-            // </style>
+            // <!DOCTYPE html>
             // <html>
-            //  <div type="ns.Header" "params"=""></div>
-            //  <div class="container">
-            //      <div type="<viewEl>"></div>
-            //  </div>
-            //  <div type="ns.Footer"></div>
+            //  <head>
+            //      <style>
+            //          #SCOPE_ID .div {
+            //              ...  
+            //          }
+            //      </style>
+            //  </head>
+            //  <body>
+            //      <div type="ns.Header" "params"=""></div>
+            //      <div class="container">
+            //          <div type="<viewEl>"></div>
+            //      </div>
+            //      <div type="ns.Footer"></div>
+            //  </body>
             // </html>
 
             // extract content from htmls
@@ -254,6 +288,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
             // which essentially tells which assembly this static file / server view is part of and hence 
             // assets and locales are to be here available locally itself
 
+            // TODO: In case of static view - set path to config.assetRoots.content
             // baseName
             if (!this.baseName) {
                 let typeQualifiedName = this.route.name,
