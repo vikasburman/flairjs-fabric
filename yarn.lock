@@ -1019,9 +1019,9 @@ ecstatic@^3.0.0:
     url-join "^2.0.5"
 
 electron-to-chromium@^1.3.247:
-  version "1.3.263"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.263.tgz#089957556c0a3e2a3726217449796914e5fe9609"
-  integrity sha512-VfPi+sE/1nEKOV7DWDqWSUGP7ztJG5FeqHbMEj6dBb/arKnxpOCnRXOSC6HBV6qTfK5v8CX7xWCqzN36UqG1oA==
+  version "1.3.264"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.264.tgz#ed837f44524d0601a7b2b7b6efd86e35753d0e27"
+  integrity sha512-z8E7WkrrquCuGYv+kKyybuZIbdms+4PeHp7Zm2uIgEhAigP0bOwqXILItwj0YO73o+QyHY/7XtEfP5DsHOWQgQ==
 
 emoji-regex@^7.0.1:
   version "7.0.3"
@@ -1376,10 +1376,10 @@ find-up@^2.0.0:
   dependencies:
     locate-path "^2.0.0"
 
-flairjs-cli@^0.60.8:
-  version "0.60.8"
-  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.60.8.tgz#5da0797616f7f3d95d07a83e14e2b5409a221c1b"
-  integrity sha512-LmOUOC59hV+36BLOeyd2jTSTihLHg90Ud41ZOx0x43xncIBSBb8aNyjzunGynz89BYLLeCivd0HBDuzxAcCLzw==
+flairjs-cli@^0.61.2:
+  version "0.61.2"
+  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.61.2.tgz#193d396e5073057f78bb31afcbaa78f9e9cbc7d0"
+  integrity sha512-/dR9+orYAT8sJJZ0wT8cSTN2bhhoKTxkZfnQM9Z/nkMHX9aoqkl9+GY92+h8lfi8TJwFYF0vUsqNyBkkoT1SfA==
   dependencies:
     clean-css "^4.2.1"
     copy-dir "^1.2.0"
@@ -1391,16 +1391,17 @@ flairjs-cli@^0.60.8:
     html-minifier "^4.0.0"
     htmllint "^0.8.0"
     jasmine "^3.4.0"
+    junk "^3.1.0"
     minimist "^1.2.0"
     open "^6.4.0"
     recursive-readdir-sync "^1.0.6"
     stylelint "^10.1.0"
     uglify-es "^3.3.9"
 
-flairjs@^0.59.40:
-  version "0.59.40"
-  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.59.40.tgz#c978c817da08dfabab7373d256f79d73848fdcb0"
-  integrity sha512-rkpcQbfmFIPyuWiRdyulmAkgH/LKfQuazu1qsGYCTUkqibbMktLfKWwhS22ZKrWcLbsPH2swgYkPHYao+A4hnQ==
+flairjs@^0.59.46:
+  version "0.59.46"
+  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.59.46.tgz#e717e68c1ac197425e2224ae4e02c7d408411955"
+  integrity sha512-YkIsmvZngFUEyvedxoSOhicdFAbrgqtFNeT2NBKe+KmC/O15UWenTKfES5IdZKssstjQmMQsAiQeapGcRlh3oQ==
 
 flat-cache@^2.0.1:
   version "2.0.1"
@@ -1522,7 +1523,7 @@ glob-to-regexp@^0.3.0:
   resolved "https://registry.yarnpkg.com/glob-to-regexp/-/glob-to-regexp-0.3.0.tgz#8c5a1494d2066c570cc3bfe4496175acc4d502ab"
   integrity sha1-jFoUlNIGbFcMw7/kSWF1rMTVAqs=
 
-glob@^7.1.1, glob@^7.1.3:
+glob@^7.1.1, glob@^7.1.3, glob@^7.1.4:
   version "7.1.4"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.4.tgz#aa608a2f6c577ad357e1ae5a5c26d9a8d1969255"
   integrity sha512-hkLPepehmnKk41pUGm3sYxoFs/umurYfYJCerbXEyFIWcAzvpipAgVkBqqT9RBKMGjnq6kMuyYwha6csxbiM1A==
@@ -2111,18 +2112,18 @@ isurl@^1.0.0-alpha5:
     has-to-string-tag-x "^1.2.0"
     is-object "^1.0.1"
 
-jasmine-core@~3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-3.4.0.tgz#2a74618e966026530c3518f03e9f845d26473ce3"
-  integrity sha512-HU/YxV4i6GcmiH4duATwAbJQMlE0MsDIR5XmSVxURxKHn3aGAdbY1/ZJFmVRbKtnLwIxxMJD7gYaPsypcbYimg==
+jasmine-core@~3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-3.5.0.tgz#132c23e645af96d85c8bca13c8758b18429fc1e4"
+  integrity sha512-nCeAiw37MIMA9w9IXso7bRaLl+c/ef3wnxsoSAlYrzS+Ot0zTG6nU8G/cIfGkqpkjX2wNaIW9RFG0TwIFnG6bA==
 
 jasmine@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/jasmine/-/jasmine-3.4.0.tgz#0fa68903ff0c9697459cd044b44f4dcef5ec8bdc"
-  integrity sha512-sR9b4n+fnBFDEd7VS2el2DeHgKcPiMVn44rtKFumq9q7P/t8WrxsVIZPob4UDdgcDNCwyDqwxCt4k9TDRmjPoQ==
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/jasmine/-/jasmine-3.5.0.tgz#7101eabfd043a1fc82ac24e0ab6ec56081357f9e"
+  integrity sha512-DYypSryORqzsGoMazemIHUfMkXM7I7easFaxAvNM3Mr6Xz3Fy36TupTrAOxZWN8MVKEU5xECv22J4tUQf3uBzQ==
   dependencies:
-    glob "^7.1.3"
-    jasmine-core "~3.4.0"
+    glob "^7.1.4"
+    jasmine-core "~3.5.0"
 
 js-tokens@^4.0.0:
   version "4.0.0"
@@ -2175,6 +2176,11 @@ jsonfile@^4.0.0:
   integrity sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=
   optionalDependencies:
     graceful-fs "^4.1.6"
+
+junk@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/junk/-/junk-3.1.0.tgz#31499098d902b7e98c5d9b9c80f43457a88abfa1"
+  integrity sha512-pBxcB3LFc8QVgdggvZWyeys+hnrNWg4OcZIU/1X59k5jQdLBlCsYGRQaz234SqoRLTCgMH00fY0xRJH+F9METQ==
 
 keyv@3.0.0:
   version "3.0.0"

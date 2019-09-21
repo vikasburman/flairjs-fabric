@@ -22,7 +22,7 @@ Class('', function() {
                     let script = document.createElement("script");
                     for(let key in item) { // item should have same attributes that are required for script tag
                         if (key === 'src') {
-                            script[key] = which(item[key], true); // debug/prod file
+                            script[key] = which(item[key]);
                         } else {
                             script[key] = item[key];
                         }
@@ -41,7 +41,7 @@ Class('', function() {
                     let link = document.createElement("link");
                     for(let key in item) { // item should have same attributes that are required for link tag
                         if (key === 'href') {
-                            link[key] = which(item[key], true); // debug/prod file
+                            link[key] = which(item[key]);
                         } else {
                             link[key] = item[key];
                         }                        

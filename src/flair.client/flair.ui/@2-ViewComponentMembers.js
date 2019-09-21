@@ -90,13 +90,13 @@ Mixin('', function() {
             title: null
         };
         const autoWireHtml = async () => {
-            this.html = await this.autoWire('view', this.html, $mainType, this.basePath, this.baseName);
+            this.html = await this.autoWire('view', this.html, $mainType);
         };
         const autoWireStyle = async () => {
-            this.style = await this.autoWire('style', this.style, $mainType, this.basePath, this.baseName);
+            this.style = await this.autoWire('style', this.style, $mainType);
         };
         const autoWireData = async () => {
-            this.data = await this.autoWire('data', this.data, $mainType, this.basePath, this.baseName);
+            this.data = await this.autoWire('data', this.data, $mainType);
         };
 
         const loadHtml = async () => {
@@ -154,12 +154,16 @@ Mixin('', function() {
                         this.i18n[nsItem.trim()] = false; // so in next loop, it gets replaced with default auto-wired value
                     }
                 }
-                let localizedPath = this.localePath + this.locale() + '/';
+                let $asm = $mainType.getAssembly(),
+                    currentLocale = this.locale();
                 for(let i18nNs in this.i18n) {
                     if (this.i18n.hasOwnProperty(i18nNs)) {
                         i18ResFile = this.i18n[i18nNs] || `./${i18nNs}.json`;
-                        i18ResFile = i18ResFile.replace('./', localizedPath);
-                        this.i18n[i18nNs] = await clientFileLoader(i18ResFile); // this will load defined json file as json object here
+                        if ($asm.hasLocale(currentLocale, i18ResFile)) {
+                            this.i18n[i18nNs] = await clientFileLoader($asm.getLocale(currentLocale, i18ResFile)); // this will load defined json file as json object here
+                        } else {
+                            this.i18n[i18nNs] = {}; // keep it empty
+                        }
                     }
                 }
             }
@@ -245,41 +249,88 @@ Mixin('', function() {
     };  
     
     $$('private');
-    this.autoWire = async (type, def, $type, basePath, baseName, viewType, viewEl) => {
+    this.autoWire = async (type, def, $type, viewType, viewEl) => {
         let value = def,
+            _value = null,
             res = null;
 
         const autoWire1 = async () => {
             // 1: if resource object
             if (value && typeof value === 'object' && value.data) { value = value.data; } // resource object
         };
+        const autoWire2 = async (ext) => {
+            // 2: pick associated resource, if need
+            if (!value) { 
+                _value = `${$type.getName()}_${ext}`;
+                if ($type.getAssembly().hasResource(_value)) {
+                    res = AppDomain.context.current().getResource(_value);
+                    value = (res && res.data ? res.data : '');
+                }
+            }
+
+            // 3: pick namespaces asset file, if need
+            if (!value) {
+                _value = which(`./${$type.getName()}.${type}{.min}.${ext}`);
+                if ($type.getAssembly().hasAsset(_value)) {
+                    value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
+                }
+            } 
+        };
         const autoWire3 = async (ext) => {
             // 3: if string 
             if (typeof value === 'string' && value !== '') { // not an empty string
                 // possibilities are:
                 //  res:<qualifiedResourceName> -- embedded resource
-                //  'path/file.<ext>' --> ./<assemblyFolder>/path/file.<ext>
-                //  'file.<type>.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file.<ext>
-                //  './path/file.<ext>' -- ./path/file.<ext>
+                //  ast:<fileName> -- asset file name and path
+                //  './file.<type>{.min}.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file.<ext>
+                //  './path/file{.min}.<ext>' --> -- (first as: asset file name and path, then if not found in context of root)
 
                 // 3.1: resource
                 if (value.startsWith('res:')) {
-                    res = AppDomain.context.current().getResource(value.substr(4)) || null; // remove res: and then find resource
-                    value = (res && res.data ? res.data : '');
+                    value = value.substr(4); // remove res: to get qualified name
+                    if ($type.getAssembly().hasResource(value)) {
+                        res = AppDomain.context.current().getResource() || null; 
+                        value = (res && res.data ? res.data : '');
+                    }
                 }
 
-                // 3.2: namespaced asset <ext> file
-                if (value.endsWith(`.${type}.${ext}`) || value.endsWith(`.${type}{.min}.${ext}`)) {
-                    value = which(`${config.assetRoots[type]}/${$type.getName()}.${ext}`, true);
+                // 3.2: specific asset file
+                if (value.startsWith('ast:')) {
+                    value = value.substr(4); // remove ast: to get asset file name and path
+                    if (!value.startsWith('./')) { value = './' + value; } // add ./ if not already there
+                    if ($type.getAssembly().hasAsset(value)) {
+                        value = $type.getAssembly().getAsset(value); // gives all resolved asset file path 
+                    }
                 }
 
-                // 3.3: <ext> file (may be namespaced asset file itself)
-                if (value.endsWith(`.${ext}`)) {
-                    if (!value.startsWith('./')) { value = basePath + value; }
+                // 3.3: namespaced asset <ext> file
+                if (value.startsWith('./') && (value.endsWith(`.${type}.${ext}`) || value.endsWith(`.${type}{.min}.${ext}`))) {
+                    _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                    if ($type.getAssembly().hasAsset(_value)) {
+                        value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
+                    } else {
+                        // leave value untouched, because this seems to be some other type of file definition
+                        // try to resolve via next approach
+                    }
+                }
+
+                // 3.4: <ext> file (may be specific asset file, namespaced asset file or a file in context of root)
+                if (value.startsWith('./') && value.endsWith(`.${ext}`)) {
+                    // since both asset files and normal files starts with ./ first check if this is available as
+                    // asset, pick from there - else go for normal file in context of root
+                    if ($type.getAssembly().hasAsset(value)) {
+                        value = $type.getAssembly().getAsset(value); // gives all resolved asset file path 
+                    } else {
+                        // leave it untouched, this could be root context file
+                    }                
+                }
+
+                // 3.5: load if file (of known or some other ext type)
+                if (value.startsWith('./')) {
                     value = await clientFileLoader(value); // load file content
+                } else {
+                    // this may be <ext> type string itself
                 }
-
-                // 3.4: else this may be <ext> string itself
             }
         };    
         const autoWireLayout = async () => {
@@ -303,41 +354,33 @@ Mixin('', function() {
         };
         const autoWireView = async () => {
             await autoWire1(); 
-
-            // 2: associated resource, if not defined
-            if (!value) { 
-                res = AppDomain.context.current().getResource(`${$type.getName()}_html`) || null;
-                value = (res && res.data ? res.data : '');
-            }
-
-            // 2: namespaces asset file, otherwise
-            if (!value) {
-                value = which(`${baseName}.view{.min}.html`, true);
-            }
-
+            await autoWire2('html');
             await autoWire3('html');
+
+            // 4: nothing defined
+            if (!value) { 
+                value = `<div><!-- view markup not define / could not be resolved --></div>`; // bare minimum view
+            }             
         };
         const autoWireStyle = async () => {
             await autoWire1(); 
-
-            // 2: associated resource, if not defined
-            if (!value) { 
-                res = AppDomain.context.current().getResource(`${$type.getName()}_css`) || null;
-                value = (res && res.data ? res.data : '');
-            }
-
+            await autoWire2('css');           
             await autoWire3('css');
+
+            // 4: nothing defined
+            if (!value) { 
+                value = ``; // bare minimum style
+            }             
         };
         const autoWireData = async () => {
             await autoWire1(); 
-
-            // 2: associated resource, if not defined
-            if (!value) { 
-                res = AppDomain.context.current().getResource(`${$type.getName()}_json`) || null;
-                value = (res && res.data ? res.data : '');
-            }
-
+            await autoWire2('json');   
             await autoWire3('json');
+
+            // 4: nothing defined
+            if (!value) { 
+                value = ``; // bare minimum data
+            }            
         };      
 
         switch(type) {
@@ -366,96 +409,77 @@ Mixin('', function() {
                 updatedHtml: () => { return doc.body.innerHTML; }
             };
 
-        // an html definition can be of multiple forms
-        // 1. standard html
-        //  <!doctype html>
-        //  <html>
-        //      <head>
-        //          <style></style>
-        //          <data></data>
-        //      </head>
-        //      <body>
-        //      </body>
-        //  </html>
-        //
-        // 2. bare minimum
-        //  <html>...</html>
-        //  OR
-        //  direct any tag
-        //
-        // 3. scattered
-        //  <style>...</style>
-        //  <data>...</data>
-        //  <html>...</html>
-        //  
-        // 4. partial
-        //  <style>...</style>
-        //  <html>...</html>
-        //
-        // 5. free flow
-        //  ...text...
+        // an html definition of a view and component can be as:
+        // <!DOCTYPE html>                              <-- so that editors don't complain - otherwise not needed
+        // <html title="@titles.home | Home">           <-- title is read only for views - not needed for components
+        //     <style src="./path/file.css"></style>    <-- can define a local asset file OR a root level file in SRC or can place content here itself inside tag - if both are defined, content here will get be taken SRC file will not be read
+        //     <data src="./path/file.css"></data>      <-- can define a local asset file OR a root level file in SRC or can place content here itself inside tag - if both are defined, content here will get be taken SRC file will not be read
+        //     <body>                                   <-- main markup of the view or component comes here
+        //          <...> ... </...>
+        //     </body>
+        // </html>        
 
         let docParser = new window.DOMParser();
         doc = docParser.parseFromString(html, 'text/html');
 
         // delete all script tags, so nothing left inside body
-        let scripts = doc.getElementsByTagName('script');
-        if (scripts) {
-            for(let s of scripts) { s.parentNode.remove(s); }
-        }
+        let scriptTag = doc.getElementsByTagName('script');
+        if (scriptTag) { for(let s of scriptTag) { s.parentNode.remove(s); } }
 
         // delete all link tags, so nothing left inside body
-        let links = doc.getElementsByTagName('link');
-        if (links) {
-            for(let l of links) { l.parentNode.remove(l); }
-        }        
+        let linkTag = doc.getElementsByTagName('link');
+        if (linkTag) { for(let l of linkTag) { l.parentNode.remove(l); } }
 
         // pick first style and then delete all style tags, so nothing left inside
-        let styles = doc.getElementsByTagName('style');
-        if (styles) {
-            if (styles.length > 0) {
-                let style = styles[0],
-                    styleSrc = style.getAttribute('src');
-                if (styleSrc) { // give pref to defined source
-                    content.style = styleSrc;
-                } else {
-                    content.style = style.innerHTML;
+        let styleTag = doc.getElementsByTagName('style');
+        if (styleTag) {
+            if (styleTag.length > 0) {
+                let style = styleTag[0];
+                content.style = style.innerHTML.trim(); // give pref to defined content
+                if (!content.style) { // if nothing defined here
+                    let styleSrc = style.getAttribute('src');
+                    if (styleSrc) { content.style = styleSrc; }
                 }
-                for(let s of styles) { s.parentNode.remove(s); }
+                
+                // delete all styles tags, so nothing left inside body
+                for(let s of styleTag) { s.parentNode.remove(s); }
             }
         }
 
         // pick first data and then delete all data tags, so nothing left inside
-        let data = doc.getElementsByTagName('data');
-        if (data) {
-            if (data.length > 0) {
-                let dt = data[0],
-                    dtSrc = dt.getAttribute('src');
-                if (dtSrc) { // give pref to defined source
-                    content.data = dtSrc;
-                } else {
-                    content.data = dt.innerHTML;
-                }                
-                for(let d of data) { d.parentNode.remove(d); }
+        let dataTag = doc.getElementsByTagName('data');
+        if (dataTag) {
+            if (dataTag.length > 0) {
+                let dt = dataTag[0];
+                content.data = dt.innerHTML.trim(); // give pref to defined content
+                if (!content.data) { // if nothing defined here
+                    let dtSrc = dt.getAttribute('src');
+                    if (dtSrc) { content.data = dtSrc; }
+                }
+
+                 // delete all data tags, so nothing left inside body
+                for(let d of dataTag) { d.parentNode.remove(d); }
             }
         }
 
         // pick title
-        // title may have pattern like this: {{ i18n('@titles.home | Home') }}
-        // just to match everything else in document, but here it is not needed like this
-        // instead needed is just: '@titles.home | Home'
-        // so remove other known parts: {{ }} and i18n( and )
-        let docTitle = doc.title || null;
-        if (docTitle) {
-            docTitle = replaceAll(docTitle, '{{', ''); docTitle = replaceAll(docTitle, '}}', ''); docTitle = replaceAll(docTitle, 'i18n', ''); docTitle = replaceAll(docTitle, '(', ''); docTitle = replaceAll(docTitle, ')', '');
-            content.title = docTitle;
+        // title may have pattern like this: '@titles.home | Home' OR 'Home' OR '@titles.home'
+        let htmlTag = doc.getElementsByTagName('html');
+        if (htmlTag) {
+            if (htmlTag.length > 0) {
+                htmlTag = htmlTag[0];
+                let docTitle = htmlTag.getAttribute('title');
+                if (docTitle) {
+                    content.title = docTitle;
+                }
+            }
         }
 
         // find all component holders
         content.elements = this.extractComponents(doc.body);
 
         // pick clean html from body
-        content.html = doc.body.innerHTML;
+        content.html = (doc.body.innerHTML || '').trim();
 
         // pick all usage of i18n string
         // i18n strings will generally be written as {{ i18n('@fileName.stringName | defaultValue') }}

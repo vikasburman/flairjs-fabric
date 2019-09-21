@@ -38,18 +38,23 @@ Mixin('', function() {
             // built-in method: path 
             // this helps in building client side path nuances
             // e.g., {{ path('abc/xyz') }} will give: '/#/en/abc/xyz'
-            // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1'
-            vueComponent.methods['path'] = (path, params) => { return _this.path(path, params); };
+            // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1' or whatever url policy was configured
+            vueComponent.methods['path'] = (path, params) => { return _this.pathToUrl(path, params); };
 
             // built-in method: route
             // this helps in using path from route settings itself
             // e.g., {{ route('home') }} will give: '/#/en/'
-            vueComponent.methods['route'] = (routeName, params) => { return _this.route(routeName, params); };
+            vueComponent.methods['route'] = (routeName, params) => { return _this.routeToUrl(routeName, params); };
 
             // built-in method: stuff
             // this helps in using stuffing values in a string
             // e.g., {{ stuff('something %1, %2 and %3', A, B, C) }} will give: 'something A, B and C'
             vueComponent.methods['stuff'] = (str, ...args) => { return stuff(str, args); };
+
+            // built-in method: lens
+            // this helps in getting a specific path value from an object or a default value
+            // e.g., {{ lens(user, 'rights.today.first', 'none') }} will give: value of rights.today.first if found, else will return 'none'
+            vueComponent.methods['lens'] = (obj, path, defaultValue) => { return lens(obj, path) || defaultValue; };
 
             // i18n specific built-in methods
             if (this.i18n) {

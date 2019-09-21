@@ -94,7 +94,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     $$('protected');
     this.assembleView = async ($mainType) => { // eslint-disable-line no-unused-vars
         const autoWireAndLoadLayout = async () => {
-            this.layout = await this.autoWire('layout', this.layout, $mainType, this.basePath, this.baseName, this.type, viewEl);
+            this.layout = await this.autoWire('layout', this.layout, $mainType, this.type, viewEl);
         };
         const mergeLayoutWithView = async () => {
             // a layout html is defined as (sample):
