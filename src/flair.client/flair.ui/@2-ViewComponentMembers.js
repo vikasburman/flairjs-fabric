@@ -123,7 +123,7 @@ Mixin('', function() {
             // load styles in dom - as scoped style
             if (this.style) {
                 let styleId = `${_inViewName}_${_thisId}`;
-                let style = replaceAll(this.style, '#SCOPE_ID', `#${styleId}`); // replace all #SCOPE_ID with #<this_view_or_component_unique_id>
+                let style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_view_or_component_unique_id>
                 this.addStyle(style, styleId);
             }            
         };
@@ -320,16 +320,22 @@ Mixin('', function() {
         const autoWireStyle = async () => {
             await autoWire1(); 
 
-            // 2: leave it empty, if not defined, since style is optional
-            if (!value) { value = ''; }
+            // 2: associated resource, if not defined
+            if (!value) { 
+                res = AppDomain.context.current().getResource(`${$type.getName()}_css`) || null;
+                value = (res && res.data ? res.data : '');
+            }
 
             await autoWire3('css');
         };
         const autoWireData = async () => {
             await autoWire1(); 
 
-            // 2: leave it empty, if not defined, since data is optional
-            if (!value) { value = ''; }
+            // 2: associated resource, if not defined
+            if (!value) { 
+                res = AppDomain.context.current().getResource(`${$type.getName()}_json`) || null;
+                value = (res && res.data ? res.data : '');
+            }
 
             await autoWire3('json');
         };      
@@ -409,7 +415,7 @@ Mixin('', function() {
         if (styles) {
             if (styles.length > 0) {
                 let style = styles[0],
-                    styleSrc = styles.getAttribute('src');
+                    styleSrc = style.getAttribute('src');
                 if (styleSrc) { // give pref to defined source
                     content.style = styleSrc;
                 } else {
@@ -428,7 +434,7 @@ Mixin('', function() {
                 if (dtSrc) { // give pref to defined source
                     content.data = dtSrc;
                 } else {
-                    content.data = dtSrc.innerHTML;
+                    content.data = dt.innerHTML;
                 }                
                 for(let d of data) { d.parentNode.remove(d); }
             }
@@ -457,6 +463,7 @@ Mixin('', function() {
         // of required i18n resources
         let matched = content.html.match(/('|")@\w*./g);
         if (matched && Array.isArray(matched) && matched.length > 0) {
+            content.i18n = '';
             matched.forEach((m) => { content.i18n += ',' + m.substr(2, m.length - 3); });
             if (content.i18n.startsWith(',')) { content.i18n = content.i18n.substr(1); }
         }
@@ -479,13 +486,13 @@ Mixin('', function() {
             let typeValue = '',
                 viewContainerTypeValue = settings.view.viewEl || 'view';
             for(let cm of comps) { 
-                typeValue = cm.getAttribute('type');
+                typeValue = cm.getAttribute('ctype');
                 if (typeValue !== '') {
                     if (typeValue === viewContainerTypeValue) {
                         if (!elements.view) { elements.view = cm; } // pick first one only
                     } else { // add to components
                         let _id = cm.getAttribute('id'),
-                            _type = cm.getAttribute('type') || '',
+                            _type = cm.getAttribute('ctype') || '',
                             _params = cm.getAttribute('params') || '',
                             _name = cm.getAttribute('name');
                         if (!_id) { // give it a new id (it is recommended that no id is given manually - so all IDs are set unique here automatically)
