@@ -3,7 +3,7 @@
         "mainEl": "main",
         "viewEl": "view",
         "transition": "",
-        "handler": "flair.ui.vue.VueView",
+        "handler": "flair.ui.VueView",
         "layout": {
             "client": "",
             "server": "",

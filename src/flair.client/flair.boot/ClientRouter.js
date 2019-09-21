@@ -47,7 +47,7 @@ Class('', Bootware, function() {
             }
         };
         const runHandler = async (route, routeHandler, ctx) => {
-            if (route.type && route.type !== ViewTypes.Client) {
+            if (route.type && route.type !== -1 && route.type !== ViewTypes.Client) {
                 routeHandler = settings.view.handler || ''; // use default handler
             }
 

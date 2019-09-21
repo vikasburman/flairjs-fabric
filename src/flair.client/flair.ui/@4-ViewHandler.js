@@ -1,4 +1,5 @@
-const { Handler, ViewTypes } = await ns('flair.app');
+const { Handler } = await ns('flair.app');
+const { ViewTypes } = await ns('flair.ui');
 
 /**
  * @name ViewHandler
@@ -10,11 +11,15 @@ Class('', Handler, function() {
         base(route);
 
         // view type
-        this.type = route.type || ViewTypes.Client;
+        if (!route.type || (route.type && route.type === -1)) { 
+            this.type = ViewTypes.Client;
+        } else {
+            this.type = route.type;
+        }
+        this.handler = route.handler;
 
         // static/server context
         if (!this.type === ViewTypes.Client) {
-            this.path = route.handler;
             this.connection = route.connection || '';
         }
     };
@@ -23,7 +28,7 @@ Class('', Handler, function() {
     this.type = -1;
 
     $$('protected');
-    this.path = '';
+    this.handler = '';
 
     $$('protected');
     this.connection = '';

@@ -9,7 +9,7 @@ Class('', [IDisposable], function() {
     $$('virtual');
     this.construct = (route) => {
         // convert this route (coming from routes.json) to registered route (Route)
-        this.route = AppDomain.context.current.getRoute(route.name); // now this object has all route properties like getAssembly() etc.
+        this.route = AppDomain.context.current().getRoute(route.name); // now this object has all route properties like getAssembly() etc.
     };
 
     $$('protected')

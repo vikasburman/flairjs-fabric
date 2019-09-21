@@ -12,9 +12,6 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     this.construct = (base, route) => {
         base(route);
 
-        // host
-        this.host = this;
-
         // settings
         mainEl = settings.view.mainEl || 'main';
         viewEl = settings.view.viewEl || 'view';
@@ -113,6 +110,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
             //      it can end with '.html' to have a file name, and filename can be:
             //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
             //          './file.layout.html' that is assumed to be in-place namespaced asset file and it will be located as: ./layouts/<namespaceOfType>.file.html
+            //          '../path/file.html' to define a html file in context of the root
             //      any other non-empty string is treated as html string itself
             //      if empty string, it picks the default layout setting value based on the view type and then follows the string approach from start
             //      if still empty string, it builds a default layout as: <div type="${viewEl}"></div>
@@ -143,9 +141,15 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
                     this.layout = which(`./${config.assetRoots.layout}/${this.baseName}.${this.layout.replace('.layout', '')}`, true);
                 }
                 if (this.layout.endsWith('.html')) { // its html file
-                    // pick file from base path
-                    // file is generally defined as ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
-                    this.layout = this.layout.replace('./', this.basePath);
+                    // pick file from base path or root path
+                    // file is generally defined as:
+                    //   ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
+                    //  ../path/filename.html and this will replace it as ./path/filename.html <-- picked from main root
+                    if (this.layout.startsWith('../')) { // main root folder
+                        this.layout = this.layout.replace('../', './');
+                    } else { // assets root folder
+                        this.layout = this.layout.replace('./', this.basePath);
+                    }
                     this.layout = await clientFileLoader(this.layout); // load file content
                 }
                 // else this is assumed to be html string itself
@@ -277,8 +281,8 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
             // ./path/file.xml : Will be resolved with ./path/file.xml
             // OR 
             // ./path/file{.en}.xml <-- yes: {.en} is a placeholder for chosen locale: Will be resolved with ./path/file.<locale>.xml
-            if (this.path.indexOf('{.en}') !== -1) {
-                this.path = this.path.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
+            if (this.handler.indexOf('{.en}') !== -1) {
+                this.handler = this.handler.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
             }
         }
 
@@ -315,7 +319,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
             let clientFileLoader =  Port('clientFile'),
                 fileContent = '';
             try {
-                fileContent = await clientFileLoader(this.path); // it can be any file: html, md, txt -- all will be loaded as html and content will be extracted
+                fileContent = await clientFileLoader(this.handler); // it can be any file: html, md, txt -- all will be loaded as html and content will be extracted
             } catch (err) {
                 fileContent = err.toString();
             }

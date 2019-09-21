@@ -1,5 +1,3 @@
-const { ViewComponent } = await ns('flair.ui');
-
 /**
  * @name ViewComponentMembers
  * @description View Component Members
@@ -105,6 +103,7 @@ Mixin('', function() {
             //      it can end with '.html' to have a file name, and filename can be:
             //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
             //          './file.view.html' that is assumed to be in-place namespaced asset file and it will be located as: ./views/<namespaceOfType>.file.html
+            //          '../path/file.html' to define a html file in context of the root
             //      any other non-empty string is treated as html string itself
             //      if empty string, is left as is and assumed no html is defined and so nothing is loaded
             if (typeof this.html !== 'string') { // undefined/null/object/anything else
@@ -127,9 +126,15 @@ Mixin('', function() {
                     this.html = which(`./${config.assetRoots.view}/${this.baseName}.${this.html.replace('.view', '')}`, true);
                 }
                 if (this.html.endsWith('.html')) { // its html file
-                    // pick file from base path
-                    // file is generally defined as ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
-                    this.html = this.html.replace('./', this.basePath);
+                    // pick file from base path or root path
+                    // file is generally defined as:
+                    //   ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
+                    //  ../path/filename.html and this will replace it as ./path/filename.html <-- picked from main root
+                    if (this.html.startsWith('../')) { // main root folder
+                        this.html = this.html.replace('../', './');
+                    } else { // assets root folder
+                        this.html = this.html.replace('./', this.basePath);
+                    }
                     this.html = await clientFileLoader(this.html); // load file content
                 }
                 // else this is assumed to be html string itself
@@ -151,6 +156,7 @@ Mixin('', function() {
             //      it can end with '.css' to have a file name, and filename can be:
             //          './path/file.css' to define a css file inside assets folder - in relation to root of the asset folder
             //          './file.style.css' that is assumed to be in-place namespaced asset file and it will be located as: ./css/<namespaceOfType>.file.css
+            //          '../path/file.css' to define a css file in context of the root
             //      any other non-empty string is treated as css string itself
             //      if empty string, is left as is and assumed no style is defined and so nothing is loaded
             if (typeof this.style !== 'string') { // undefined/null/object/anything else
@@ -173,9 +179,15 @@ Mixin('', function() {
                     this.style = which(`./${config.assetRoots.style}/${this.baseName}.${this.style.replace('.style', '')}`, true);
                 }
                 if (this.style.endsWith('.css')) { // its css file
-                    // pick file from base path
-                    // file is generally defined as ./path/fileName.css and this will replace it as: ./<basePath>/path/fileName.css
-                    this.style = this.style.replace('./', this.basePath);
+                    // pick file from base path or root path
+                    // file is generally defined as:
+                    //   ./path/fileName.css and this will replace it as: ./<basePath>/path/fileName.css
+                    //  ../path/filename.css and this will replace it as ./path/filename.css <-- picked from main root
+                    if (this.style.startsWith('../')) { // main root folder
+                        this.style = this.style.replace('../', './');
+                    } else { // assets root folder
+                        this.style = this.style.replace('./', this.basePath);
+                    }
                     this.style = await clientFileLoader(this.style); // load file content
                 }
                 // else this is assumed to be css string itself
@@ -197,6 +209,7 @@ Mixin('', function() {
             //      it can end with '.json' to have a file name, and filename can be:
             //          './path/file.json' to define a json file inside assets folder - in relation to root of the asset folder
             //          './file.data.json' that is assumed to be in-place namespaced asset file and it will be located as: ./data/<namespaceOfType>.file.json
+            //          '../path/file.json' to define a json file in context of the root
             //      any other non-empty string is treated as json string itself
             //      if empty string, is left as is and assumed no data is defined and so nothing is loaded
             if (typeof this.data !== 'string') { // undefined/null/object/anything else
@@ -219,9 +232,15 @@ Mixin('', function() {
                     this.data = which(`./${config.assetRoots.data}/${this.baseName}.${this.data.replace('.data', '')}`, true);
                 }
                 if (this.data.endsWith('.json')) { // its json file
-                    // pick file from base path
-                    // file is generally defined as ./path/fileName.json and this will replace it as: ./<basePath>/path/fileName.json
-                    this.data = this.data.replace('./', this.basePath);
+                    // pick file from base path or root path
+                    // file is generally defined as:
+                    //   ./path/fileName.json and this will replace it as: ./<basePath>/path/fileName.json
+                    //  ../path/filename.json and this will replace it as ./path/filename.json <-- picked from main root
+                    if (this.data.startsWith('../')) { // main root folder
+                        this.data = this.data.replace('../', './');
+                    } else { // assets root folder
+                        this.data = this.data.replace('./', this.basePath);
+                    }
                     this.data = await clientFileLoader(this.data); // <-- this gives parsed JSON object
                 }
                 // else this is assumed to be json string itself
@@ -259,7 +278,11 @@ Mixin('', function() {
         const loadJson = async () => {
             // load static data in property
             if (typeof this.data === 'string') { // json string
-                this.data = JSON.parse(this.data);
+                if (this.data) {
+                    this.data = JSON.parse(this.data);
+                } else {
+                    this.data = null; // reset to null
+                }
             } // else either not defined OR defined as object itself
         };        
         const loadI18NResources = async () => {
@@ -315,6 +338,8 @@ Mixin('', function() {
     $$('protected');
     $$('virtual');
     this.onLoad = async (ctx, el) => {
+        const { ViewComponent } = await ns('flair.ui');
+        
         // in case of Vue or any other library is used, 
         // this method will be redone in derived class
         el.innerHTML = this.html;
@@ -551,10 +576,10 @@ Mixin('', function() {
     this.version = (value) => { return AppDomain.host().version(value, true); };
 
     $$('protected');
-    this.path = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
+    this.pathToUrl = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
     
     $$('protected');
-    this.route = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
+    this.routeToUrl = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
 
     $$('protected');
     this.i18nValue = (key) => {
