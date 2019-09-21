@@ -1,3 +1,5 @@
+const { ViewTypes } = await ns('flair.ui');
+
 /**
  * @name ViewComponentMembers
  * @description View Component Members
@@ -88,163 +90,13 @@ Mixin('', function() {
             title: null
         };
         const autoWireHtml = async () => {
-            // html
-            // html will always be a html (direct) OR a html file as asset or embedded resource
-            // auto-wire logic works like this:
-            // this.html can be:
-            //  undefined/null (default):
-            //      it assumes an empty string and follows the 'string' approach below
-            //  object:
-            //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
-            //      any other type of object is treated as empty string
-            //  anything else is treated as empty string
-            //  string:
-            //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
-            //      it can end with '.html' to have a file name, and filename can be:
-            //          './path/file.html' to define a html file inside assets folder - in relation to root of the asset folder
-            //          './file.view.html' that is assumed to be in-place namespaced asset file and it will be located as: ./views/<namespaceOfType>.file.html
-            //          '../path/file.html' to define a html file in context of the root
-            //      any other non-empty string is treated as html string itself
-            //      if empty string, is left as is and assumed no html is defined and so nothing is loaded
-            if (typeof this.html !== 'string') { // undefined/null/object/anything else
-                if (this.html && typeof this.html === 'object' && this.html.data) { // resource object
-                    let resData = this.html.data;
-                    this.html = resData; // set it as its data
-                } else {
-                    this.html = ''; // set as empty string
-                }   
-            }
-            if (typeof this.html === 'string') {
-                if (this.html.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
-                    this.html = this.getResIfDefined(this.html);
-                    if (this.html.startsWith('res:')) { // embedded resource could not resolved
-                        this.html = '';
-                    }
-                }
-                if (this.html.endsWith('.view.html') || this.html.endsWith('.view{.min}.html')) { // its namespaced in-place asset html file
-                    // build proper name of the file
-                    this.html = which(`./${config.assetRoots.view}/${this.baseName}.${this.html.replace('.view', '')}`, true);
-                }
-                if (this.html.endsWith('.html')) { // its html file
-                    // pick file from base path or root path
-                    // file is generally defined as:
-                    //   ./path/fileName.html and this will replace it as: ./<basePath>/path/fileName.html
-                    //  ../path/filename.html and this will replace it as ./path/filename.html <-- picked from main root
-                    if (this.html.startsWith('../')) { // main root folder
-                        this.html = this.html.replace('../', './');
-                    } else { // assets root folder
-                        this.html = this.html.replace('./', this.basePath);
-                    }
-                    this.html = await clientFileLoader(this.html); // load file content
-                }
-                // else this is assumed to be html string itself
-            }
+            this.html = await this.autoWire('view', this.html, $mainType, this.basePath, this.baseName);
         };
         const autoWireStyle = async () => {
-            // style
-            // style will always be a css (direct) OR a css file as asset or embedded resource
-            // auto-wire logic works like this:
-            // this.style can be:
-            //  undefined/null (default):
-            //      it assumes an empty string and follows the 'string' approach below
-            //  object:
-            //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
-            //      any other type of object is treated as empty string
-            //  anything else is treated as empty string
-            //  string:
-            //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
-            //      it can end with '.css' to have a file name, and filename can be:
-            //          './path/file.css' to define a css file inside assets folder - in relation to root of the asset folder
-            //          './file.style.css' that is assumed to be in-place namespaced asset file and it will be located as: ./css/<namespaceOfType>.file.css
-            //          '../path/file.css' to define a css file in context of the root
-            //      any other non-empty string is treated as css string itself
-            //      if empty string, is left as is and assumed no style is defined and so nothing is loaded
-            if (typeof this.style !== 'string') { // undefined/null/object/anything else
-                if (this.style && typeof this.style === 'object' && this.style.data) { // resource object
-                    let resData = this.style.data;
-                    this.style = resData; // set it as its data
-                } else {
-                    this.style = ''; // set as empty string
-                }   
-            }
-            if (typeof this.style === 'string') {
-                if (this.style.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
-                    this.style = this.getResIfDefined(this.style);
-                    if (this.style.startsWith('res:')) { // embedded resource could not resolved
-                        this.style = '';
-                    }
-                }
-                if (this.style.endsWith('.style.css') || this.style.endsWith('.style{.min}.css')) { // its namespaced in-place asset css file
-                    // build proper name of the file
-                    this.style = which(`./${config.assetRoots.style}/${this.baseName}.${this.style.replace('.style', '')}`, true);
-                }
-                if (this.style.endsWith('.css')) { // its css file
-                    // pick file from base path or root path
-                    // file is generally defined as:
-                    //   ./path/fileName.css and this will replace it as: ./<basePath>/path/fileName.css
-                    //  ../path/filename.css and this will replace it as ./path/filename.css <-- picked from main root
-                    if (this.style.startsWith('../')) { // main root folder
-                        this.style = this.style.replace('../', './');
-                    } else { // assets root folder
-                        this.style = this.style.replace('./', this.basePath);
-                    }
-                    this.style = await clientFileLoader(this.style); // load file content
-                }
-                // else this is assumed to be css string itself
-            }
+            this.style = await this.autoWire('style', this.style, $mainType, this.basePath, this.baseName);
         };
         const autoWireData = async () => {
-            // data
-            // data will always be a json (direct) OR a json file as asset or embedded resource
-            // auto-wire logic works like this:
-            // this.data can be:
-            //  undefined/null (default):
-            //      it assumes an empty string and follows the 'string' approach below
-            //  object:
-            //      it can be the resource object itself to get resource string and then it follows the 'string' approach below
-            //      any other type of object is treated as empty string
-            //  anything else is treated as empty string
-            //  string:
-            //      it can start with 'res:<resTypeName>' to define the qualified type name for the resource which is to be loaded to the layout
-            //      it can end with '.json' to have a file name, and filename can be:
-            //          './path/file.json' to define a json file inside assets folder - in relation to root of the asset folder
-            //          './file.data.json' that is assumed to be in-place namespaced asset file and it will be located as: ./data/<namespaceOfType>.file.json
-            //          '../path/file.json' to define a json file in context of the root
-            //      any other non-empty string is treated as json string itself
-            //      if empty string, is left as is and assumed no data is defined and so nothing is loaded
-            if (typeof this.data !== 'string') { // undefined/null/object/anything else
-                if (this.data && typeof this.data === 'object' && this.data.data) { // resource object
-                    let resData = this.data.data;
-                    this.data = resData; // set it as its data
-                } else {
-                    this.data = ''; // set as empty string
-                }   
-            }
-            if (typeof this.data === 'string') {
-                if (this.data.startsWith('res:')) { //  its an embedded resource - res:<resTypeName>
-                    this.data = this.getResIfDefined(this.data);
-                    if (this.data.startsWith('res:')) { // embedded resource could not resolved
-                        this.data = '';
-                    }
-                }
-                if (this.data.endsWith('.data.json') || this.style.endsWith('.data{.min}.json')) { // its namespaced in-place asset json file
-                    // build proper name of the file
-                    this.data = which(`./${config.assetRoots.data}/${this.baseName}.${this.data.replace('.data', '')}`, true);
-                }
-                if (this.data.endsWith('.json')) { // its json file
-                    // pick file from base path or root path
-                    // file is generally defined as:
-                    //   ./path/fileName.json and this will replace it as: ./<basePath>/path/fileName.json
-                    //  ../path/filename.json and this will replace it as ./path/filename.json <-- picked from main root
-                    if (this.data.startsWith('../')) { // main root folder
-                        this.data = this.data.replace('../', './');
-                    } else { // assets root folder
-                        this.data = this.data.replace('./', this.basePath);
-                    }
-                    this.data = await clientFileLoader(this.data); // <-- this gives parsed JSON object
-                }
-                // else this is assumed to be json string itself
-            }
+            this.data = await this.autoWire('data', this.data, $mainType, this.basePath, this.baseName);
         };
 
         const loadHtml = async () => {
@@ -351,7 +203,7 @@ Mixin('', function() {
             cObj = null;
         for (let comp of components) {
             if (!this.components[comp.name]) { // ignore duplicates
-                cEl = el.getElementById(comp.id);
+                cEl = el.querySelector(`[id="${comp.id}"]`);
                 if (cEl) { 
                     cType = as(await include(comp.type), ViewComponent);
                     if (cType) { 
@@ -393,14 +245,103 @@ Mixin('', function() {
     };  
     
     $$('private');
-    this.getResIfDefined = (defString) => {
-        if (typeof defString === 'string' && defString.startsWith('res:')) { // its an embedded resource - res:<resTypeName>
-            let resTypeName = defString.substr(4); // remove res:
-            let res = AppDomain.context.current().getResource(resTypeName) || null;
-            return (res ? res.data : defString);
-        } else {
-            return defString;
+    this.autoWire = async (type, def, $type, basePath, baseName, viewType, viewEl) => {
+        let value = def,
+            res = null;
+
+        const autoWire1 = async () => {
+            // 1: if resource object
+            if (value && typeof value === 'object' && value.data) { value = value.data; } // resource object
+        };
+        const autoWire3 = async (ext) => {
+            // 3: if string 
+            if (typeof value === 'string' && value !== '') { // not an empty string
+                // possibilities are:
+                //  res:<qualifiedResourceName> -- embedded resource
+                //  'path/file.<ext>' --> ./<assemblyFolder>/path/file.<ext>
+                //  'file.<type>.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file.<ext>
+                //  './path/file.<ext>' -- ./path/file.<ext>
+
+                // 3.1: resource
+                if (value.startsWith('res:')) {
+                    res = AppDomain.context.current().getResource(value.substr(4)) || null; // remove res: and then find resource
+                    value = (res && res.data ? res.data : '');
+                }
+
+                // 3.2: namespaced asset <ext> file
+                if (value.endsWith(`.${type}.${ext}`) || value.endsWith(`.${type}{.min}.${ext}`)) {
+                    value = which(`${config.assetRoots[type]}/${$type.getName()}.${ext}`, true);
+                }
+
+                // 3.3: <ext> file (may be namespaced asset file itself)
+                if (value.endsWith(`.${ext}`)) {
+                    if (!value.startsWith('./')) { value = basePath + value; }
+                    value = await clientFileLoader(value); // load file content
+                }
+
+                // 3.4: else this may be <ext> string itself
+            }
+        };    
+        const autoWireLayout = async () => {
+            await autoWire1(); 
+
+            // 2: pick from settings default value for current view type, if not defined
+            if (!value) { 
+                switch(viewType) {
+                    case ViewTypes.Client: value = settings.view.layout.client || ''; break;
+                    case ViewTypes.Server: value = settings.view.layout.server || ''; break;
+                    case ViewTypes.Static: value = settings.view.layout.static || ''; break;
+                }
+            }
+
+           await autoWire3('html');
+
+            // 4: nothing defined
+            if (!value) { 
+                value = `<div type="${viewEl}"></div>`; // bare minimum layout, so at least view is loaded 
+            } 
+        };
+        const autoWireView = async () => {
+            await autoWire1(); 
+
+            // 2: associated resource, if not defined
+            if (!value) { 
+                res = AppDomain.context.current().getResource(`${$type.getName()}_html`) || null;
+                value = (res && res.data ? res.data : '');
+            }
+
+            // 2: namespaces asset file, otherwise
+            if (!value) {
+                value = which(`${baseName}.view{.min}.html`, true);
+            }
+
+            await autoWire3('html');
+        };
+        const autoWireStyle = async () => {
+            await autoWire1(); 
+
+            // 2: leave it empty, if not defined, since style is optional
+            if (!value) { value = ''; }
+
+            await autoWire3('css');
+        };
+        const autoWireData = async () => {
+            await autoWire1(); 
+
+            // 2: leave it empty, if not defined, since data is optional
+            if (!value) { value = ''; }
+
+            await autoWire3('json');
+        };      
+
+        switch(type) {
+            case 'layout': await autoWireLayout(); break;
+            case 'view': await autoWireView(); break;
+            case 'style': await autoWireStyle(); break;
+            case 'data': await autoWireData(); break;
         }
+
+        return value;
     };
 
     $$('private');
@@ -526,14 +467,14 @@ Mixin('', function() {
     $$('private');
     this.extractComponents = (el) => {
         // components can be defined in html anywhere as:
-        //  <comp type="<quaklified-type-name-of-component>" "params"="...">
+        //  <div ctype="<quaklified-type-name-of-component>" "params"="..."></div>
         // a special component that will hold view - (in case of layout only) - will have a type same as viewEl setting
         let elements = {
             components: [],
             view: null
         };
 
-        let comps = el.getElementsByTagName('comp');
+        let comps = el.querySelectorAll('div[ctype]');
         if (comps) {
             let typeValue = '',
                 viewContainerTypeValue = settings.view.viewEl || 'view';
@@ -547,7 +488,7 @@ Mixin('', function() {
                             _type = cm.getAttribute('type') || '',
                             _params = cm.getAttribute('params') || '',
                             _name = cm.getAttribute('name');
-                        if (!_id) { // give it a new id
+                        if (!_id) { // give it a new id (it is recommended that no id is given manually - so all IDs are set unique here automatically)
                             _id = guid();
                             cm.setAttribute('id', _id); 
                         }

@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.35
- *  Fri, 20 Sep 2019 23:52:45 GMT
+ *  Version: 0.59.39
+ *  Sat, 21 Sep 2019 05:45:11 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -75,8 +75,7 @@
     // assembly closure: types (start)
         
     await (async () => { // type: ./src/flair.client.vue/flair.ui/@1-VueComponentMembers.js
-        const { ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
-        const Vue = await include('vue/vue{.min}.js');  
+        const { ViewState } = await ns('flair.ui');
         
         /**
          * @name VueComponentMembers
@@ -90,6 +89,9 @@
         
             $$('private');
             this.define = async (ctx, el) => {
+                const { VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
+                const Vue = await include('vue/vue{.min}.js');  
+                
                 const stateAsComputed = async () => {
                     // state (implemented as build-in computed structure)
                     // global state properties are added as computed properties
@@ -163,7 +165,7 @@
                         isDefined = false;
                     for (let comp of components) {
                         if (!Vue.options.components[comp.name] && !this.components[comp.name]) { // ignore global and local duplicates
-                            cEl = el.getElementById(comp.id);
+                            cEl = el.querySelector(`[id="${comp.id}"]`);
                             if (cEl) { 
                                 cType = as(await include(comp.type), VueComponent);
                                 if (cType) { 
@@ -660,6 +662,7 @@
                             return defString;
                         }
                     };
+                    // TODO:
         
                     // auto wire html and styles, if configured as 'true' - for making 
                     // it ready to pick from assets below
@@ -899,7 +902,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.35","lupdate":"Fri, 20 Sep 2019 23:52:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.39","lupdate":"Sat, 21 Sep 2019 05:45:11 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueLayout","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

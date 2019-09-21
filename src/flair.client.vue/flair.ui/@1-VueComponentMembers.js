@@ -1,5 +1,4 @@
-const { ViewState, VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
-const Vue = await include('vue/vue{.min}.js');  
+const { ViewState } = await ns('flair.ui');
 
 /**
  * @name VueComponentMembers
@@ -12,6 +11,9 @@ Mixin('', function() {
 
     $$('private');
     this.define = async (ctx, el) => {
+        const { VueFilter, VueMixin, VueDirective, VueComponent } = await ns('flair.ui');
+        const Vue = await include('vue/vue{.min}.js');  
+        
         const stateAsComputed = async () => {
             // state (implemented as build-in computed structure)
             // global state properties are added as computed properties
@@ -85,7 +87,7 @@ Mixin('', function() {
                 isDefined = false;
             for (let comp of components) {
                 if (!Vue.options.components[comp.name] && !this.components[comp.name]) { // ignore global and local duplicates
-                    cEl = el.getElementById(comp.id);
+                    cEl = el.querySelector(`[id="${comp.id}"]`);
                     if (cEl) { 
                         cType = as(await include(comp.type), VueComponent);
                         if (cType) { 
