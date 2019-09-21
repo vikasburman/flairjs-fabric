@@ -417,7 +417,10 @@ Mixin('', function() {
         //     <body>                                   <-- main markup of the view or component comes here
         //          <...> ... </...>
         //     </body>
-        // </html>        
+        // </html>       
+        // NOTE: In all places in the html markup, all paths that start with:
+        //  ./ <-- represents the assets root folder for the assembly
+        //  ~/ <-- represents the root folder 
 
         let docParser = new window.DOMParser();
         doc = docParser.parseFromString(html, 'text/html');
@@ -438,7 +441,10 @@ Mixin('', function() {
                 content.style = style.innerHTML.trim(); // give pref to defined content
                 if (!content.style) { // if nothing defined here
                     let styleSrc = style.getAttribute('src');
-                    if (styleSrc) { content.style = styleSrc; }
+                    if (styleSrc) { 
+                        if (styleSrc.startsWith('~/')) { styleSrc = styleSrc.replace('~/', './'); } // since auto-wiring handles paths starting with './' first at assembly root - then at main root, it will still work -- the only edge case is that if same file is present on assembly root and on main root - assembly root one will be picked --- but that is a rare edge case
+                        content.style = styleSrc; 
+                    }
                 }
                 
                 // delete all styles tags, so nothing left inside body
@@ -454,12 +460,37 @@ Mixin('', function() {
                 content.data = dt.innerHTML.trim(); // give pref to defined content
                 if (!content.data) { // if nothing defined here
                     let dtSrc = dt.getAttribute('src');
-                    if (dtSrc) { content.data = dtSrc; }
+                    if (dtSrc) { 
+                        if (dtSrc.startsWith('~/')) { dtSrc = dtSrc.replace('~/', './'); } // since auto-wiring handles paths starting with './' first at assembly root - then at main root, it will still work -- the only edge case is that if same file is present on assembly root and on main root - assembly root one will be picked --- but that is a rare edge case
+                        content.data = dtSrc; 
+                    }
                 }
 
                  // delete all data tags, so nothing left inside body
                 for(let d of dataTag) { d.parentNode.remove(d); }
             }
+        }
+
+        // find all component holders
+        content.elements = this.extractComponents(doc.body);
+
+        // pick clean html from body
+        content.html = (doc.body.innerHTML || '').trim();
+
+        // 1. replace all paths starting from './' to assets folder of this type
+        // 2. thereafter replace all paths starting from '~/' to './', the actual root folder
+        content.html = replaceAll(content.html, './', this.basePath);
+        content.html = replaceAll(content.html, '~/', './');
+
+        // pick all usage of i18n string
+        // i18n strings will generally be written as {{ i18n('@fileName.stringName | defaultValue') }}
+        // it looks for '@fileName. pattern via /('|")@\w*./ regex and extract 'fileName' to build a comma delimited string
+        // of required i18n resources
+        let matched = content.html.match(/('|")@\w*./g);
+        if (matched && Array.isArray(matched) && matched.length > 0) {
+            content.i18n = '';
+            matched.forEach((m) => { content.i18n += ',' + m.substr(2, m.length - 3); });
+            if (content.i18n.startsWith(',')) { content.i18n = content.i18n.substr(1); }
         }
 
         // pick title
@@ -471,25 +502,20 @@ Mixin('', function() {
                 let docTitle = htmlTag.getAttribute('title');
                 if (docTitle) {
                     content.title = docTitle;
+
+                    // add i18n resources for title, if not already in list
+                    if (docTitle.startsWith('@')) { // i18n resource is referred
+                        let titleI18nRes = docTitle.substr(1).split('.')[0]; // @titles.home | Home --> titles
+                        if (titleI18nRes) {
+                            if (content.i18n) {
+                                if (content.i18n.indexOf(titleI18nRes) === -1) { content.i18n += ',' + titleI18nRes; }
+                            } else {
+                                content.i18n = titleI18nRes;
+                            }
+                        }
+                    }
                 }
             }
-        }
-
-        // find all component holders
-        content.elements = this.extractComponents(doc.body);
-
-        // pick clean html from body
-        content.html = (doc.body.innerHTML || '').trim();
-
-        // pick all usage of i18n string
-        // i18n strings will generally be written as {{ i18n('@fileName.stringName | defaultValue') }}
-        // it looks for '@fileName. pattern via /('|")@\w*./ regex and extract 'fileName' to build a comma delimited string
-        // of required i18n resources
-        let matched = content.html.match(/('|")@\w*./g);
-        if (matched && Array.isArray(matched) && matched.length > 0) {
-            content.i18n = '';
-            matched.forEach((m) => { content.i18n += ',' + m.substr(2, m.length - 3); });
-            if (content.i18n.startsWith(',')) { content.i18n = content.i18n.substr(1); }
         }
 
         return content;

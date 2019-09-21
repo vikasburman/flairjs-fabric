@@ -1376,10 +1376,10 @@ find-up@^2.0.0:
   dependencies:
     locate-path "^2.0.0"
 
-flairjs-cli@^0.61.2:
-  version "0.61.2"
-  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.61.2.tgz#193d396e5073057f78bb31afcbaa78f9e9cbc7d0"
-  integrity sha512-/dR9+orYAT8sJJZ0wT8cSTN2bhhoKTxkZfnQM9Z/nkMHX9aoqkl9+GY92+h8lfi8TJwFYF0vUsqNyBkkoT1SfA==
+flairjs-cli@^0.61.8:
+  version "0.61.8"
+  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.61.8.tgz#1f4285967479a410fe56c7d363c44778ea9bc4d9"
+  integrity sha512-U3K4uVwkUcVDnMu9PizQbyCy3Uw51WuBGni5v48wmjcneCFHvOi8o7Ujz0DtubRygnAkDfENLrUjPK2oPrtEQw==
   dependencies:
     clean-css "^4.2.1"
     copy-dir "^1.2.0"
