@@ -1,4 +1,3 @@
-
 const { IDisposable } = await ns();
 
 /**
@@ -14,6 +13,10 @@ Class('', [IDisposable], function() {
 
     $$('protected')
     this.route = null;
+
+    $$('virtual');
+    $$('async');
+    this.run = noop;
 
     $$('virtual');
     this.dispose = noop;

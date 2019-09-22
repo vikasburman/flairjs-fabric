@@ -1,4 +1,4 @@
-const { Attribute } = ns();
+const { Attribute } = await ns();
 
 /**
  * @name Cache

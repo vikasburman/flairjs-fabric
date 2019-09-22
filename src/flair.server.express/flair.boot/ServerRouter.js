@@ -1,5 +1,6 @@
 const { Bootware } = await ns('flair.app');
-const { RestHandler, RestInterceptor } = await ns('flair.api');
+const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload, Payload } = await ns('flair.api');
+const querystring = require('querystring');
 
 /**
  * @name ServerRouter
@@ -32,6 +33,69 @@ Class('', Bootware, function() {
             });
         }
 
+        const onDone = (result, ctx) => {
+            let req = ctx.req, res = ctx.res; // eslint-disable-line no-unused-vars
+
+            const addResHeaders = () => {
+                for(let rh of result.data.resHeaders) { 
+                    res.set(rh.name, rh.value);
+                }
+            };
+            const autoSend = () => {
+                if (result.isError) {
+                    if (ctx.isAjaxReq) {
+                        res.status(result.status).json(result.toObject()).end(); 
+                    } else {
+                        res.status(result.status).send(result.toString()).end();
+                    }
+                } else {
+                    // add res headers
+                    addResHeaders();
+
+                    if (is(result.data, AttachmentPayload)) { // https://expressjs.com/en/api.html#res.download
+                        res.download(result.data.file, result.data.displayName, result.data.options, result.data.cb).end();
+                    } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
+                        res.end(result.data.buffer, result.data.encoding, result.data.cb);
+                    } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
+                        res.status(result.status).jsonp(result.toObject()).end();    
+                    } else if (is(result.data, Payload)) { // extended but otherwise normal payload
+                        if (ctx.isAjaxReq) {
+                            res.status(result.status).json(result.toObject()).end(); 
+                        } else {
+                            res.status(result.status).send(result.toString()).end();
+                        }   
+                    } else { // normal payload
+                        if (ctx.isAjaxReq) {
+                            res.status(result.status).json(result.toObject()).end(); 
+                        } else {
+                            res.status(result.status).send(result.toString()).end();
+                        }
+                    }
+                }
+            };
+
+            // complete the call
+            if (res.status === 302) { // redirect - Found
+                let redirectPath = ctx.getData('redirect-path'),
+                    redirectStatus = ctx.getData('redirect-status'),
+                    additionalInfo = ctx.getData('redirect-additionalInfo');
+                
+                // append additional info as query params to path
+                if (additionalInfo) { redirectPath += '?' + querystring.stringify(additionalInfo); }
+
+                // perform redirect
+                res.redirect(redirectStatus, redirectPath);
+            } else { // send data
+                // https://expressjs.com/en/api.html#res.format
+                res.format({
+                    'auto': autoSend,
+                    'text/plain': () => { res.status(result.status).send(result.toString()).end(); },
+                    'text/html': () => { res.status(result.status).send(result.toString()).end(); },
+                    'application/json': () => { res.status(result.status).json(result.toObject()).end(); },
+                    'default': autoSend
+                });
+            }
+        };
         const runInterceptors = async (req, res) => {
             // run mount specific interceptors
             // each interceptor is derived from RestInterceptor and
@@ -41,35 +105,37 @@ Class('', Bootware, function() {
             for (let ic of mountInterceptors) {
                 let ICType = as(await include(ic), RestInterceptor);
                 if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                
-                await new ICType().run(req, res);
-                if (req.$stop) { break; } // break, if someone forced to stop 
+                await new ICType().run(req, res); // it can throw error that will be passed in response and response cycle will stop here
             }
         };
-        const runHandler = async (route, routeHandler, verb, req, res) => {
+        const runHandler = async (route, routeHandler, verb, ctx) => {
             let RouteHandler = as(await include(routeHandler), RestHandler);
             if (RouteHandler) {
                 // req.params has all the route parameters.
                 // e.g., for route "/users/:userId/books/:bookId" req.params will 
                 // have "req.params: { "userId": "34", "bookId": "8989" }"
                 let rh = new RouteHandler(route);
-                return await rh[verb](req, res);
+
+                // await rh[verb](req, res);
+                return await rh.run(verb, ctx);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
             }
         };
         const chooseRouteHandler = (route) => {
             if (typeof route.handler === 'string') { return route.handler; }
-            return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+            return route.handler[AppDomain.app().getRoutingContext(route.name)] || route.handler.default || ''; // will pick current context handler OR default handler OR error situation
         };
         const getHandler = (route, verb) => {
             return (req, res, next) => { 
+                let ctx = new RestHandlerContext(req, res);
+
                 const onError = (err) => {
-                    next(err);
-                };
-                const onDone = (result) => {
-                    if (!result) {
-                        next();
+                    let result = new RestHandlerResult(err);
+                    if (result.status === 100) { // continue
+                        next(); // continue to next
+                    } else {
+                        onDone(result, ctx);
                     }
                 };
                 const handleRoute = async () => {
@@ -82,28 +148,19 @@ Class('', Bootware, function() {
                     //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
                     //          free | freemium | full  - if some routing is to be based on license model
                     //          anything else
+                    //      'default' must be defined to handle a catch-anything-else scenario 
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
-                    return await runHandler(route, routeHandler, verb, req, res);
+                    if (!routeHandler) { throw new Exception.NotDefined(route); }
+                    return await runHandler(route, routeHandler, verb, ctx); // it can throw any error including 100 (to continue to next handler)
                 };
-
-                // add special properties to req
-                req.$stop = false;
 
                 // run interceptors
                 runInterceptors(req, res).then(() => {
-                    if (!req.$stop) {
-                        handleRoute().then(onDone).catch(onError);
-                    } else {
-                        res.end();
-                    }
-                }).catch((err) => {
-                    if (req.stop) {
-                        res.end();
-                    } else {
-                        onError(err);
-                    }
-                });
+                    handleRoute().then((result) => {
+                        onDone(result, ctx);
+                    }).catch(onError);
+                }).catch(onError);
             };
         };
         const addHandler = (verb, route) => {
@@ -136,42 +193,14 @@ Class('', Bootware, function() {
 
         // catch 404 for this mount and forward to error handler
         mount.app.use((req, res, next) => {
-            var err = new Error('Not Found');
-            err.status = 404;
+            var err = new Exception.NotFound(req.originalUrl);
             next(err);
         });
 
-        // dev/prod error handler
-        if (env.isProd) {
-            mount.app.use((err, req, res) => {
-                res.status(err.status || 500);
-                if (req.xhr) {
-                    res.status(500).send({
-                        error: err.toString()
-                    });
-                } else {
-                    res.render('error', {
-                        message: err.message,
-                        error: err
-                    });
-                }
-                res.end();
-            });
-        } else {
-            mount.app.use((err, req, res) => {
-                res.status(err.status || 500);
-                if (req.xhr) {
-                    res.status(500).send({
-                        error: err.toString()
-                    });
-                } else {
-                    res.render('error', {
-                        message: err.message,
-                        error: err
-                    });
-                }
-                res.end();
-            });
-        }
+        // error handler
+        mount.app.use((err, req, res) => {
+            let result = new RestHandlerResult(err);
+            onDone(result, req, res);
+        });
     };
 });

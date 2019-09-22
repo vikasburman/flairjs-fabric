@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.59.69
- *  Sun, 22 Sep 2019 13:53:35 GMT
+ *  Version: 0.59.80
+ *  Sun, 22 Sep 2019 23:41:43 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -211,8 +211,60 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app/@1-Handler.js
+    await (async () => { // type: ./src/flair.app/flair.app/@1-HandlerContext.js
+        /**
+         * @name HandlerContext
+         * @description HandlerContext data
+         */
+        $$('abstract');
+        $$('ns', 'flair.app');
+		Class('HandlerContext', function() {
+            $$('virtual');
+            this.construct = () => { };
         
+            $$('private');
+            this.items = {};
+        
+            this.getData = (key, defaultValue) => { return this.items[key] || defaultValue; };
+            this.setData = (key, value) => { this.items[key] = value; };
+        
+            this.redirect = (path, status, additionalInfo) => { // additionalInfo can be and object with key: value - these will be passed as querystring to redirect call
+                this.setData('redirect-path', path);
+                this.setData('redirect-status', status || 302); // Found
+                this.setData('redirect-additionalInfo', additionalInfo || null);
+                throw new Exception.Redirect(path);
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app/@1-Payload.js
+        /**
+         * @name Payload
+         * @description Extended payload
+         */
+        $$('ns', 'flair.app');
+		Class('Payload', function() {
+            $$('virtual');
+            this.construct = (data, status, mimeType, resHeaders) => {
+                this.data = data || null;
+                this.status = status || null;
+                if (Array.isArray(resHeaders)) { this.resHeaders.push(...resHeaders); }
+                
+                if (mimeType) { this.resHeaders.push({ name: 'Content-Type', value: mimeType || 'text/plain' }); }
+            };
+        
+            $$('readonly');
+            this.data = null;
+        
+            $$('readonly');
+            this.status = null;
+        
+            $$('readonly');
+            this.resHeaders = [];
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app/@1-Handler.js
         const { IDisposable } = await ns();
         
         /**
@@ -229,6 +281,10 @@
         
             $$('protected')
             this.route = null;
+        
+            $$('virtual');
+            $$('async');
+            this.run = noop;
         
             $$('virtual');
             this.dispose = noop;
@@ -319,6 +375,111 @@
             this.dispose = (base) => {
                 base();
                 AppDomain.host().error.remove(this.handleError); // remove error handler
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app/@2-HandlerResult.js
+        const { Payload } = await ns('flair.app');
+        
+        /**
+         * @name HandlerResult
+         * @description Handler's structured result
+         */
+        $$('ns', 'flair.app');
+		Class('HandlerResult', function() {
+            $$('virtual');
+            this.construct = (error, payload, resHeaders) => {
+                let status = 200,
+                    message = 'OK',
+                    esx = 'Exception';
+        
+                // check if extended Payload
+                if (payload && is(payload, Payload)) {
+                    status = payload.status || status;
+                    this.isExtendedPayload = true;
+                }
+        
+                // get status and status message
+                if (error && error.name) {
+                    message = error.name || (env.isServer ? 'InternalServerError' : 'InternalClientError');
+                    switch(error.name) {
+                        case 'Continue' + esx: 
+                            status = 100; break;
+                        case 'NoContent' + esx: 
+                            status = 204; break;
+                        case 'Redirect' + esx: 
+                            status = 302; break;
+                        case 'NotModified' + esx:
+                            status = 304; break;
+                        case 'InvalidArgument' + esx:
+                        case 'InvalidOperation' + esx:
+                            status = 406; break; // not acceptable
+                        case 'Unauthorized' + esx: 
+                            status = 401; break;
+                        case 'NotFound' + esx: 
+                            status = 404; break;
+                        case 'NotAllowed' + esx: 
+                        case 'NotAvailable' + esx: 
+                        case 'NotSupported' + esx: 
+                            status = 405; break;
+                        case 'OperationConflict' + esx: 
+                        case 'Duplicate' + esx: 
+                            status = 409; break;
+                        case 'NotImplemented' + esx: 
+                        case 'NotDefined' + esx: 
+                            status = 501; break;
+                        default:
+                            status = 500; break;
+                    }
+                }
+                this.status = status;
+                this.message = message;
+        
+                this.isError = error ? true : false;
+                if (error && env.isDebug) {
+                    this.message += `\n${error.message || ''}`; 
+                    this.message += `\n${error.stack || ''}`;
+                }
+                this.data = payload || null;
+                if (Array.isError(resHeaders)) { this.resHeaders.push(...resHeaders); }
+            };
+        
+            $$('private');
+            this.isExtendedPayload = false;
+        
+            $$('readonly');
+            this.status = 500;
+        
+            $$('readonly');
+            this.message = '';
+        
+            $$('readonly');
+            this.isError = false;
+        
+            $$('readonly');
+            this.data = null;
+        
+            $$('readonly');
+            this.resHeaders = [];
+        
+            this.toObject = () => {
+                return Object.freeze({
+                    isError: this.isError,
+                    status: this.status,
+                    message: this.message,
+                    data: (this.isExtendedPayload ? this.data.data : this.data)
+                });
+            };
+            this.toString = () => {
+                return this.value().toString();
+            };
+            this.value = () => {
+                if (this.isError) {
+                    return this.message;
+                } else {
+                    return (this.isExtendedPayload ? this.data.data : this.data);
+                }
             };
         });
         
@@ -626,7 +787,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.app/flair.app.attr/Cache.js
-        const { Attribute } = ns();
+        const { Attribute } = await ns();
         
         /**
          * @name Cache
@@ -724,7 +885,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.69","lupdate":"Sun, 22 Sep 2019 13:53:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.80","lupdate":"Sun, 22 Sep 2019 23:41:43 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
