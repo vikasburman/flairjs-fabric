@@ -52,13 +52,20 @@ Class('', [ViewComponentMembers], function() {
         // view
         await this.load(ctx, el);
 
-        // now initiate async server data load process, this may take long
-        // therefore any must needed data should be loaded either in beforeLoad 
-        // or afterLoad functions, anything that can wait still when UI is visible
-        // should be loaded here
+        // now initiate async data load process for any data that needs to be preloaded 
+        // before view is shown, this will wait before views are swapped
         // corresponding cancel operations must also be written in cancelLoadData
-        // NOTE: this does not wait for completion of this async method
-        this.loadData(ctx); 
+        // NOTE: this DOES wait for completion of this async method
+        await this.preloadData(ctx);
+
+        // note: unlike View, there is no view swapping happening here, 
+        // still having two methods: preload and load makes sense because
+        // one waits for completion while other not
+
+        // now initiate async server data load process for any data which may take long to load
+        // corresponding cancel operations must also be written in cancelLoadData
+        // NOTE: this DOES NOT wait for completion of this async method
+        this.loadData(ctx);
     };  
 
     $$('protected');

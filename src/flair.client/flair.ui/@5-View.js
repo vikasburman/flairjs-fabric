@@ -75,15 +75,15 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         // NOTE: this DOES NOT wait for completion of this async method
         this.loadData(ctx);
 
-        // remove all styles related to outview 
+        // remove all styles related to outview
         if (this.$static.outView && this.$static.outView.name !== this.$static.inView.name) { // if not the same view and there was an outview
             let styles = document.head.getElementsByTagName('style');
             if (styles && styles.length > 0) {
-                let styleId = '';
+                let styleOwner = '';
                 for(let s of styles) {
-                    styleId = s.getAttribute('id') || '';
-                    if (styleId.startsWith(this.$static.outView.name)) { // member of this view
-                        s.parentNode.remove(s); // remove this style
+                    styleOwner = s.getAttribute('owner') || '';
+                    if (styleOwner === this.$static.outView.name) { // owner was this view
+                        s.parentNode.removeChild(s); // remove this style
                     }
                 }
             }
@@ -124,7 +124,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
 
             // load layout style if defined
             if (content.style) {
-                let layoutStyleId = `${this.$static.inView.name}_${this.id}_LAYOUT`;
+                let layoutStyleId = `${this.id}_LAYOUT`;
                 let style = replaceAll(content.style, '#SCOPE_ID', `#${layoutStyleId}`); // replace all #SCOPE_ID with #<this_view_unique_id>_LAYOUT
                 this.addStyle(style, layoutStyleId);
             }

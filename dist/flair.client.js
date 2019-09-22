@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.65
- *  Sun, 22 Sep 2019 00:38:41 GMT
+ *  Version: 0.59.67
+ *  Sun, 22 Sep 2019 01:28:48 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -213,9 +213,8 @@
                 const loadStyle = async () => {
                     // load styles in dom - as scoped style
                     if (this.style) {
-                        let styleId = `${_inViewName}_${_thisId}`;
                         let style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_view_or_component_unique_id>
-                        this.addStyle(style, styleId);
+                        this.addStyle(style);
                     }            
                 };
                 const loadJson = async () => {
@@ -304,7 +303,7 @@
                             if (cType) { 
                                 cObj = new cType();
                                 if (cObj) { 
-                                    this.components[comp.name] = cObj.view(_inViewName, ctx, cEl, comp.params);
+                                    this.components[comp.name] = await cObj.view(_inViewName, ctx, cEl, comp.params);
                                 }
                             }
                         }
@@ -332,7 +331,8 @@
             this.addStyle = (style, _id) => {
                 if (style) {
                     let styleEl = window.document.createElement('style');
-                    styleEl.id = _id || `${_inViewName}_${_thisId}`;
+                    styleEl.id = _id || `${_thisId}`;
+                    styleEl.owner = _inViewName;
                     styleEl.type = 'text/css';
                     styleEl.appendChild(window.document.createTextNode(style));
                     window.document.head.appendChild(styleEl);
@@ -888,15 +888,15 @@
                 // NOTE: this DOES NOT wait for completion of this async method
                 this.loadData(ctx);
         
-                // remove all styles related to outview 
+                // remove all styles related to outview
                 if (this.$static.outView && this.$static.outView.name !== this.$static.inView.name) { // if not the same view and there was an outview
                     let styles = document.head.getElementsByTagName('style');
                     if (styles && styles.length > 0) {
-                        let styleId = '';
+                        let styleOwner = '';
                         for(let s of styles) {
-                            styleId = s.getAttribute('id') || '';
-                            if (styleId.startsWith(this.$static.outView.name)) { // member of this view
-                                s.parentNode.remove(s); // remove this style
+                            styleOwner = s.getAttribute('owner') || '';
+                            if (styleOwner === this.$static.outView.name) { // owner was this view
+                                s.parentNode.removeChild(s); // remove this style
                             }
                         }
                     }
@@ -937,7 +937,7 @@
         
                     // load layout style if defined
                     if (content.style) {
-                        let layoutStyleId = `${this.$static.inView.name}_${this.id}_LAYOUT`;
+                        let layoutStyleId = `${this.id}_LAYOUT`;
                         let style = replaceAll(content.style, '#SCOPE_ID', `#${layoutStyleId}`); // replace all #SCOPE_ID with #<this_view_unique_id>_LAYOUT
                         this.addStyle(style, layoutStyleId);
                     }
@@ -1174,13 +1174,20 @@
                 // view
                 await this.load(ctx, el);
         
-                // now initiate async server data load process, this may take long
-                // therefore any must needed data should be loaded either in beforeLoad 
-                // or afterLoad functions, anything that can wait still when UI is visible
-                // should be loaded here
+                // now initiate async data load process for any data that needs to be preloaded 
+                // before view is shown, this will wait before views are swapped
                 // corresponding cancel operations must also be written in cancelLoadData
-                // NOTE: this does not wait for completion of this async method
-                this.loadData(ctx); 
+                // NOTE: this DOES wait for completion of this async method
+                await this.preloadData(ctx);
+        
+                // note: unlike View, there is no view swapping happening here, 
+                // still having two methods: preload and load makes sense because
+                // one waits for completion while other not
+        
+                // now initiate async server data load process for any data which may take long to load
+                // corresponding cancel operations must also be written in cancelLoadData
+                // NOTE: this DOES NOT wait for completion of this async method
+                this.loadData(ctx);
             };  
         
             $$('protected');
@@ -1993,7 +2000,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.65","lupdate":"Sun, 22 Sep 2019 00:38:41 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.67","lupdate":"Sun, 22 Sep 2019 01:28:48 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

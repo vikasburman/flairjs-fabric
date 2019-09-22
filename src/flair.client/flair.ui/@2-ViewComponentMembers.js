@@ -122,9 +122,8 @@ Mixin('', function() {
         const loadStyle = async () => {
             // load styles in dom - as scoped style
             if (this.style) {
-                let styleId = `${_inViewName}_${_thisId}`;
                 let style = replaceAll(this.style, '#SCOPE_ID', `#${_thisId}`); // replace all #SCOPE_ID with #<this_view_or_component_unique_id>
-                this.addStyle(style, styleId);
+                this.addStyle(style);
             }            
         };
         const loadJson = async () => {
@@ -213,7 +212,7 @@ Mixin('', function() {
                     if (cType) { 
                         cObj = new cType();
                         if (cObj) { 
-                            this.components[comp.name] = cObj.view(_inViewName, ctx, cEl, comp.params);
+                            this.components[comp.name] = await cObj.view(_inViewName, ctx, cEl, comp.params);
                         }
                     }
                 }
@@ -241,7 +240,8 @@ Mixin('', function() {
     this.addStyle = (style, _id) => {
         if (style) {
             let styleEl = window.document.createElement('style');
-            styleEl.id = _id || `${_inViewName}_${_thisId}`;
+            styleEl.id = _id || `${_thisId}`;
+            styleEl.owner = _inViewName;
             styleEl.type = 'text/css';
             styleEl.appendChild(window.document.createTextNode(style));
             window.document.head.appendChild(styleEl);
