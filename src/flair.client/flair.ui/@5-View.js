@@ -42,6 +42,9 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         // call base
         base(ctx);
 
+        // give it a unique name
+        this.name = this.name || this.$Type.getName(true); // this is the name of the type which is being instantiated
+
         // initialize in context of this type
         let result = await this.init(this.$static.inView.name, this.$Type);
         if (result && result.title) { this.title = result.title; }

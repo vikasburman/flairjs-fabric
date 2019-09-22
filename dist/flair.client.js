@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.67
- *  Sun, 22 Sep 2019 01:28:48 GMT
+ *  Version: 0.59.69
+ *  Sun, 22 Sep 2019 13:53:36 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -854,6 +854,9 @@
         
                 // call base
                 base(ctx);
+        
+                // give it a unique name
+                this.name = this.name || this.$Type.getName(true); // this is the name of the type which is being instantiated
         
                 // initialize in context of this type
                 let result = await this.init(this.$static.inView.name, this.$Type);
@@ -1997,15 +2000,10 @@
     // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
-    AppDomain.context.current().currentAssemblyBeingLoaded();
+    AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.67","lupdate":"Sun, 22 Sep 2019 01:28:48 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
-    
-    // assembly load complete
-    if (typeof onLoadComplete === 'function') { 
-        onLoadComplete();   // eslint-disable-line no-undef
-    }
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.69","lupdate":"Sun, 22 Sep 2019 13:53:36 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

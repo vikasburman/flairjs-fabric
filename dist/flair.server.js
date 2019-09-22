@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.59.67
- *  Sun, 22 Sep 2019 01:28:49 GMT
+ *  Version: 0.59.69
+ *  Sun, 22 Sep 2019 13:53:37 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -196,15 +196,10 @@
     // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
-    AppDomain.context.current().currentAssemblyBeingLoaded();
+    AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.67","lupdate":"Sun, 22 Sep 2019 01:28:49 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
-    
-    // assembly load complete
-    if (typeof onLoadComplete === 'function') { 
-        onLoadComplete();   // eslint-disable-line no-undef
-    }
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.69","lupdate":"Sun, 22 Sep 2019 13:53:37 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.RestHandler","flair.api.RESTEndPoint","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

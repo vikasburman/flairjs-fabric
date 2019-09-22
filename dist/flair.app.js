@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.59.67
- *  Sun, 22 Sep 2019 01:28:48 GMT
+ *  Version: 0.59.69
+ *  Sun, 22 Sep 2019 13:53:35 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -66,7 +66,16 @@
     // assembly closure: init (end)
     
     // assembly closure: global functions (start)
-    // (not defined)
+    // assembly globals
+    const onLoadComplete = (asm) => {
+        // register custom attributes
+        const registerCustomAttribute = (customAttrName, qualifiedTypeName) => {
+            let customAttrType = asm.getType(qualifiedTypeName);
+            if (customAttrType) { Container.register(customAttrName, customAttrType); }
+        };
+        
+        registerCustomAttribute('cache', 'flair.app.attr.Cache');
+    }; 
     // assembly closure: global functions (end)
     
     // set assembly being loaded
@@ -616,6 +625,66 @@
         });
         
     })();    
+    await (async () => { // type: ./src/flair.app/flair.app.attr/Cache.js
+        const { Attribute } = ns();
+        
+        /**
+         * @name Cache
+         * @description Caching custom attribute
+         * $$('cache', { 'duration': 10000 }) OR $$('cache', 10000)
+         */
+        $$('ns', 'flair.app.attr');
+		Class('Cache', Attribute, function() {
+            $$('override');
+            this.construct = (base, cacheConfig) => {
+                base(cacheConfig);
+        
+                // config
+                this.cacheConfig = (typeof cacheConfig === 'number' ? { duration: cacheConfig } : cacheConfig)
+                this.enabled = (this.cacheConfig && this.cacheConfig.duration);
+                this.cacheHandler = Port('cacheHandler');
+        
+                // constraints
+                this.constraints = '(class || struct) && (func && async) && !(timer || on || @fetch || @cache)';
+            };
+        
+            $$('readonly');
+            this.cacheConfig = null;
+        
+            $$('private');
+            this.cacheHandler = null;
+        
+            $$('private');
+            this.enabled = false;
+        
+            $$('override');
+            this.decorateFunction = (base, typeName, memberName, member) => { // eslint-disable-line no-unused-vars
+                let _this = this,
+                    cacheId = `${typeName}___${memberName}`;
+        
+                let callMember = async (...args) => {
+                    let resultData = await member(...args);
+                    if (_this.enabled) { // save for later
+                        await _this.cacheHandler.set(cacheId, _this.cacheConfig, resultData);
+                    }
+                    return resultData;
+                };
+        
+                // decorated function
+                return async function(...args) {
+                    if (_this.enabled) {
+                        try {
+                            return await _this.cacheHandler.get(cacheId, _this.cacheConfig);
+                        } catch (err) { // eslint-disable-line no-unused-vars
+                            // ignore and move forward by calling callMember below
+                        }
+                    }
+                    return await callMember(...args);
+                };
+            };
+        });
+        
+    })();    
     await (async () => { // type: ./src/flair.app/flair.boot/DIContainer.js
         const { Bootware } = await ns('flair.app');
         
@@ -652,15 +721,10 @@
     // assembly closure: embedded resources (end)        
     
     // clear assembly being loaded
-    AppDomain.context.current().currentAssemblyBeingLoaded();
+    AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.67","lupdate":"Sun, 22 Sep 2019 01:28:48 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
-    
-    // assembly load complete
-    if (typeof onLoadComplete === 'function') { 
-        onLoadComplete();   // eslint-disable-line no-undef
-    }
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.69","lupdate":"Sun, 22 Sep 2019 13:53:35 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Handler","flair.app.App","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
