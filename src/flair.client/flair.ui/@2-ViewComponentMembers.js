@@ -261,16 +261,16 @@ Mixin('', function() {
         const autoWire2 = async (ext) => {
             // 2: pick associated resource, if need
             if (!value) { 
-                _value = `${$type.getName()}_${ext}`;
+                _value = `${$type.getName()}_${ext}`; // myapp.views.404_html
                 if ($type.getAssembly().hasResource(_value)) {
                     res = AppDomain.context.current().getResource(_value);
                     value = (res && res.data ? res.data : '');
                 }
             }
-
+            
             // 3: pick namespaces asset file, if need
             if (!value) {
-                _value = which(`./${$type.getName()}.${type}{.min}.${ext}`);
+                _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
                 if ($type.getAssembly().hasAsset(_value)) {
                     value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                 }
@@ -359,7 +359,7 @@ Mixin('', function() {
 
             // 4: nothing defined
             if (!value) { 
-                value = `<div><!-- view markup not define / could not be resolved --></div>`; // bare minimum view
+                value = `<div><!-- view markup not defined / could not be resolved --></div>`; // bare minimum view
             }             
         };
         const autoWireStyle = async () => {
@@ -379,8 +379,8 @@ Mixin('', function() {
 
             // 4: nothing defined
             if (!value) { 
-                value = ``; // bare minimum data
-            }            
+                value = {}; // bare minimum data
+            }
         };      
 
         switch(type) {
@@ -427,11 +427,11 @@ Mixin('', function() {
 
         // delete all script tags, so nothing left inside body
         let scriptTag = doc.getElementsByTagName('script');
-        if (scriptTag) { for(let s of scriptTag) { s.parentNode.remove(s); } }
+        if (scriptTag) { for(let s of scriptTag) { s.parentNode.removeChild(s); } }
 
         // delete all link tags, so nothing left inside body
         let linkTag = doc.getElementsByTagName('link');
-        if (linkTag) { for(let l of linkTag) { l.parentNode.remove(l); } }
+        if (linkTag) { for(let l of linkTag) { l.parentNode.removeChild(l); } }
 
         // pick first style and then delete all style tags, so nothing left inside
         let styleTag = doc.getElementsByTagName('style');
@@ -448,7 +448,7 @@ Mixin('', function() {
                 }
                 
                 // delete all styles tags, so nothing left inside body
-                for(let s of styleTag) { s.parentNode.remove(s); }
+                for(let s of styleTag) { s.parentNode.removeChild(s); }
             }
         }
 
@@ -467,7 +467,7 @@ Mixin('', function() {
                 }
 
                  // delete all data tags, so nothing left inside body
-                for(let d of dataTag) { d.parentNode.remove(d); }
+                for(let d of dataTag) { d.parentNode.removeChild(d); }
             }
         }
 
@@ -644,6 +644,11 @@ Mixin('', function() {
     $$('async');
     this.afterLoad = noop;
     
+    $$('protected');
+    $$('virtual');
+    $$('async');
+    this.preloadData = noop;     
+
     $$('protected');
     $$('virtual');
     $$('async');

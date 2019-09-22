@@ -61,16 +61,19 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
         // view
         await this.load(ctx, el);
 
+        // now initiate async data load process for any data that needs to be preloaded 
+        // before view is shown, this will wait before views are swapped
+        // corresponding cancel operations must also be written in cancelLoadData
+        // NOTE: this DOES wait for completion of this async method
+        await this.preloadData(ctx);
+
         // swap views (old one is replaced with this new one)
         await this.swap();
 
-        // now initiate async server data load process, this may take long
-        // therefore any must needed data should be loaded either in beforeLoad 
-        // or afterLoad functions, anything that can wait still when UI is visible
-        // should be loaded here
+        // now initiate async server data load process for any data which may take long to load
         // corresponding cancel operations must also be written in cancelLoadData
-        // NOTE: this does not wait for completion of this async method
-        this.loadData(ctx);  
+        // NOTE: this DOES NOT wait for completion of this async method
+        this.loadData(ctx);
 
         // remove all styles related to outview 
         if (this.$static.outView && this.$static.outView.name !== this.$static.inView.name) { // if not the same view and there was an outview

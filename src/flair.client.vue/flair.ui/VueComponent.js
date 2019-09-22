@@ -18,8 +18,8 @@ Class('', ViewComponent, [VueComponentMembers], function() {
         // template
         // https://vuejs.org/v2/api/#template
         // built from html and css settings
-        if (this.html) {
-            vueComponent.template = this.html.trim();
+        if (this.template || this.html) {
+            vueComponent.template = this.template || this.html; // template if set manually gets precedence - else html
         }
 
         // props

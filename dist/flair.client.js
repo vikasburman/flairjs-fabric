@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.64
- *  Sat, 21 Sep 2019 22:08:13 GMT
+ *  Version: 0.59.65
+ *  Sun, 22 Sep 2019 00:38:41 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -352,16 +352,16 @@
                 const autoWire2 = async (ext) => {
                     // 2: pick associated resource, if need
                     if (!value) { 
-                        _value = `${$type.getName()}_${ext}`;
+                        _value = `${$type.getName()}_${ext}`; // myapp.views.404_html
                         if ($type.getAssembly().hasResource(_value)) {
                             res = AppDomain.context.current().getResource(_value);
                             value = (res && res.data ? res.data : '');
                         }
                     }
-        
+                    
                     // 3: pick namespaces asset file, if need
                     if (!value) {
-                        _value = which(`./${$type.getName()}.${type}{.min}.${ext}`);
+                        _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
                         if ($type.getAssembly().hasAsset(_value)) {
                             value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                         }
@@ -450,7 +450,7 @@
         
                     // 4: nothing defined
                     if (!value) { 
-                        value = `<div><!-- view markup not define / could not be resolved --></div>`; // bare minimum view
+                        value = `<div><!-- view markup not defined / could not be resolved --></div>`; // bare minimum view
                     }             
                 };
                 const autoWireStyle = async () => {
@@ -470,8 +470,8 @@
         
                     // 4: nothing defined
                     if (!value) { 
-                        value = ``; // bare minimum data
-                    }            
+                        value = {}; // bare minimum data
+                    }
                 };      
         
                 switch(type) {
@@ -518,11 +518,11 @@
         
                 // delete all script tags, so nothing left inside body
                 let scriptTag = doc.getElementsByTagName('script');
-                if (scriptTag) { for(let s of scriptTag) { s.parentNode.remove(s); } }
+                if (scriptTag) { for(let s of scriptTag) { s.parentNode.removeChild(s); } }
         
                 // delete all link tags, so nothing left inside body
                 let linkTag = doc.getElementsByTagName('link');
-                if (linkTag) { for(let l of linkTag) { l.parentNode.remove(l); } }
+                if (linkTag) { for(let l of linkTag) { l.parentNode.removeChild(l); } }
         
                 // pick first style and then delete all style tags, so nothing left inside
                 let styleTag = doc.getElementsByTagName('style');
@@ -539,7 +539,7 @@
                         }
                         
                         // delete all styles tags, so nothing left inside body
-                        for(let s of styleTag) { s.parentNode.remove(s); }
+                        for(let s of styleTag) { s.parentNode.removeChild(s); }
                     }
                 }
         
@@ -558,7 +558,7 @@
                         }
         
                          // delete all data tags, so nothing left inside body
-                        for(let d of dataTag) { d.parentNode.remove(d); }
+                        for(let d of dataTag) { d.parentNode.removeChild(d); }
                     }
                 }
         
@@ -738,6 +738,11 @@
             $$('protected');
             $$('virtual');
             $$('async');
+            this.preloadData = noop;     
+        
+            $$('protected');
+            $$('virtual');
+            $$('async');
             this.loadData = noop;     
         });
     })();    
@@ -869,16 +874,19 @@
                 // view
                 await this.load(ctx, el);
         
+                // now initiate async data load process for any data that needs to be preloaded 
+                // before view is shown, this will wait before views are swapped
+                // corresponding cancel operations must also be written in cancelLoadData
+                // NOTE: this DOES wait for completion of this async method
+                await this.preloadData(ctx);
+        
                 // swap views (old one is replaced with this new one)
                 await this.swap();
         
-                // now initiate async server data load process, this may take long
-                // therefore any must needed data should be loaded either in beforeLoad 
-                // or afterLoad functions, anything that can wait still when UI is visible
-                // should be loaded here
+                // now initiate async server data load process for any data which may take long to load
                 // corresponding cancel operations must also be written in cancelLoadData
-                // NOTE: this does not wait for completion of this async method
-                this.loadData(ctx);  
+                // NOTE: this DOES NOT wait for completion of this async method
+                this.loadData(ctx);
         
                 // remove all styles related to outview 
                 if (this.$static.outView && this.$static.outView.name !== this.$static.inView.name) { // if not the same view and there was an outview
@@ -1646,7 +1654,8 @@
                     }
         
                     // use route404 handler
-                    await runHandler(route404.handler, ctx);
+                    let routeHandler = chooseRouteHandler(route404);
+                    await runHandler(route404, routeHandler, ctx);
                 });
             };
         });
@@ -1984,7 +1993,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded();
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.64","lupdate":"Sat, 21 Sep 2019 22:08:13 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.65","lupdate":"Sun, 22 Sep 2019 00:38:41 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // assembly load complete
     if (typeof onLoadComplete === 'function') { 

@@ -98,7 +98,7 @@ Mixin('', function() {
                         if (cType) { 
                             cObj = new cType();
                             if (cObj) { 
-                                this.components[comp.name] = cObj.view(this.inViewName, ctx, cEl, comp.params); 
+                                this.components[comp.name] = await cObj.view(this.inViewName, ctx, cEl, comp.params); 
                                 
                                 // insert component's tag in cEl
                                 cEl.innerHTML = `<component is="${comp.name}"></component>`;

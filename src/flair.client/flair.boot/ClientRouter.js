@@ -126,7 +126,8 @@ Class('', Bootware, function() {
             }
 
             // use route404 handler
-            await runHandler(route404.handler, ctx);
+            let routeHandler = chooseRouteHandler(route404);
+            await runHandler(route404, routeHandler, ctx);
         });
     };
 });
