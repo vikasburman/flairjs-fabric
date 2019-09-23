@@ -1,5 +1,5 @@
 const { Host } = await ns('flair.app');
-const { ViewHandler, Page } = await ns('flair.ui');
+const { Page } = await ns('flair.ui');
 
 /**
  * @name ClientHost
@@ -84,7 +84,7 @@ Class('', Host, function() {
     // other segmentation support (end)
 
     // path support (start)
-    this.routeToUrl = (route, params) => {
+    this.routeToUrl = (route, params, query) => {
         if (!route) { return null; }
 
         // get route object
@@ -96,13 +96,12 @@ Class('', Host, function() {
         // get app
         let app = this.mounts[routeObj.mount].app;
 
-
         // return
-        return app.buildUrl(routeObj.path, params);
+        return app.buildUrl(routeObj.path, params, query);
     };
-    this.pathToUrl = (path, params) => {
+    this.pathToUrl = (path, params, query) => {
         let app = this.urlToApp(path); // it will still work even if this is not url
-        return app.buildUrl(path, params);
+        return app.buildUrl(path, params, query);
     };
     $$('private');
     this.urlToApp = (url) => {
@@ -129,21 +128,17 @@ Class('', Host, function() {
     // path support (end)
 
     // view (start)
-    this.view = {
-        get: () => { return ViewHandler.currentView; },
-        set: noop
-    };
-    this.redirect = async (route, params, isRefresh) => {
-        await this.navigate(route, params, true);
+    this.redirect = async (route, params, query, isRefresh) => {
+        await this.navigate(route, params, query, true);
         if (isRefresh) { await this.refresh(); }
     };
-    this.navigate = async (route, params, isReplace) => {
+    this.navigate = async (route, params, query, isReplace) => {
         params = params || {};
 
         // get url from route
         // routeName: qualifiedRouteName
         // url: hash part of url 
-        let url = this.routeToUrl(route, params);
+        let url = this.routeToUrl(route, params, query);
 
         // navigate/replace
         if (url) {
@@ -249,7 +244,7 @@ Class('', Host, function() {
         // host/#/path
         if (!window.location.hash) { // no hash is given
             if (settings.view.routes.home) {
-                await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                await this.redirect(settings.view.routes.home, {}, {}, true); // force refresh but don't let history entry added for first page
             } else {
                 console.log(`No home route is configured.`); // eslint-disable-line no-console
             }

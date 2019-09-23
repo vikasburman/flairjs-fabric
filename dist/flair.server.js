@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.59.85
- *  Mon, 23 Sep 2019 01:27:45 GMT
+ *  Version: 0.59.92
+ *  Mon, 23 Sep 2019 04:33:59 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -200,13 +200,21 @@
                 this.res = res;
             };
         
-            // ideally these should not be used directly
+            // ideally this should not be used directly
             $$('readonly');
             this.req = null;
         
-            // ideally these should not be used directly
+            // ideally this should not be used directly
             $$('readonly');
             this.res = null;
+        
+            this.redirect = (route, status, params, query) => {
+                this.setData('redirect-route', route);
+                this.setData('redirect-status', status || 302); // Found
+                this.setData('redirect-params', params || null);
+                this.setData('redirect-query', query || null);
+                throw Exception.Redirect(route);
+            };
         
             // response specific items
             this.isHeadersSent = { get: () => { return this.res.headersSent; } }
@@ -226,6 +234,7 @@
             this.isStale = { get: () => { return this.req.stale; } }
             this.isFresh = { get: () => { return this.req.fresh; } }
             this.isSecure = { get: () => { return this.req.secure; } }
+            this.url = { get: () => { return this.req.url; } }
             this.originalUrl = { get: () => { return this.req.originalUrl; } }
             this.baseUrl = { get: () => { return this.req.baseUrl; } }
             this.route = { get: () => { return this.req.route; } }
@@ -236,7 +245,7 @@
             this.protocol = { get: () => { return this.req.protocol; } }
             this.path = { get: () => { return this.req.path; } }
             this.method = { get: () => { return this.req.method; } }
-            this.body = { get: () => { return this.req.method; } }
+            this.body = { get: () => { return this.req.body; } }
             this.params = { get: () => { return this.req.params; } }
             this.query = { get: () => { return this.req.query; } }
             this.isContentType = (mimeType) => { 
@@ -274,6 +283,11 @@
         $$('ns', 'flair.api');
 		Class('RestHandler', Handler, function() {
             $$('override');
+            this.construct = (base, route) => {
+                base(route);
+            };
+        
+            $$('override');
             this.run = async (base, verb, ctx) => {
                 base(verb, ctx);
         
@@ -294,7 +308,7 @@
                 }
         
                 // run the handler
-                if (fn && fn !== noop) {
+                if (fn) {
                     try {
                         result = await fn(ctx); // (result can be: AttachmentPayload, BinaryPayload, Payload OR any normal data like a number, object, string, boolean, array, etc. just anything )
                     } catch (err) {
@@ -410,7 +424,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.92","lupdate":"Mon, 23 Sep 2019 04:33:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

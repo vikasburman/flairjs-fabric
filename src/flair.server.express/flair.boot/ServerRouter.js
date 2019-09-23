@@ -1,6 +1,5 @@
-const { Bootware } = await ns('flair.app');
-const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload, Payload } = await ns('flair.api');
-const querystring = require('querystring');
+const { Bootware, Payload } = await ns('flair.app');
+const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload } = await ns('flair.api');
 
 /**
  * @name ServerRouter
@@ -36,63 +35,44 @@ Class('', Bootware, function() {
         const onDone = (result, ctx) => {
             let req = ctx.req, res = ctx.res; // eslint-disable-line no-unused-vars
 
-            const addResHeaders = () => {
-                for(let rh of result.data.resHeaders) { 
-                    res.set(rh.name, rh.value);
+            // complete the call
+            if (result.status === 302) { // redirect - Found
+                let redirectRoute = ctx.getData('redirect-route'),
+                    redirectStatus = ctx.getData('redirect-status'),
+                    redirectParams = ctx.getData('redirect-params'),
+                    redirectQuery = ctx.getData('redirect-query');
+                
+                // build path
+                let redirectPath = AppDomain.host().routeToUrl(redirectRoute, redirectParams, redirectQuery);
+
+                // perform redirect
+                res.redirect(redirectStatus, redirectPath);
+            } else { // send data
+                let isCompleted = false;
+                if (!result.isError && is(result.data, Payload)) { // extended but otherwise normal payload case when not error
+                    // add any res headers
+                    for(let rh of result.data.resHeaders) { 
+                        res.set(rh.name, rh.value);
+                    }
+
+                    if (is(result.data, AttachmentPayload)) { // https://expressjs.com/en/api.html#res.download
+                        isCompleted = true;
+                        res.download(result.data.file, result.data.displayName, result.data.options, result.data.cb).end();
+                    } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
+                        isCompleted = true;
+                        res.end(result.data.buffer, result.data.encoding, result.data.cb);
+                    } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
+                        isCompleted = true;
+                        res.status(result.status).jsonp(result.value()).end();    
+                    }
                 }
-            };
-            const autoSend = () => {
-                if (result.isError) {
+                if (result.isError || !isCompleted) { // error or normal payload or plain but extended payload cases 
                     if (ctx.isAjaxReq) {
                         res.status(result.status).json(result.value()).end(); 
                     } else {
                         res.status(result.status).send(result.value()).end();
                     }
-                } else {
-                    // add res headers
-                    addResHeaders();
-
-                    if (is(result.data, AttachmentPayload)) { // https://expressjs.com/en/api.html#res.download
-                        res.download(result.data.file, result.data.displayName, result.data.options, result.data.cb).end();
-                    } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
-                        res.end(result.data.buffer, result.data.encoding, result.data.cb);
-                    } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
-                        res.status(result.status).jsonp(result.value()).end();    
-                    } else if (is(result.data, Payload)) { // extended but otherwise normal payload
-                        if (ctx.isAjaxReq) {
-                            res.status(result.status).json(result.value()).end(); 
-                        } else {
-                            res.status(result.status).send(result.value()).end();
-                        }   
-                    } else { // normal payload
-                        if (ctx.isAjaxReq) {
-                            res.status(result.status).json(result.value()).end(); 
-                        } else {
-                            res.status(result.status).send(result.value()).end();
-                        }
-                    }
                 }
-            };
-
-            // complete the call
-            if (res.status === 302) { // redirect - Found
-                let redirectPath = ctx.getData('redirect-path'),
-                    redirectStatus = ctx.getData('redirect-status'),
-                    additionalInfo = ctx.getData('redirect-additionalInfo');
-                
-                // append additional info as query params to path
-                if (additionalInfo) { redirectPath += '?' + querystring.stringify(additionalInfo); }
-
-                // perform redirect
-                res.redirect(redirectStatus, redirectPath);
-            } else { // send data
-                // https://expressjs.com/en/api.html#res.format
-                res.format({
-                    'auto': autoSend,
-                    'text/*': () => { res.status(result.status).send(result.value()).end(); },
-                    'application/json': () => { res.status(result.status).json(result.value()).end(); },
-                    'default': autoSend
-                });
             }
         };
         const runInterceptors = async (req, res) => {
@@ -110,12 +90,7 @@ Class('', Bootware, function() {
         const runHandler = async (route, routeHandler, verb, ctx) => {
             let RouteHandler = as(await include(routeHandler), RestHandler);
             if (RouteHandler) {
-                // req.params has all the route parameters.
-                // e.g., for route "/users/:userId/books/:bookId" req.params will 
-                // have "req.params: { "userId": "34", "bookId": "8989" }"
                 let rh = new RouteHandler(route);
-
-                // await rh[verb](req, res);
                 return await rh.run(verb, ctx);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -198,6 +173,7 @@ Class('', Bootware, function() {
 
         // error handler
         mount.app.use((err, req, res) => {
+            // note: 404 handler does not run interceptors
             let result = new RestHandlerResult(err);
             onDone(result, req, res);
         });

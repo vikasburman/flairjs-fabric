@@ -574,10 +574,10 @@ Mixin('', function() {
     this.version = (value) => { return AppDomain.host().version(value, true); };
 
     $$('protected');
-    this.pathToUrl = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
+    this.pathToUrl = (path, params, query) => { return AppDomain.host().pathToUrl(path, params, query); };
     
     $$('protected');
-    this.routeToUrl = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
+    this.routeToUrl = (routeName, params, query) => { return AppDomain.host().routeToUrl(routeName, params, query); };
 
     $$('protected');
     this.i18nValue = (key) => {

@@ -18,10 +18,18 @@ Class('', Handler, function() {
         }
         this.handler = route.handler;
 
-        // static/server context
+        // static (or server in future)
         if (!this.type === ViewTypes.Client) {
             this.connection = route.connection || '';
         }
+    };
+
+    $$('override');
+    this.run = async (base, verb, ctx) => {
+        base(verb, ctx);
+
+        // run the handler - verb will always be 'view', so no need to check
+        await this.onView(ctx); // no result - instead ui will be navigated to // it can throw any error
     };
 
     $$('readonly');
@@ -36,7 +44,5 @@ Class('', Handler, function() {
     $$('protected');
     $$('virtual');
     $$('async');
-    this.loadView = noop;
-
-    this.view = async (ctx) => { await this.loadView(ctx); }
+    this.onView = noop;    
 });

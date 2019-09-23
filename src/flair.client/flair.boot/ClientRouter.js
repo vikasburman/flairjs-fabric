@@ -1,5 +1,5 @@
-const { Bootware } = await ns('flair.app');
-const { ViewTypes, ViewHandler, ViewInterceptor } = await ns('flair.ui');
+const { Bootware, HandlerResult } = await ns('flair.app');
+const { ViewTypes, ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
 
 /**
  * @name ClientRouter
@@ -32,6 +32,17 @@ Class('', Bootware, function() {
             });
         }
 
+        const onDone = (result, ctx) => {
+            // complete the call
+            if (result.status === 302) { // redirect - Found
+                let redirectRoute = ctx.getData('redirect-route'),
+                    redirectParams = ctx.getData('redirect-params'),
+                    redirectQuery = ctx.getData('redirect-query');
+    
+                // perform redirect
+                setTimeout(() => { AppDomain.host().redirect(redirectRoute, redirectParams, redirectQuery) }, 0);
+            } // navigate to view already happened, nothing else is needed
+        };        
         const runInterceptors = async (ctx) => {
             // run mount specific interceptors
             // each interceptor is derived from ViewInterceptor and
@@ -41,9 +52,7 @@ Class('', Bootware, function() {
             for(let ic of mountInterceptors) {
                 let ICType = as(await include(ic), ViewInterceptor);
                 if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                
-                await new ICType().run(ctx);
-                if (ctx.$stop) { break; } // break, if someone forced to stop 
+                await new ICType().run(ctx); // it can throw error that will be passed in response and response cycle will stop here
             }
         };
         const runHandler = async (route, routeHandler, ctx) => {
@@ -55,27 +64,34 @@ Class('', Bootware, function() {
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {
                 let rh = new RouteHandler(route);
-                await rh.view(ctx);
+                await rh.run(ctx);
             } else {
                 throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
             }
         };
         const chooseRouteHandler = (route) => {
             if (typeof route.handler === 'string') { return route.handler; }
-            return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+            return route.handler[AppDomain.app().getRoutingContext(route.name)] || route.handler.default || '';  // will pick current context handler OR default handler OR error situation
         };
         const getHandler = (route) => {
-            return async (ctx) => {
+            return async (routerCtx) => {
+                let ctx = new ViewHandlerContext(routerCtx);
                 // ctx.params has all the route parameters.
                 // e.g., for route "/users/:userId/books/:bookId" ctx.params will 
                 // have "ctx.params: { "userId": "34", "bookId": "8989" }"
                 // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
 
-                // run interceptors
-                await runInterceptors(ctx);
+                // note: using HandlerResult and no ViewHandlerResult is created, because 
+                // there are no results for views - but since HandlerResult gives an easy way to manage
+                // status - it is being used for that functionality only
+                const onError = (err) => {
+                    let result = new HandlerResult(err);
 
-                // handle route
-                if (!ctx.$stop) {
+                    // unlike server router handling status 100 (continue) is not supported here
+                    
+                    onDone(result, ctx);
+                };
+                const handleRoute = async () => {
                     // route.handler can be defined as:
                     // string: 
                     //      qualified type name of the handler (e.g., abc.xyz)
@@ -91,10 +107,19 @@ Class('', Bootware, function() {
                     //          free | freemium | full  - if some routing is to be based on license model
                     //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
                     //          anything else
-                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                    //      'default' must be defined to handle a catch-anything-else scenario 
+                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined                    let routeHandler = chooseRouteHandler(route);
                     let routeHandler = chooseRouteHandler(route);
+                    if (!routeHandler) { throw Exception.NotDefined(route); }
                     await runHandler(route, routeHandler, ctx);
-                }
+                };                
+
+                runInterceptors(ctx).then(() => {
+                    handleRoute().then(() => {
+                        let result = HandlerResult(null, true); // since all is OK - use true as result value
+                        onDone(result, ctx);
+                    }).catch(onError);
+                }).catch(onError);
             };
         };
         const addHandler = (app, route) => {
@@ -113,14 +138,17 @@ Class('', Bootware, function() {
         }
 
         // catch 404 for this mount
-        app.add404(async (ctx) => {
-            // 404 handler does not run interceptors
-            // and instead of running the route (for which this ctx was setup)
+        app.add404(async (routerCtx) => {
+            let ctx = new ViewHandlerContext(routerCtx);
+
+            // note: 404 handler does not run interceptors
+            
+            // instead of running the route (for which this ctx was setup)
             // it will pick the handler of notfound route and show that view with this ctx
             let route404 = settings.view.routes.notfound;
             if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
             if (!route404) { // break it here
-                alert(`404: ${ctx.$url} not found.`); // eslint-disable-line no-alert
+                alert(`404: ${ctx.originalUrl} not found.`); // eslint-disable-line no-alert
                 setTimeout(() => { window.history.back(); }, 0);
                 return;
             }

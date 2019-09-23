@@ -39,12 +39,12 @@ Mixin('', function() {
             // this helps in building client side path nuances
             // e.g., {{ path('abc/xyz') }} will give: '/#/en/abc/xyz'
             // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1' or whatever url policy was configured
-            vueComponent.methods['path'] = (path, params) => { return _this.pathToUrl(path, params); };
+            vueComponent.methods['path'] = (path, params, query) => { return _this.pathToUrl(path, params, query); };
 
             // built-in method: route
             // this helps in using path from route settings itself
             // e.g., {{ route('home') }} will give: '/#/en/'
-            vueComponent.methods['route'] = (routeName, params) => { return _this.routeToUrl(routeName, params); };
+            vueComponent.methods['route'] = (routeName, params, query) => { return _this.routeToUrl(routeName, params, query); };
 
             // built-in method: stuff
             // this helps in using stuffing values in a string

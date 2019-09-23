@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.59.85
- *  Mon, 23 Sep 2019 01:27:45 GMT
+ *  Version: 0.59.92
+ *  Mon, 23 Sep 2019 04:33:59 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -117,12 +117,12 @@
                     // this helps in building client side path nuances
                     // e.g., {{ path('abc/xyz') }} will give: '/#/en/abc/xyz'
                     // e.g., {{ path('abc/:xyz', { xyz: 1}) }} will give: '/#/en/abc/1' or whatever url policy was configured
-                    vueComponent.methods['path'] = (path, params) => { return _this.pathToUrl(path, params); };
+                    vueComponent.methods['path'] = (path, params, query) => { return _this.pathToUrl(path, params, query); };
         
                     // built-in method: route
                     // this helps in using path from route settings itself
                     // e.g., {{ route('home') }} will give: '/#/en/'
-                    vueComponent.methods['route'] = (routeName, params) => { return _this.routeToUrl(routeName, params); };
+                    vueComponent.methods['route'] = (routeName, params, query) => { return _this.routeToUrl(routeName, params, query); };
         
                     // built-in method: stuff
                     // this helps in using stuffing values in a string
@@ -687,7 +687,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.92","lupdate":"Mon, 23 Sep 2019 04:33:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

@@ -26,6 +26,68 @@ Class('', Host, function() {
         set: noop
     };
 
+    // path support (start)
+    this.routeToUrl = (route, params, query) => {
+        if (!route) { return null; }
+
+        // get route object
+        let routeObj = AppDomain.context.current().getRoute(route); // route = qualifiedRouteName
+        if (!routeObj) {
+            return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent url, so it will automatically go to notfound view
+        }
+
+        let url = routeObj.path;
+        if (!url.startsWith('/')) { url = '/' +  url; }
+
+        // replace params
+        // path can be like: test/:id
+        // where it is expected that params.id property will 
+        // have what to replace in this
+        // If param var not found in path, it will be added as query string
+        // but ideally query string should be passed separately as object 
+        let isQueryAdded = false;
+        if (params) {
+            let idx = -1,
+                qs = '?',
+                value = null;
+            for(let p in params) {
+                if (params.hasOwnProperty(p)) {
+                    idx = url.indexOf(`:${p}`);
+                    value = encodeURIComponent(params[p].toString());
+                    if (idx !== -1) { 
+                        url = replaceAll(url, `:${p}`, value); 
+                    } else {
+                        qs += `${p}=${value}&`;
+                    }
+                }
+            }
+            if (qs !== '?') { 
+                isQueryAdded = true;
+                if (qs.endsWith('&')) { qs = qs.substr(0, qs.length - 1); } // remove last &
+                url += qs; 
+            }            
+        }
+
+        // query
+        if (query) {
+            let qs = isQueryAdded ? '&' : '?',
+                value = null;
+            for(let p in query) {
+                if (query.hasOwnProperty(p)) {
+                    value = encodeURIComponent(query[p].toString());
+                    qs += `${p}=${value}&`;
+                }
+            }
+            if (qs !== '?' || qs !== '&') {
+                url += qs; // add these as well
+            }               
+        }
+
+        // done
+        return url;
+    };
+    // path support (end)    
+
     $$('override');
     this.boot = async (base) => { // mount all express app and sub-apps
         base();

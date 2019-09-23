@@ -7,6 +7,11 @@ const { RestHandlerResult } = await ns('flair.api');
  */
 Class('', Handler, function() {
     $$('override');
+    this.construct = (base, route) => {
+        base(route);
+    };
+
+    $$('override');
     this.run = async (base, verb, ctx) => {
         base(verb, ctx);
 
@@ -27,7 +32,7 @@ Class('', Handler, function() {
         }
 
         // run the handler
-        if (fn && fn !== noop) {
+        if (fn) {
             try {
                 result = await fn(ctx); // (result can be: AttachmentPayload, BinaryPayload, Payload OR any normal data like a number, object, string, boolean, array, etc. just anything )
             } catch (err) {

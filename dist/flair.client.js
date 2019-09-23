@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.85
- *  Mon, 23 Sep 2019 01:27:45 GMT
+ *  Version: 0.59.92
+ *  Mon, 23 Sep 2019 04:33:57 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -82,7 +82,6 @@
         $$('ns', 'flair.ui');
 		Enum('ViewTypes', function() {
             this.Client = 0;
-            this.Server = 1;
             this.Static = 2;
         });
         
@@ -665,10 +664,10 @@
             this.version = (value) => { return AppDomain.host().version(value, true); };
         
             $$('protected');
-            this.pathToUrl = (path, params) => { return AppDomain.host().pathToUrl(path, params); };
+            this.pathToUrl = (path, params, query) => { return AppDomain.host().pathToUrl(path, params, query); };
             
             $$('protected');
-            this.routeToUrl = (routeName, params) => { return AppDomain.host().routeToUrl(routeName, params); };
+            this.routeToUrl = (routeName, params, query) => { return AppDomain.host().routeToUrl(routeName, params, query); };
         
             $$('protected');
             this.i18nValue = (key) => {
@@ -746,6 +745,100 @@
             this.loadData = noop;     
         });
     })();    
+    await (async () => { // type: ./src/flair.client/flair.ui/@3-ViewHandlerContext.js
+        const { HandlerContext } = await ns('flair.app');
+        
+        // Credit: https://gist.github.com/allenhwkim/19c2f36a7afa6f0c507008613e966d1b
+        const Cookie = function (tld) {
+            this.tld = tld; // if true, set cookie domain at top level domain
+            this.set = (name, value, days) => {
+                let cookie = { [name]: value, path: '/' };
+                if (days) {
+                    let date = new Date();
+                    date.setTime(date.getTime()+(days*24*60*60*1000));
+                    cookie.expires = date.toUTCString();
+                }
+                  
+                if (Cookie.tld) {
+                    cookie.domain = '.' + window.location.hostname.split('.').slice(-2).join('.');
+                } 
+              
+                let arr = [];
+                for(let key in cookie) {
+                    arr.push(`${key}=${cookie[key]}`);
+                }
+                document.cookie = arr.join('; ');
+              
+                return this.get(name);
+            };
+            this.getAll = () => {
+                let cookie = {};
+                document.cookie.split(';').forEach(el => {
+                    let [k,v] = el.split('=');
+                    cookie[k.trim()] = v;
+                });
+                return cookie;
+            };
+            this.get = (name) => {
+                return this.getAll()[name];
+            };
+            this.delete = (name) => {
+                this.set(name, '', -1);
+            };
+            this.deleteAll = () => {
+                let cookie = this.getAll();
+                for(let key in cookie) {
+                    this.delete(key);
+                }        
+            };
+        };
+        
+        /**
+         * @name ViewHandlerContext
+         * @description View Handler Context
+         */
+        $$('ns', 'flair.ui');
+		Class('ViewHandlerContext', HandlerContext, function() {
+            $$('override');
+            this.construct = (base, ctx) => { 
+                base();
+        
+                this.ctx = ctx; // internal context
+            };
+        
+            // ideally this should not be used directly
+            $$('readonly');
+            this.ctx = null;
+        
+            this.redirect = (route, params, query) => {
+                this.setData('redirect-route', route);
+                this.setData('redirect-params', params || null);
+                this.setData('redirect-query', query || null);
+                throw Exception.Redirect(route);
+            };
+        
+            this.isSecure = { get: () => { this.protocol === 'https' ? true : false; } }
+            this.readyState = { get: () => { return window.document.readyState; } }
+            this.characterSet = { get: () => { return window.document.characterSet; } }
+            this.url = { get: () => { return window.document.location.href; } }
+            this.originalUrl = { get: () => { return this.ctx.$url; } } // location.pathname
+            this.baseUrl = { get: () => { return this.ctx.$mount; } }
+            this.route = { get: () => { return this.ctx.$route; } }
+            this.origin = { get: () => { return window.document.location.origin; } }
+            this.hostName = { get: () => { return window.document.location.hostname; } }
+            this.port = { get: () => { return window.document.location.port; } }
+            this.protocol = { get: () => { return window.document.location.protocol; } }
+            this.path = { get: () => { return this.ctx.$path; } }
+            this.hash = { get: () => { return window.document.location.hash; } }
+            this.handler = { get: () => { return this.ctx.$handler; } }
+            this.locale = { get: () => { return this.ctx.$locale; } }
+            this.version = { get: () => { return this.ctx.$version; } }
+            this.params = { get: () => { return this.ctx.$params; } }
+            this.query = { get: () => { return this.ctx.$query; } }
+            this.cookie = Object.freeze(new Cookie(true));
+        });
+        
+    })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@3-ViewTransition.js
         /**
          * @name ViewTransition
@@ -785,10 +878,18 @@
                 }
                 this.handler = route.handler;
         
-                // static/server context
+                // static (or server in future)
                 if (!this.type === ViewTypes.Client) {
                     this.connection = route.connection || '';
                 }
+            };
+        
+            $$('override');
+            this.run = async (base, verb, ctx) => {
+                base(verb, ctx);
+        
+                // run the handler - verb will always be 'view', so no need to check
+                await this.onView(ctx); // no result - instead ui will be navigated to // it can throw any error
             };
         
             $$('readonly');
@@ -803,9 +904,7 @@
             $$('protected');
             $$('virtual');
             $$('async');
-            this.loadView = noop;
-        
-            this.view = async (ctx) => { await this.loadView(ctx); }
+            this.onView = noop;    
         });
         
     })();    
@@ -1218,7 +1317,7 @@
         $$('ns', 'flair.ui');
 		Class('Page', function() {
             let handlers = [],
-                defaultHandler;
+                defaultHandler = null;
         
             this.construct = (options, params) => {
                 // any path can be built using 
@@ -1294,6 +1393,7 @@
                     locale: '',
                     version: '',
                     params: {},
+                    query: {},
                     handler: null,
                     route: null
                 },
@@ -1330,7 +1430,8 @@
                         qvars = qvars || {};
                         qvars[qitems[0].trim()] = decodeURIComponent(qitems[1].trim());
                     }
-                }     
+                    if (qvars) { parts.query = qvars; }
+                }    
         
                 // add trailing slash 
                 if (!path.endsWith('/')) { path += '/'; }
@@ -1370,15 +1471,10 @@
                     }
                 }
         
-                // overwrite/merge params with qvars (if there were conflict)
-                if (qvars) {
-                    parts.params = Object.assign(parts.params, qvars);
-                }
-        
                 // done
                 return parts;
             };
-            this.buildUrl = (path, params) => {
+            this.buildUrl = (path, params, query) => {
                 // start with base
                 let url = this.base;
                 if (!url.endsWith('/')) { url += '/'; }
@@ -1419,6 +1515,8 @@
                 // where it is expected that params.id property will 
                 // have what to replace in this
                 // If param var not found in path, it will be added as query string
+                // but ideally query string should be passed separately as object 
+                let isQueryAdded = false;
                 if (params) {
                     let idx = -1,
                         qs = '?',
@@ -1430,11 +1528,30 @@
                             if (idx !== -1) { 
                                 url = replaceAll(url, `:${p}`, value); 
                             } else {
-                                qs += `${p}=${value}`;
+                                qs += `${p}=${value}&`;
                             }
                         }
                     }
-                    if (qs !== '?') { url += qs; }            
+                    if (qs !== '?') { 
+                        isQueryAdded = true;
+                        if (qs.endsWith('&')) { qs = qs.substr(0, qs.length - 1); } // remove last &
+                        url += qs; 
+                    }            
+                }
+        
+                // query
+                if (query) {
+                    let qs = isQueryAdded ? '&' : '?',
+                        value = null;
+                    for(let p in query) {
+                        if (query.hasOwnProperty(p)) {
+                            value = encodeURIComponent(query[p].toString());
+                            qs += `${p}=${value}&`;
+                        }
+                    }
+                    if (qs !== '?' || qs !== '&') {
+                        url += qs; // add these as well
+                    }               
                 }
         
                 // done
@@ -1466,41 +1583,29 @@
                 defaultHandler = handler;
             };
             this.run = async (url) => {
+                // get path parts
+                let parts = this.breakUrl(url);
+        
                 // default ctx
                 let ctx = {
                     $url: url,
-                    $page: '',
                     $route: '',
                     $handler: '',
                     $mount: '',
-                    $locale: '',
-                    $version: '',
-                    $path: '',
-                    $stop: false,  // if no further processing to be done
-                    $redirect: {
-                        route: '',
-                        params: {}
-                    } // route to redirect to
+                    $path: parts.path | '',
+                    $locale: parts.locale || '',
+                    $version: parts.version || '',
+                    $params: parts.params || {},
+                    $query: parts.query || {}
                 };
         
-                // get path parts
-                let parts = this.breakUrl(url),
-                    params = parts.params;
-                
-                // enrich ctx
-                ctx.$locale = parts.locale;
-                ctx.$version = parts.version;
+                // enrich ctx for route
                 if (parts.route) {
                     ctx.$route = parts.route.name;
                     ctx.$handler = parts.route.handler;
                     ctx.$mount = parts.route.mount;
                     ctx.$path = parts.route.path;
-                } else {
-                    ctx.$path = parts.path;
                 }
-        
-                // add params to ctx
-                if (params) { ctx = Object.assign(ctx, params); }
         
                 try {
                     if (parts.handler) {
@@ -1516,13 +1621,6 @@
                         
                         // run handler
                         await parts.handler(ctx);
-        
-                        // redirect if configured
-                        if (ctx.$redirect.route) {
-                            let route = ctx.$redirect,
-                                params = ctx.$params;
-                            setTimeout(() => { AppDomain.host().redirect(route, params) }, 0);
-                        }                
                     } else {
                         // run default handler 
                         await defaultHandler(ctx);
@@ -1535,8 +1633,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const { Bootware } = await ns('flair.app');
-        const { ViewTypes, ViewHandler, ViewInterceptor } = await ns('flair.ui');
+        const { Bootware, HandlerResult } = await ns('flair.app');
+        const { ViewTypes, ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
         
         /**
          * @name ClientRouter
@@ -1570,6 +1668,17 @@
                     });
                 }
         
+                const onDone = (result, ctx) => {
+                    // complete the call
+                    if (result.status === 302) { // redirect - Found
+                        let redirectRoute = ctx.getData('redirect-route'),
+                            redirectParams = ctx.getData('redirect-params'),
+                            redirectQuery = ctx.getData('redirect-query');
+            
+                        // perform redirect
+                        setTimeout(() => { AppDomain.host().redirect(redirectRoute, redirectParams, redirectQuery) }, 0);
+                    } // navigate to view already happened, nothing else is needed
+                };        
                 const runInterceptors = async (ctx) => {
                     // run mount specific interceptors
                     // each interceptor is derived from ViewInterceptor and
@@ -1579,9 +1688,7 @@
                     for(let ic of mountInterceptors) {
                         let ICType = as(await include(ic), ViewInterceptor);
                         if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                        
-                        await new ICType().run(ctx);
-                        if (ctx.$stop) { break; } // break, if someone forced to stop 
+                        await new ICType().run(ctx); // it can throw error that will be passed in response and response cycle will stop here
                     }
                 };
                 const runHandler = async (route, routeHandler, ctx) => {
@@ -1593,27 +1700,34 @@
                     let RouteHandler = as(await include(routeHandler), ViewHandler);
                     if (RouteHandler) {
                         let rh = new RouteHandler(route);
-                        await rh.view(ctx);
+                        await rh.run(ctx);
                     } else {
                         throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
                     }
                 };
                 const chooseRouteHandler = (route) => {
                     if (typeof route.handler === 'string') { return route.handler; }
-                    return route.handler[AppDomain.app().getRoutingContext(route.name)] || '**undefined**';
+                    return route.handler[AppDomain.app().getRoutingContext(route.name)] || route.handler.default || '';  // will pick current context handler OR default handler OR error situation
                 };
                 const getHandler = (route) => {
-                    return async (ctx) => {
+                    return async (routerCtx) => {
+                        let ctx = new ViewHandlerContext(routerCtx);
                         // ctx.params has all the route parameters.
                         // e.g., for route "/users/:userId/books/:bookId" ctx.params will 
                         // have "ctx.params: { "userId": "34", "bookId": "8989" }"
                         // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
         
-                        // run interceptors
-                        await runInterceptors(ctx);
+                        // note: using HandlerResult and no ViewHandlerResult is created, because 
+                        // there are no results for views - but since HandlerResult gives an easy way to manage
+                        // status - it is being used for that functionality only
+                        const onError = (err) => {
+                            let result = new HandlerResult(err);
         
-                        // handle route
-                        if (!ctx.$stop) {
+                            // unlike server router handling status 100 (continue) is not supported here
+                            
+                            onDone(result, ctx);
+                        };
+                        const handleRoute = async () => {
                             // route.handler can be defined as:
                             // string: 
                             //      qualified type name of the handler (e.g., abc.xyz)
@@ -1629,10 +1743,19 @@
                             //          free | freemium | full  - if some routing is to be based on license model
                             //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
                             //          anything else
-                            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+                            //      'default' must be defined to handle a catch-anything-else scenario 
+                            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined                    let routeHandler = chooseRouteHandler(route);
                             let routeHandler = chooseRouteHandler(route);
+                            if (!routeHandler) { throw Exception.NotDefined(route); }
                             await runHandler(route, routeHandler, ctx);
-                        }
+                        };                
+        
+                        runInterceptors(ctx).then(() => {
+                            handleRoute().then(() => {
+                                let result = HandlerResult(null, true); // since all is OK - use true as result value
+                                onDone(result, ctx);
+                            }).catch(onError);
+                        }).catch(onError);
                     };
                 };
                 const addHandler = (app, route) => {
@@ -1651,14 +1774,17 @@
                 }
         
                 // catch 404 for this mount
-                app.add404(async (ctx) => {
-                    // 404 handler does not run interceptors
-                    // and instead of running the route (for which this ctx was setup)
+                app.add404(async (routerCtx) => {
+                    let ctx = new ViewHandlerContext(routerCtx);
+        
+                    // note: 404 handler does not run interceptors
+                    
+                    // instead of running the route (for which this ctx was setup)
                     // it will pick the handler of notfound route and show that view with this ctx
                     let route404 = settings.view.routes.notfound;
                     if (route404) { route404 = AppDomain.context.current().getRoute(route404); }
                     if (!route404) { // break it here
-                        alert(`404: ${ctx.$url} not found.`); // eslint-disable-line no-alert
+                        alert(`404: ${ctx.originalUrl} not found.`); // eslint-disable-line no-alert
                         setTimeout(() => { window.history.back(); }, 0);
                         return;
                     }
@@ -1672,7 +1798,7 @@
     })();    
     await (async () => { // type: ./src/flair.client/flair.app/ClientHost.js
         const { Host } = await ns('flair.app');
-        const { ViewHandler, Page } = await ns('flair.ui');
+        const { Page } = await ns('flair.ui');
         
         /**
          * @name ClientHost
@@ -1758,7 +1884,7 @@
             // other segmentation support (end)
         
             // path support (start)
-            this.routeToUrl = (route, params) => {
+            this.routeToUrl = (route, params, query) => {
                 if (!route) { return null; }
         
                 // get route object
@@ -1770,13 +1896,12 @@
                 // get app
                 let app = this.mounts[routeObj.mount].app;
         
-        
                 // return
-                return app.buildUrl(routeObj.path, params);
+                return app.buildUrl(routeObj.path, params, query);
             };
-            this.pathToUrl = (path, params) => {
+            this.pathToUrl = (path, params, query) => {
                 let app = this.urlToApp(path); // it will still work even if this is not url
-                return app.buildUrl(path, params);
+                return app.buildUrl(path, params, query);
             };
             $$('private');
             this.urlToApp = (url) => {
@@ -1803,21 +1928,17 @@
             // path support (end)
         
             // view (start)
-            this.view = {
-                get: () => { return ViewHandler.currentView; },
-                set: noop
-            };
-            this.redirect = async (route, params, isRefresh) => {
-                await this.navigate(route, params, true);
+            this.redirect = async (route, params, query, isRefresh) => {
+                await this.navigate(route, params, query, true);
                 if (isRefresh) { await this.refresh(); }
             };
-            this.navigate = async (route, params, isReplace) => {
+            this.navigate = async (route, params, query, isReplace) => {
                 params = params || {};
         
                 // get url from route
                 // routeName: qualifiedRouteName
                 // url: hash part of url 
-                let url = this.routeToUrl(route, params);
+                let url = this.routeToUrl(route, params, query);
         
                 // navigate/replace
                 if (url) {
@@ -1923,7 +2044,7 @@
                 // host/#/path
                 if (!window.location.hash) { // no hash is given
                     if (settings.view.routes.home) {
-                        await this.redirect(settings.view.routes.home, {}, true); // force refresh but don't let history entry added for first page
+                        await this.redirect(settings.view.routes.home, {}, {}, true); // force refresh but don't let history entry added for first page
                     } else {
                         console.log(`No home route is configured.`); // eslint-disable-line no-console
                     }
@@ -2003,7 +2124,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.92","lupdate":"Mon, 23 Sep 2019 04:33:57 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

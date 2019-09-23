@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.59.85
- *  Mon, 23 Sep 2019 01:27:46 GMT
+ *  Version: 0.59.92
+ *  Mon, 23 Sep 2019 04:33:59 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -103,6 +103,68 @@
                 get: () => { return mountedApps; },
                 set: noop
             };
+        
+            // path support (start)
+            this.routeToUrl = (route, params, query) => {
+                if (!route) { return null; }
+        
+                // get route object
+                let routeObj = AppDomain.context.current().getRoute(route); // route = qualifiedRouteName
+                if (!routeObj) {
+                    return replaceAll(route, '.', '_'); // convert route qualified name in a non-existent url, so it will automatically go to notfound view
+                }
+        
+                let url = routeObj.path;
+                if (!url.startsWith('/')) { url = '/' +  url; }
+        
+                // replace params
+                // path can be like: test/:id
+                // where it is expected that params.id property will 
+                // have what to replace in this
+                // If param var not found in path, it will be added as query string
+                // but ideally query string should be passed separately as object 
+                let isQueryAdded = false;
+                if (params) {
+                    let idx = -1,
+                        qs = '?',
+                        value = null;
+                    for(let p in params) {
+                        if (params.hasOwnProperty(p)) {
+                            idx = url.indexOf(`:${p}`);
+                            value = encodeURIComponent(params[p].toString());
+                            if (idx !== -1) { 
+                                url = replaceAll(url, `:${p}`, value); 
+                            } else {
+                                qs += `${p}=${value}&`;
+                            }
+                        }
+                    }
+                    if (qs !== '?') { 
+                        isQueryAdded = true;
+                        if (qs.endsWith('&')) { qs = qs.substr(0, qs.length - 1); } // remove last &
+                        url += qs; 
+                    }            
+                }
+        
+                // query
+                if (query) {
+                    let qs = isQueryAdded ? '&' : '?',
+                        value = null;
+                    for(let p in query) {
+                        if (query.hasOwnProperty(p)) {
+                            value = encodeURIComponent(query[p].toString());
+                            qs += `${p}=${value}&`;
+                        }
+                    }
+                    if (qs !== '?' || qs !== '&') {
+                        url += qs; // add these as well
+                    }               
+                }
+        
+                // done
+                return url;
+            };
+            // path support (end)    
         
             $$('override');
             this.boot = async (base) => { // mount all express app and sub-apps
@@ -396,9 +458,8 @@
         
     })();    
     await (async () => { // type: ./src/flair.server.express/flair.boot/ServerRouter.js
-        const { Bootware } = await ns('flair.app');
-        const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload, Payload } = await ns('flair.api');
-        const querystring = require('querystring');
+        const { Bootware, Payload } = await ns('flair.app');
+        const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload } = await ns('flair.api');
         
         /**
          * @name ServerRouter
@@ -435,63 +496,44 @@
                 const onDone = (result, ctx) => {
                     let req = ctx.req, res = ctx.res; // eslint-disable-line no-unused-vars
         
-                    const addResHeaders = () => {
-                        for(let rh of result.data.resHeaders) { 
-                            res.set(rh.name, rh.value);
+                    // complete the call
+                    if (result.status === 302) { // redirect - Found
+                        let redirectRoute = ctx.getData('redirect-route'),
+                            redirectStatus = ctx.getData('redirect-status'),
+                            redirectParams = ctx.getData('redirect-params'),
+                            redirectQuery = ctx.getData('redirect-query');
+                        
+                        // build path
+                        let redirectPath = AppDomain.host().routeToUrl(redirectRoute, redirectParams, redirectQuery);
+        
+                        // perform redirect
+                        res.redirect(redirectStatus, redirectPath);
+                    } else { // send data
+                        let isCompleted = false;
+                        if (!result.isError && is(result.data, Payload)) { // extended but otherwise normal payload case when not error
+                            // add any res headers
+                            for(let rh of result.data.resHeaders) { 
+                                res.set(rh.name, rh.value);
+                            }
+        
+                            if (is(result.data, AttachmentPayload)) { // https://expressjs.com/en/api.html#res.download
+                                isCompleted = true;
+                                res.download(result.data.file, result.data.displayName, result.data.options, result.data.cb).end();
+                            } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
+                                isCompleted = true;
+                                res.end(result.data.buffer, result.data.encoding, result.data.cb);
+                            } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
+                                isCompleted = true;
+                                res.status(result.status).jsonp(result.value()).end();    
+                            }
                         }
-                    };
-                    const autoSend = () => {
-                        if (result.isError) {
+                        if (result.isError || !isCompleted) { // error or normal payload or plain but extended payload cases 
                             if (ctx.isAjaxReq) {
                                 res.status(result.status).json(result.value()).end(); 
                             } else {
                                 res.status(result.status).send(result.value()).end();
                             }
-                        } else {
-                            // add res headers
-                            addResHeaders();
-        
-                            if (is(result.data, AttachmentPayload)) { // https://expressjs.com/en/api.html#res.download
-                                res.download(result.data.file, result.data.displayName, result.data.options, result.data.cb).end();
-                            } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
-                                res.end(result.data.buffer, result.data.encoding, result.data.cb);
-                            } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
-                                res.status(result.status).jsonp(result.value()).end();    
-                            } else if (is(result.data, Payload)) { // extended but otherwise normal payload
-                                if (ctx.isAjaxReq) {
-                                    res.status(result.status).json(result.value()).end(); 
-                                } else {
-                                    res.status(result.status).send(result.value()).end();
-                                }   
-                            } else { // normal payload
-                                if (ctx.isAjaxReq) {
-                                    res.status(result.status).json(result.value()).end(); 
-                                } else {
-                                    res.status(result.status).send(result.value()).end();
-                                }
-                            }
                         }
-                    };
-        
-                    // complete the call
-                    if (res.status === 302) { // redirect - Found
-                        let redirectPath = ctx.getData('redirect-path'),
-                            redirectStatus = ctx.getData('redirect-status'),
-                            additionalInfo = ctx.getData('redirect-additionalInfo');
-                        
-                        // append additional info as query params to path
-                        if (additionalInfo) { redirectPath += '?' + querystring.stringify(additionalInfo); }
-        
-                        // perform redirect
-                        res.redirect(redirectStatus, redirectPath);
-                    } else { // send data
-                        // https://expressjs.com/en/api.html#res.format
-                        res.format({
-                            'auto': autoSend,
-                            'text/*': () => { res.status(result.status).send(result.value()).end(); },
-                            'application/json': () => { res.status(result.status).json(result.value()).end(); },
-                            'default': autoSend
-                        });
                     }
                 };
                 const runInterceptors = async (req, res) => {
@@ -509,12 +551,7 @@
                 const runHandler = async (route, routeHandler, verb, ctx) => {
                     let RouteHandler = as(await include(routeHandler), RestHandler);
                     if (RouteHandler) {
-                        // req.params has all the route parameters.
-                        // e.g., for route "/users/:userId/books/:bookId" req.params will 
-                        // have "req.params: { "userId": "34", "bookId": "8989" }"
                         let rh = new RouteHandler(route);
-        
-                        // await rh[verb](req, res);
                         return await rh.run(verb, ctx);
                     } else {
                         throw Exception.InvalidDefinition(`Invalid route handler. (${routeHandler})`);
@@ -597,6 +634,7 @@
         
                 // error handler
                 mount.app.use((err, req, res) => {
+                    // note: 404 handler does not run interceptors
                     let result = new RestHandlerResult(err);
                     onDone(result, req, res);
                 });
@@ -613,7 +651,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:46 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.92","lupdate":"Mon, 23 Sep 2019 04:33:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

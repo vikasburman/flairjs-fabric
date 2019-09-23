@@ -5,7 +5,7 @@
 $$('sealed');
 Class('', function() {
     let handlers = [],
-        defaultHandler;
+        defaultHandler = null;
 
     this.construct = (options, params) => {
         // any path can be built using 
@@ -81,6 +81,7 @@ Class('', function() {
             locale: '',
             version: '',
             params: {},
+            query: {},
             handler: null,
             route: null
         },
@@ -117,7 +118,8 @@ Class('', function() {
                 qvars = qvars || {};
                 qvars[qitems[0].trim()] = decodeURIComponent(qitems[1].trim());
             }
-        }     
+            if (qvars) { parts.query = qvars; }
+        }    
 
         // add trailing slash 
         if (!path.endsWith('/')) { path += '/'; }
@@ -157,15 +159,10 @@ Class('', function() {
             }
         }
 
-        // overwrite/merge params with qvars (if there were conflict)
-        if (qvars) {
-            parts.params = Object.assign(parts.params, qvars);
-        }
-
         // done
         return parts;
     };
-    this.buildUrl = (path, params) => {
+    this.buildUrl = (path, params, query) => {
         // start with base
         let url = this.base;
         if (!url.endsWith('/')) { url += '/'; }
@@ -206,6 +203,8 @@ Class('', function() {
         // where it is expected that params.id property will 
         // have what to replace in this
         // If param var not found in path, it will be added as query string
+        // but ideally query string should be passed separately as object 
+        let isQueryAdded = false;
         if (params) {
             let idx = -1,
                 qs = '?',
@@ -217,11 +216,30 @@ Class('', function() {
                     if (idx !== -1) { 
                         url = replaceAll(url, `:${p}`, value); 
                     } else {
-                        qs += `${p}=${value}`;
+                        qs += `${p}=${value}&`;
                     }
                 }
             }
-            if (qs !== '?') { url += qs; }            
+            if (qs !== '?') { 
+                isQueryAdded = true;
+                if (qs.endsWith('&')) { qs = qs.substr(0, qs.length - 1); } // remove last &
+                url += qs; 
+            }            
+        }
+
+        // query
+        if (query) {
+            let qs = isQueryAdded ? '&' : '?',
+                value = null;
+            for(let p in query) {
+                if (query.hasOwnProperty(p)) {
+                    value = encodeURIComponent(query[p].toString());
+                    qs += `${p}=${value}&`;
+                }
+            }
+            if (qs !== '?' || qs !== '&') {
+                url += qs; // add these as well
+            }               
         }
 
         // done
@@ -253,41 +271,29 @@ Class('', function() {
         defaultHandler = handler;
     };
     this.run = async (url) => {
+        // get path parts
+        let parts = this.breakUrl(url);
+
         // default ctx
         let ctx = {
             $url: url,
-            $page: '',
             $route: '',
             $handler: '',
             $mount: '',
-            $locale: '',
-            $version: '',
-            $path: '',
-            $stop: false,  // if no further processing to be done
-            $redirect: {
-                route: '',
-                params: {}
-            } // route to redirect to
+            $path: parts.path | '',
+            $locale: parts.locale || '',
+            $version: parts.version || '',
+            $params: parts.params || {},
+            $query: parts.query || {}
         };
 
-        // get path parts
-        let parts = this.breakUrl(url),
-            params = parts.params;
-        
-        // enrich ctx
-        ctx.$locale = parts.locale;
-        ctx.$version = parts.version;
+        // enrich ctx for route
         if (parts.route) {
             ctx.$route = parts.route.name;
             ctx.$handler = parts.route.handler;
             ctx.$mount = parts.route.mount;
             ctx.$path = parts.route.path;
-        } else {
-            ctx.$path = parts.path;
         }
-
-        // add params to ctx
-        if (params) { ctx = Object.assign(ctx, params); }
 
         try {
             if (parts.handler) {
@@ -303,13 +309,6 @@ Class('', function() {
                 
                 // run handler
                 await parts.handler(ctx);
-
-                // redirect if configured
-                if (ctx.$redirect.route) {
-                    let route = ctx.$redirect,
-                        params = ctx.$params;
-                    setTimeout(() => { AppDomain.host().redirect(route, params) }, 0);
-                }                
             } else {
                 // run default handler 
                 await defaultHandler(ctx);

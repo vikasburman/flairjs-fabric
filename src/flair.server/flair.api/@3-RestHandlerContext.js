@@ -13,13 +13,21 @@ Class('', HandlerContext, function() {
         this.res = res;
     };
 
-    // ideally these should not be used directly
+    // ideally this should not be used directly
     $$('readonly');
     this.req = null;
 
-    // ideally these should not be used directly
+    // ideally this should not be used directly
     $$('readonly');
     this.res = null;
+
+    this.redirect = (route, status, params, query) => {
+        this.setData('redirect-route', route);
+        this.setData('redirect-status', status || 302); // Found
+        this.setData('redirect-params', params || null);
+        this.setData('redirect-query', query || null);
+        throw Exception.Redirect(route);
+    };
 
     // response specific items
     this.isHeadersSent = { get: () => { return this.res.headersSent; } }
@@ -39,6 +47,7 @@ Class('', HandlerContext, function() {
     this.isStale = { get: () => { return this.req.stale; } }
     this.isFresh = { get: () => { return this.req.fresh; } }
     this.isSecure = { get: () => { return this.req.secure; } }
+    this.url = { get: () => { return this.req.url; } }
     this.originalUrl = { get: () => { return this.req.originalUrl; } }
     this.baseUrl = { get: () => { return this.req.baseUrl; } }
     this.route = { get: () => { return this.req.route; } }
@@ -49,7 +58,7 @@ Class('', HandlerContext, function() {
     this.protocol = { get: () => { return this.req.protocol; } }
     this.path = { get: () => { return this.req.path; } }
     this.method = { get: () => { return this.req.method; } }
-    this.body = { get: () => { return this.req.method; } }
+    this.body = { get: () => { return this.req.body; } }
     this.params = { get: () => { return this.req.params; } }
     this.query = { get: () => { return this.req.query; } }
     this.isContentType = (mimeType) => { 
