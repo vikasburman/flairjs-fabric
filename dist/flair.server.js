@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.60.3
- *  Mon, 23 Sep 2019 23:30:54 GMT
+ *  Version: 0.60.4
+ *  Mon, 23 Sep 2019 23:36:08 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -76,7 +76,7 @@
         
     await (async () => { // type: ./src/flair.server/flair.api/@1-AttachmentPayload.js
         const { Payload } = await ns('flair.app');
-        const path = require('path');
+        const path = await include('path');
         
         /**
          * @name AttachmentPayload
@@ -424,7 +424,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.3","lupdate":"Mon, 23 Sep 2019 23:30:54 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.4","lupdate":"Mon, 23 Sep 2019 23:36:08 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

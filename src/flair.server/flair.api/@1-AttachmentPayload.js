@@ -1,5 +1,5 @@
 const { Payload } = await ns('flair.app');
-const path = require('path');
+const path = await include('path');
 
 /**
  * @name AttachmentPayload
