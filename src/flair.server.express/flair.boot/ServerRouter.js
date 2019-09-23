@@ -44,9 +44,9 @@ Class('', Bootware, function() {
             const autoSend = () => {
                 if (result.isError) {
                     if (ctx.isAjaxReq) {
-                        res.status(result.status).json(result.toObject()).end(); 
+                        res.status(result.status).json(result.value()).end(); 
                     } else {
-                        res.status(result.status).send(result.toString()).end();
+                        res.status(result.status).send(result.value()).end();
                     }
                 } else {
                     // add res headers
@@ -57,18 +57,18 @@ Class('', Bootware, function() {
                     } else if (is(result.data, BinaryPayload)) { // https://expressjs.com/en/api.html#res.end AND // https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
                         res.end(result.data.buffer, result.data.encoding, result.data.cb);
                     } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
-                        res.status(result.status).jsonp(result.toObject()).end();    
+                        res.status(result.status).jsonp(result.value()).end();    
                     } else if (is(result.data, Payload)) { // extended but otherwise normal payload
                         if (ctx.isAjaxReq) {
-                            res.status(result.status).json(result.toObject()).end(); 
+                            res.status(result.status).json(result.value()).end(); 
                         } else {
-                            res.status(result.status).send(result.toString()).end();
+                            res.status(result.status).send(result.value()).end();
                         }   
                     } else { // normal payload
                         if (ctx.isAjaxReq) {
-                            res.status(result.status).json(result.toObject()).end(); 
+                            res.status(result.status).json(result.value()).end(); 
                         } else {
-                            res.status(result.status).send(result.toString()).end();
+                            res.status(result.status).send(result.value()).end();
                         }
                     }
                 }
@@ -89,9 +89,8 @@ Class('', Bootware, function() {
                 // https://expressjs.com/en/api.html#res.format
                 res.format({
                     'auto': autoSend,
-                    'text/plain': () => { res.status(result.status).send(result.toString()).end(); },
-                    'text/html': () => { res.status(result.status).send(result.toString()).end(); },
-                    'application/json': () => { res.status(result.status).json(result.toObject()).end(); },
+                    'text/*': () => { res.status(result.status).send(result.value()).end(); },
+                    'application/json': () => { res.status(result.status).json(result.value()).end(); },
                     'default': autoSend
                 });
             }
@@ -151,7 +150,7 @@ Class('', Bootware, function() {
                     //      'default' must be defined to handle a catch-anything-else scenario 
                     //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
                     let routeHandler = chooseRouteHandler(route);
-                    if (!routeHandler) { throw new Exception.NotDefined(route); }
+                    if (!routeHandler) { throw Exception.NotDefined(route); }
                     return await runHandler(route, routeHandler, verb, ctx); // it can throw any error including 100 (to continue to next handler)
                 };
 
@@ -193,7 +192,7 @@ Class('', Bootware, function() {
 
         // catch 404 for this mount and forward to error handler
         mount.app.use((req, res, next) => {
-            var err = new Exception.NotFound(req.originalUrl);
+            var err = Exception.NotFound(req.originalUrl);
             next(err);
         });
 

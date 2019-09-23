@@ -59,7 +59,7 @@ Class('', function() {
             this.message += `\n${error.stack || ''}`;
         }
         this.data = payload || null;
-        if (Array.isError(resHeaders)) { this.resHeaders.push(...resHeaders); }
+        if (Array.isArray(resHeaders)) { this.resHeaders.push(...resHeaders); }
     };
 
     $$('private');
@@ -80,22 +80,12 @@ Class('', function() {
     $$('readonly');
     this.resHeaders = [];
 
-    this.toObject = () => {
+    this.value = () => {
         return Object.freeze({
             isError: this.isError,
             status: this.status,
             message: this.message,
             data: (this.isExtendedPayload ? this.data.data : this.data)
         });
-    };
-    this.toString = () => {
-        return this.value().toString();
-    };
-    this.value = () => {
-        if (this.isError) {
-            return this.message;
-        } else {
-            return (this.isExtendedPayload ? this.data.data : this.data);
-        }
     };
 });

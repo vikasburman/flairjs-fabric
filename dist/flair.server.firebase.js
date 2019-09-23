@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.firebase
  *     File: ./flair.server.firebase.js
- *  Version: 0.59.81
- *  Sun, 22 Sep 2019 23:44:04 GMT
+ *  Version: 0.59.85
+ *  Mon, 23 Sep 2019 01:27:46 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -152,7 +152,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.firebase","file":"./flair.server.firebase{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.81","lupdate":"Sun, 22 Sep 2019 23:44:04 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.FirebaseApp"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.firebase","file":"./flair.server.firebase{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:46 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.FirebaseApp"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

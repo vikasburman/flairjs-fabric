@@ -8,7 +8,7 @@ const path = require('path');
 Class('', Payload, function() {
     $$('override');
     this.construct = (base, file, status, mimeType, displayName, options, cb, resHeaders) => {
-        if (!this.file) { throw new Exception.InvalidArgument('file'); }
+        if (!this.file) { throw Exception.InvalidArgument('file'); }
         base(file, status, mimeType, resHeaders);
         
         this.file = file || ''; 

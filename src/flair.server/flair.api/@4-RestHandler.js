@@ -34,7 +34,7 @@ Class('', Handler, function() {
                 error = err;
             }
         } else {
-            error = new Exception.NotImplemented(`Verb ${verb} is not implemented.`);
+            error = Exception.NotImplemented(`Verb ${verb} is not implemented.`);
         }
 
         // get well formed result

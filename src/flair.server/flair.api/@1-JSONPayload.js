@@ -7,7 +7,7 @@ const { Payload } = await ns('flair.app');
 Class('', Payload, function() {
     $$('override');
     this.construct = (base, data, status, isJsonP, resHeaders) => {
-        if (!data)  { throw new Exception.InvalidArgument('data'); }
+        if (!data)  { throw Exception.InvalidArgument('data'); }
         base(data, status, 'application/json', resHeaders);
 
         this.isJsonP = isJsonP || false;

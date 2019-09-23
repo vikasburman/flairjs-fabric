@@ -22,7 +22,7 @@ Class('', Bootware, function() {
                 // name: standard header name
                 // value: header value
                 for(let header of resHeaders) {
-                    res.setHeader(header.name, header.value);
+                    res.set(header.name, header.value);
                 }
                 next();
             });         

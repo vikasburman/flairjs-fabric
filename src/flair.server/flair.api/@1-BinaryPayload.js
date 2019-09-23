@@ -7,7 +7,7 @@ const { Payload } = await ns('flair.app');
 Class('', Payload, function() {
     $$('override');
     this.construct = (base, data, status, mimeType, filename, cb, resHeaders) => {
-        if (!data)  { throw new Exception.InvalidArgument('data'); }
+        if (!data)  { throw Exception.InvalidArgument('data'); }
 
         this.buffer = Buffer.from(data, this.encoding);
         

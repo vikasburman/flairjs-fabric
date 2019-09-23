@@ -2,7 +2,6 @@
  * @name HandlerContext
  * @description HandlerContext data
  */
-$$('abstract');
 Class('', function() {
     $$('virtual');
     this.construct = () => { };
@@ -17,6 +16,6 @@ Class('', function() {
         this.setData('redirect-path', path);
         this.setData('redirect-status', status || 302); // Found
         this.setData('redirect-additionalInfo', additionalInfo || null);
-        throw new Exception.Redirect(path);
+        throw Exception.Redirect(path);
     };
 });

@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.59.81
- *  Sun, 22 Sep 2019 23:44:04 GMT
+ *  Version: 0.59.85
+ *  Mon, 23 Sep 2019 01:27:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -86,7 +86,7 @@
 		Class('AttachmentPayload', Payload, function() {
             $$('override');
             this.construct = (base, file, status, mimeType, displayName, options, cb, resHeaders) => {
-                if (!this.file) { throw new Exception.InvalidArgument('file'); }
+                if (!this.file) { throw Exception.InvalidArgument('file'); }
                 base(file, status, mimeType, resHeaders);
                 
                 this.file = file || ''; 
@@ -122,7 +122,7 @@
 		Class('BinaryPayload', Payload, function() {
             $$('override');
             this.construct = (base, data, status, mimeType, filename, cb, resHeaders) => {
-                if (!data)  { throw new Exception.InvalidArgument('data'); }
+                if (!data)  { throw Exception.InvalidArgument('data'); }
         
                 this.buffer = Buffer.from(data, this.encoding);
                 
@@ -156,7 +156,7 @@
 		Class('JSONPayload', Payload, function() {
             $$('override');
             this.construct = (base, data, status, isJsonP, resHeaders) => {
-                if (!data)  { throw new Exception.InvalidArgument('data'); }
+                if (!data)  { throw Exception.InvalidArgument('data'); }
                 base(data, status, 'application/json', resHeaders);
         
                 this.isJsonP = isJsonP || false;
@@ -301,7 +301,7 @@
                         error = err;
                     }
                 } else {
-                    error = new Exception.NotImplemented(`Verb ${verb} is not implemented.`);
+                    error = Exception.NotImplemented(`Verb ${verb} is not implemented.`);
                 }
         
                 // get well formed result
@@ -410,7 +410,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.81","lupdate":"Sun, 22 Sep 2019 23:44:04 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.85","lupdate":"Mon, 23 Sep 2019 01:27:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.api.AttachmentPayload","flair.api.BinaryPayload","flair.api.JSONPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.api.RestInterceptor","flair.boot.NodeEnv"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
