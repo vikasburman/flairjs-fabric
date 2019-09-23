@@ -119,7 +119,6 @@ Class('', Bootware, function() {
                     //      routingContext can be any value that represents a routing context for whatever situation 
                     //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
                     //      basis it will pick required handler from here some examples of handlers can be:
-                    //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
                     //          free | freemium | full  - if some routing is to be based on license model
                     //          anything else
                     //      'default' must be defined to handle a catch-anything-else scenario 

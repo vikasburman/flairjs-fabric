@@ -73,7 +73,6 @@ Class('', Bootware, [IDisposable], function() {
     };
 
     $$('virtual');
-    $$('async');
     this.getRoutingContext = noop;
 
     $$('override');
