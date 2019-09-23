@@ -116,7 +116,7 @@ Class('', function() {
             for(let item of items) {
                 qitems = item.split('=');
                 qvars = qvars || {};
-                qvars[qitems[0].trim()] = decodeURIComponent(qitems[1].trim());
+                qvars[qitems[0].trim()] = qitems[1] ? decodeURIComponent(qitems[1].trim()) : '';
             }
             if (qvars) { parts.query = qvars; }
         }    
@@ -237,7 +237,7 @@ Class('', function() {
                     qs += `${p}=${value}&`;
                 }
             }
-            if (qs !== '?' || qs !== '&') {
+            if (!(qs === '?' || qs === '&')) {
                 url += qs; // add these as well
             }               
         }
@@ -280,7 +280,7 @@ Class('', function() {
             $route: '',
             $handler: '',
             $mount: '',
-            $path: parts.path | '',
+            $path: parts.path || '',
             $locale: parts.locale || '',
             $version: parts.version || '',
             $params: parts.params || {},

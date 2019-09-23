@@ -35,7 +35,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     $$('protected');
     $$('override');
     $$('sealed');
-    this.loadView = async (base, ctx) => {
+    this.onView = async (base, ctx) => {
         this.$static.outView = this.$static.currentView;
         this.$static.inView = this;
 

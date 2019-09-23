@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.59.92
- *  Mon, 23 Sep 2019 04:33:57 GMT
+ *  Version: 0.60.0
+ *  Mon, 23 Sep 2019 05:12:59 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -885,8 +885,8 @@
             };
         
             $$('override');
-            this.run = async (base, verb, ctx) => {
-                base(verb, ctx);
+            this.run = async (base, ctx) => {
+                base('view', ctx); // verb is always view
         
                 // run the handler - verb will always be 'view', so no need to check
                 await this.onView(ctx); // no result - instead ui will be navigated to // it can throw any error
@@ -947,7 +947,7 @@
             $$('protected');
             $$('override');
             $$('sealed');
-            this.loadView = async (base, ctx) => {
+            this.onView = async (base, ctx) => {
                 this.$static.outView = this.$static.currentView;
                 this.$static.inView = this;
         
@@ -1428,7 +1428,7 @@
                     for(let item of items) {
                         qitems = item.split('=');
                         qvars = qvars || {};
-                        qvars[qitems[0].trim()] = decodeURIComponent(qitems[1].trim());
+                        qvars[qitems[0].trim()] = qitems[1] ? decodeURIComponent(qitems[1].trim()) : '';
                     }
                     if (qvars) { parts.query = qvars; }
                 }    
@@ -1549,7 +1549,7 @@
                             qs += `${p}=${value}&`;
                         }
                     }
-                    if (qs !== '?' || qs !== '&') {
+                    if (!(qs === '?' || qs === '&')) {
                         url += qs; // add these as well
                     }               
                 }
@@ -1592,7 +1592,7 @@
                     $route: '',
                     $handler: '',
                     $mount: '',
-                    $path: parts.path | '',
+                    $path: parts.path || '',
                     $locale: parts.locale || '',
                     $version: parts.version || '',
                     $params: parts.params || {},
@@ -2124,7 +2124,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.59.92","lupdate":"Mon, 23 Sep 2019 04:33:57 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.0","lupdate":"Mon, 23 Sep 2019 05:12:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
