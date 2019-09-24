@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.6
- *  Tue, 24 Sep 2019 05:32:43 GMT
+ *  Version: 0.60.7
+ *  Tue, 24 Sep 2019 05:41:20 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -50,7 +50,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":false,"isExpress":false,"isServerless":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"ports":{},"bootwares":[],"assemblies":[]},"di":{"container":{}},"api":{"connections":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":false,"isExpress":false,"isServerless":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"ports":[],"bootwares":[],"assemblies":[]},"di":{"container":{}},"api":{"connections":{}}}');
     let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -904,7 +904,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.6","lupdate":"Tue, 24 Sep 2019 05:32:43 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.7","lupdate":"Tue, 24 Sep 2019 05:41:20 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
