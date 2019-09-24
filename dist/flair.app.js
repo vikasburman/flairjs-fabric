@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.8
- *  Tue, 24 Sep 2019 05:55:30 GMT
+ *  Version: 0.60.9
+ *  Tue, 24 Sep 2019 16:45:51 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -513,21 +513,26 @@
                 const addHeadElements = (list, elName) => {
                     let el = null,
                         value = null,
-                        isAdded = false,
+                        isDefined = false,
+                        isEmpty = false,
                         head = window.document.getElementsByTagName('head')[0];
         
                     for(let item of list) {
                         el = document.createElement(elName);
-                        isAdded = false;
+                        isDefined = false;
+                        isEmpty = false;
                         for(let key in item) { 
                             if (item.hasOwnProperty(key)) {
                                 value = item[key];
-                                if (['src', 'href'].indexOf(key) !== -1) { value = which(value); }
-                                isAdded = true;
+                                if (['src', 'href'].indexOf(key) !== -1) { 
+                                    value = which(value); 
+                                    if (!value) { isEmpty = true; } // if src/href not defined, no point adding it
+                                }
+                                isDefined = true;
                                 el.setAttribute(key, value); 
                             }
                         }
-                        if (isAdded) { head.appendChild(el); }
+                        if (isDefined && !isEmpty) { head.appendChild(el); }
                     }
                 };
                 const loadScripts = async () => { // scripts loading is supported only on client ui environment
@@ -904,7 +909,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.8","lupdate":"Tue, 24 Sep 2019 05:55:30 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.9","lupdate":"Tue, 24 Sep 2019 16:45:51 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

@@ -16,21 +16,26 @@ Class('', function() {
         const addHeadElements = (list, elName) => {
             let el = null,
                 value = null,
-                isAdded = false,
+                isDefined = false,
+                isEmpty = false,
                 head = window.document.getElementsByTagName('head')[0];
 
             for(let item of list) {
                 el = document.createElement(elName);
-                isAdded = false;
+                isDefined = false;
+                isEmpty = false;
                 for(let key in item) { 
                     if (item.hasOwnProperty(key)) {
                         value = item[key];
-                        if (['src', 'href'].indexOf(key) !== -1) { value = which(value); }
-                        isAdded = true;
+                        if (['src', 'href'].indexOf(key) !== -1) { 
+                            value = which(value); 
+                            if (!value) { isEmpty = true; } // if src/href not defined, no point adding it
+                        }
+                        isDefined = true;
                         el.setAttribute(key, value); 
                     }
                 }
-                if (isAdded) { head.appendChild(el); }
+                if (isDefined && !isEmpty) { head.appendChild(el); }
             }
         };
         const loadScripts = async () => { // scripts loading is supported only on client ui environment
