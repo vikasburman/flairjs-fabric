@@ -3,12 +3,7 @@
         "mainEl": "main",
         "viewEl": "view",
         "transition": "",
-        "handler": "flair.ui.VueView",
-        "layout": {
-            "client": "",
-            "server": "",
-            "static": ""
-        },
+        "layout": "",
         "routes": {
             "home": "",
             "notfound": ""

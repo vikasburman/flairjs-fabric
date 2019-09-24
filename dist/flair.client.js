@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.60.4
- *  Mon, 23 Sep 2019 23:36:08 GMT
+ *  Version: 0.60.6
+ *  Tue, 24 Sep 2019 05:32:44 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -50,7 +50,7 @@
     AppDomain.loadPathOf('flair.client', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"view":{"mainEl":"main","viewEl":"view","transition":"","handler":"flair.ui.VueView","layout":{"client":"","server":"","static":""},"routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
+    let settings = JSON.parse('{"view":{"mainEl":"main","viewEl":"view","transition":"","layout":"","routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
     let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
@@ -74,21 +74,7 @@
     
     // assembly closure: types (start)
         
-    await (async () => { // type: ./src/flair.client/flair.ui/@1-ViewTypes.js
-        /**
-         * @name ViewTypes
-         * @description ViewTypes enum
-         */
-        $$('ns', 'flair.ui');
-		Enum('ViewTypes', function() {
-            this.Client = 0;
-            this.Static = 2;
-        });
-        
-    })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@2-ViewComponentMembers.js
-        const { ViewTypes } = await ns('flair.ui');
-        
         /**
          * @name ViewComponentMembers
          * @description View Component Members
@@ -339,7 +325,7 @@
             };  
             
             $$('private');
-            this.autoWire = async (type, def, $type, viewType, viewEl) => {
+            this.autoWire = async (type, def, $type, viewEl) => {
                 let value = def,
                     _value = null,
                     res = null;
@@ -426,13 +412,9 @@
                 const autoWireLayout = async () => {
                     await autoWire1(); 
         
-                    // 2: pick from settings default value for current view type, if not defined
+                    // 2: pick from settings default value, if not defined
                     if (!value) { 
-                        switch(viewType) {
-                            case ViewTypes.Client: value = settings.view.layout.client || ''; break;
-                            case ViewTypes.Server: value = settings.view.layout.server || ''; break;
-                            case ViewTypes.Static: value = settings.view.layout.static || ''; break;
-                        }
+                        value = settings.view.layout;
                     }
         
                    await autoWire3('html');
@@ -858,7 +840,6 @@
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@4-ViewHandler.js
         const { Handler } = await ns('flair.app');
-        const { ViewTypes } = await ns('flair.ui');
         
         /**
          * @name ViewHandler
@@ -869,19 +850,6 @@
             $$('override');
             this.construct = (base, route) => {
                 base(route);
-        
-                // view type
-                if (!route.type || (route.type && route.type === -1)) { 
-                    this.type = ViewTypes.Client;
-                } else {
-                    this.type = route.type;
-                }
-                this.handler = route.handler;
-        
-                // static (or server in future)
-                if (!this.type === ViewTypes.Client) {
-                    this.connection = route.connection || '';
-                }
             };
         
             $$('override');
@@ -892,15 +860,6 @@
                 await this.onView(ctx); // no result - instead ui will be navigated to // it can throw any error
             };
         
-            $$('readonly');
-            this.type = -1;
-        
-            $$('protected');
-            this.handler = '';
-        
-            $$('protected');
-            this.connection = '';
-        
             $$('protected');
             $$('virtual');
             $$('async');
@@ -909,7 +868,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@5-View.js
-        const { ViewTypes, ViewHandler, ViewTransition, ViewComponentMembers } = await ns('flair.ui');
+        const { ViewHandler, ViewTransition, ViewComponentMembers } = await ns('flair.ui');
         
         /**
          * @name View
@@ -1012,7 +971,7 @@
             $$('protected');
             this.assembleView = async ($mainType) => { // eslint-disable-line no-unused-vars
                 const autoWireAndLoadLayout = async () => {
-                    this.layout = await this.autoWire('layout', this.layout, $mainType, this.type, viewEl);
+                    this.layout = await this.autoWire('layout', this.layout, $mainType, viewEl);
                 };
                 const mergeLayoutWithView = async () => {
                     // a layout html is defined as (sample):
@@ -1130,83 +1089,11 @@
                         this.viewTransition = '';
                     }
                 }
-                
-                // static file localization
-                if (this.type === ViewTypes.Static) {
-                    // static file can be localized as well, hence its name can be:
-                    // ./path/file.xml : Will be resolved with ./path/file.xml
-                    // OR 
-                    // ./path/file{.en}.xml <-- yes: {.en} is a placeholder for chosen locale: Will be resolved with ./path/file.<locale>.xml
-                    if (this.handler.indexOf('{.en}') !== -1) {
-                        this.handler = this.handler.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
-                    }
-                }
-        
-                // static file / server view name, base and paths
-                if (this.type === ViewTypes.Static || this.type === ViewTypes.Server) {
-                    // in this case it will be considered from route's qualified name
-                    // which essentially tells which assembly this static file / server view is part of and hence 
-                    // assets and locales are to be here available locally itself
-        
-                    // TODO: In case of static view - set path to config.assetRoots.content
-                    // baseName
-                    if (!this.baseName) {
-                        let typeQualifiedName = this.route.name,
-                            baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1);
-                        this.baseName = baseName;
-                    }
-        
-                    // basePath
-                    if (!this.basePath) {
-                        this.basePath = this.route.getAssembly().assetsPath();
-                    }            
-        
-                    // locale path
-                    if (!this.localePath) {
-                        this.localePath = this.route.getAssembly().localesPath(); // note: this is without any specific locale
-                    }
-                }
             };
         
             $$('protected');
             $$('virtual');
             this.afterInit = async ($mainType) => { // eslint-disable-line no-unused-vars
-                const loadStaticFile = async () => {
-                    let clientFileLoader =  Port('clientFile'),
-                        fileContent = '';
-                    try {
-                        fileContent = await clientFileLoader(this.handler); // it can be any file: html, md, txt -- all will be loaded as html and content will be extracted
-                    } catch (err) {
-                        fileContent = err.toString();
-                    }
-                    return fileContent;
-                };
-                const loadServerView = async () => {
-                    let serverContent = '';
-                     try {
-                        // TODO: read server view
-                        // make a fetch call after building the url to fetch - server will be configured to handle this route 
-                        // via ViewHandler which will return the text of html
-                         // TODO:
-                    } catch (err) {
-                        serverContent = err.toString();
-                    }
-                    return serverContent;
-                };
-        
-                // static/server file/view load support
-                // fetch, parse and load content here
-                let rawContent = '';
-                if (this.type === ViewTypes.Static) { 
-                    rawContent = await loadStaticFile(); 
-                } else if (this.type === ViewTypes.Server) { 
-                    rawContent = await loadServerView(); 
-                }
-                let content = this.extractContent(rawContent);
-                if (content.style) { this.style = content.style; }
-                if (content.data) { this.data = content.data; }
-                if (content.html) { this.html = content.html; }
-                if (content.title) { this.title = content.title; }
             };
         
             $$('static');
@@ -1268,6 +1155,7 @@
             $$('protected');
             this.viewComponentObject = null;
         
+            // TODO: check view's loadView is gone, so why it is here
             $$('protected');
             this.loadView = async (ctx, el) => {
                  // initialize in context of this type
@@ -1634,7 +1522,7 @@
     })();    
     await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
         const { Bootware, HandlerResult } = await ns('flair.app');
-        const { ViewTypes, ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
+        const { ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
         
         /**
          * @name ClientRouter
@@ -1692,10 +1580,6 @@
                     }
                 };
                 const runHandler = async (route, routeHandler, ctx) => {
-                    if (route.type && route.type !== -1 && route.type !== ViewTypes.Client) {
-                        routeHandler = settings.view.handler || ''; // use default handler
-                    }
-        
                     // get route handler
                     let RouteHandler = as(await include(routeHandler), ViewHandler);
                     if (RouteHandler) {
@@ -2124,7 +2008,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.4","lupdate":"Mon, 23 Sep 2019 23:36:08 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewTypes","flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.6","lupdate":"Tue, 24 Sep 2019 05:32:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

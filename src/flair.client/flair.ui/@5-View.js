@@ -1,4 +1,4 @@
-const { ViewTypes, ViewHandler, ViewTransition, ViewComponentMembers } = await ns('flair.ui');
+const { ViewHandler, ViewTransition, ViewComponentMembers } = await ns('flair.ui');
 
 /**
  * @name View
@@ -100,7 +100,7 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
     $$('protected');
     this.assembleView = async ($mainType) => { // eslint-disable-line no-unused-vars
         const autoWireAndLoadLayout = async () => {
-            this.layout = await this.autoWire('layout', this.layout, $mainType, this.type, viewEl);
+            this.layout = await this.autoWire('layout', this.layout, $mainType, viewEl);
         };
         const mergeLayoutWithView = async () => {
             // a layout html is defined as (sample):
@@ -218,83 +218,11 @@ Class('', ViewHandler, [ViewComponentMembers], function() {
                 this.viewTransition = '';
             }
         }
-        
-        // static file localization
-        if (this.type === ViewTypes.Static) {
-            // static file can be localized as well, hence its name can be:
-            // ./path/file.xml : Will be resolved with ./path/file.xml
-            // OR 
-            // ./path/file{.en}.xml <-- yes: {.en} is a placeholder for chosen locale: Will be resolved with ./path/file.<locale>.xml
-            if (this.handler.indexOf('{.en}') !== -1) {
-                this.handler = this.handler.replace('{.en}', '.' + this.locale()); // whatever locale is currently selected
-            }
-        }
-
-        // static file / server view name, base and paths
-        if (this.type === ViewTypes.Static || this.type === ViewTypes.Server) {
-            // in this case it will be considered from route's qualified name
-            // which essentially tells which assembly this static file / server view is part of and hence 
-            // assets and locales are to be here available locally itself
-
-            // TODO: In case of static view - set path to config.assetRoots.content
-            // baseName
-            if (!this.baseName) {
-                let typeQualifiedName = this.route.name,
-                    baseName = typeQualifiedName.substr(typeQualifiedName.lastIndexOf('.') + 1);
-                this.baseName = baseName;
-            }
-
-            // basePath
-            if (!this.basePath) {
-                this.basePath = this.route.getAssembly().assetsPath();
-            }            
-
-            // locale path
-            if (!this.localePath) {
-                this.localePath = this.route.getAssembly().localesPath(); // note: this is without any specific locale
-            }
-        }
     };
 
     $$('protected');
     $$('virtual');
     this.afterInit = async ($mainType) => { // eslint-disable-line no-unused-vars
-        const loadStaticFile = async () => {
-            let clientFileLoader =  Port('clientFile'),
-                fileContent = '';
-            try {
-                fileContent = await clientFileLoader(this.handler); // it can be any file: html, md, txt -- all will be loaded as html and content will be extracted
-            } catch (err) {
-                fileContent = err.toString();
-            }
-            return fileContent;
-        };
-        const loadServerView = async () => {
-            let serverContent = '';
-             try {
-                // TODO: read server view
-                // make a fetch call after building the url to fetch - server will be configured to handle this route 
-                // via ViewHandler which will return the text of html
-                 // TODO:
-            } catch (err) {
-                serverContent = err.toString();
-            }
-            return serverContent;
-        };
-
-        // static/server file/view load support
-        // fetch, parse and load content here
-        let rawContent = '';
-        if (this.type === ViewTypes.Static) { 
-            rawContent = await loadStaticFile(); 
-        } else if (this.type === ViewTypes.Server) { 
-            rawContent = await loadServerView(); 
-        }
-        let content = this.extractContent(rawContent);
-        if (content.style) { this.style = content.style; }
-        if (content.data) { this.data = content.data; }
-        if (content.html) { this.html = content.html; }
-        if (content.title) { this.title = content.title; }
     };
 
     $$('static');

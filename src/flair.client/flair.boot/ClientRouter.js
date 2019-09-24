@@ -1,5 +1,5 @@
 const { Bootware, HandlerResult } = await ns('flair.app');
-const { ViewTypes, ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
+const { ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
 
 /**
  * @name ClientRouter
@@ -56,10 +56,6 @@ Class('', Bootware, function() {
             }
         };
         const runHandler = async (route, routeHandler, ctx) => {
-            if (route.type && route.type !== -1 && route.type !== ViewTypes.Client) {
-                routeHandler = settings.view.handler || ''; // use default handler
-            }
-
             // get route handler
             let RouteHandler = as(await include(routeHandler), ViewHandler);
             if (RouteHandler) {

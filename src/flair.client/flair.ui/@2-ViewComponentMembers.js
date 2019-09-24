@@ -1,5 +1,3 @@
-const { ViewTypes } = await ns('flair.ui');
-
 /**
  * @name ViewComponentMembers
  * @description View Component Members
@@ -249,7 +247,7 @@ Mixin('', function() {
     };  
     
     $$('private');
-    this.autoWire = async (type, def, $type, viewType, viewEl) => {
+    this.autoWire = async (type, def, $type, viewEl) => {
         let value = def,
             _value = null,
             res = null;
