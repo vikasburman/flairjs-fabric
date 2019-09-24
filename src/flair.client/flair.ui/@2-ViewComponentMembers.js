@@ -336,13 +336,9 @@ Mixin('', function() {
         const autoWireLayout = async () => {
             await autoWire1(); 
 
-            // 2: pick from settings default value for current view type, if not defined
+            // 2: pick from settings default value, if not defined
             if (!value) { 
-                switch(viewType) {
-                    case ViewTypes.Client: value = settings.view.layout.client || ''; break;
-                    case ViewTypes.Server: value = settings.view.layout.server || ''; break;
-                    case ViewTypes.Static: value = settings.view.layout.static || ''; break;
-                }
+                value = settings.view.layout;
             }
 
            await autoWire3('html');

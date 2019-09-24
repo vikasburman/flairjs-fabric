@@ -44,6 +44,7 @@ Class('', [ViewComponentMembers], function() {
     $$('protected');
     this.viewComponentObject = null;
 
+    // TODO: check view's loadView is gone, so why it is here
     $$('protected');
     this.loadView = async (ctx, el) => {
          // initialize in context of this type

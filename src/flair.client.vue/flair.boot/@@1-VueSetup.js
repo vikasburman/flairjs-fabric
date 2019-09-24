@@ -16,59 +16,49 @@ Class('', Bootware, function() {
     this.boot = async (base) => {
         base();
 
-        // setup Vue configuration, if any
-        // TODO: (if any)
-
-        // load Vue extensions
-        // each extension in array is defined as:
-        // { "name": "name", "type": "ns.typeName", "options": {} }
-        let extensions = settings.vue.extensions,
+        let list = null,
+            extType = null,
             ExtType = null,
             ext = null;
-        for (let item of extensions) {
-            if (!item.name) { throw Exception.OperationFailed(`Extension name cannot be empty. (${item.type})`); }
-            if (!item.type) { throw Exception.OperationFailed(`Extension type cannot be empty. (${item.name})`); }
-            
-            ExtType = await include(item.type);
-            if (as(ExtType, VueComponent)) { // global components
-                try {
-                    ext = new ExtType();
-                    if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
-                    Vue.component(item.name, await ext.view('', null, null, item.options)); // register globally (without any context)
-                } catch (err) {
-                    throw Exception.OperationFailed(`Component registration failed. (${item.type})`, err);
+
+        // setup Vue configuration
+        // TODO: (if any)
+
+        // combined extensions (inbuilt and configured)
+        // which() will pick as:
+        // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+        // here definition is { "name": "name", "type": "ns.typeName", "options": {} }
+        list = [
+        ];
+        list.push(...settings.vue.extensions);
+
+        for(let item of list) {
+            if (item.name && item.type) { 
+                extType = which(item.type);
+                if (extType) {
+                    try {
+                        ExtType = await include(extType);
+                        ext = new ExtType();
+
+                        if (as(extType, VueComponent)) { // global components
+                            if (Vue.options.components[item.name]) { throw Exception.Duplicate(`Component already registered. (${item.name})`); } // check for duplicate
+                            Vue.component(item.name, await ext.view('', null, null, item.options)); // register globally (without any context)
+                        } else if (as(extType, VueDirective)) { // global directives
+                            Vue.directive(item.name, await ext.factory()); 
+                        } else if (as(ExtType, VueFilter)) { // filters
+                            // TODO: prevent duplicate filter registration, as done for components
+                            Vue.filter(item.name, await ext.factory());                            
+                        } else if (as(ExtType, VueMixin)) { // mixins
+                            Vue.mixin(await ext.factory());
+                        } else if (as(ExtType, VuePlugin)) { // plugins
+                            Vue.use(await ext.factory(), item.options || {});
+                        } else {
+                            throw Exception.InvalidArgument(extType);
+                        }                        
+                    } catch (err) {
+                        throw Exception.OperationFailed(`Extension registration failed. (${extType})`, err);
+                    }
                 }
-            } else if (as(ExtType, VueDirective)) { // directives
-                try {
-                    ext = new ExtType();
-                    Vue.directive(item.name, await ext.factory()); // register globally
-                } catch (err) {
-                    throw Exception.OperationFailed(`Directive registration failed. (${item.type})`, err);
-                }
-            } else if (as(ExtType, VueFilter)) { // filters
-                try {
-                    ext = new ExtType();
-                    // TODO: prevent duplicate filter registration, as done for components
-                    Vue.filter(item.name, await ext.factory());
-                } catch (err) {
-                    throw Exception.OperationFailed(`Filter registration failed. (${item.type})`, err);
-                }                
-            } else if (as(ExtType, VueMixin)) { // mixins
-                try {
-                    ext = new ExtType();
-                    Vue.mixin(await ext.factory());
-                } catch (err) {
-                    throw Exception.OperationFailed(`Mixin registration failed. (${item.type})`, err);
-                }
-            } else if (as(ExtType, VuePlugin)) { // plugins
-                try {
-                    ext = new ExtType(item.name);
-                    Vue.use(await ext.factory(), item.options || {});
-                } catch (err) {
-                    throw Exception.OperationFailed(`Plugin registration failed. (${item.type})`, err);
-                }
-            } else { // unknown
-                throw Exception.InvalidArgument(item.type);
             }
         }
     };   

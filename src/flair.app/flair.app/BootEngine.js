@@ -1,4 +1,4 @@
-const { Bootware } = await ns('flair.app');
+const { Bootware, IPortHandler } = await ns('flair.app');
 
 /**
  * @name BootEngine
@@ -9,140 +9,178 @@ Class('', function() {
     this.start = async function() {
         let allBootwares = [],
             mountSpecificBootwares = [];
+        
         const loadConfiguredEnv = async () => {
             env.x(settings.boot.env); // add it once as freezed
         };
+        const addHeadElements = (list, elName) => {
+            let el = null,
+                value = null,
+                isAdded = false,
+                head = window.document.getElementsByTagName('head')[0];
+
+            for(let item of list) {
+                el = document.createElement(elName);
+                isAdded = false;
+                for(let key in item) { 
+                    if (item.hasOwnProperty(key)) {
+                        value = item[key];
+                        if (['src', 'href'].indexOf(key) !== -1) { value = which(value); }
+                        isAdded = true;
+                        el.setAttribute(key, value); 
+                    }
+                }
+                if (isAdded) { head.appendChild(el); }
+            }
+        };
         const loadScripts = async () => { // scripts loading is supported only on client ui environment
             if (env.isClient && !env.isWorker) {
-                // add scripts one by one, they will end loading at different times
+                // combined scripts (inbuilt and configured)
+                // which() will pick as: (from src and href keys only)
+                // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                // here definition is an object having key-value pairs representing attribute and values of a script element in html header
+                // e.g., { async: true, src: "./something" }
+                // note: key-value pairs must match to a valid definition of script type element
+                // it adds script one by one, they will end loading at different times
                 // but since these are added, DOMReady will eventually ensure everything is loaded
                 // before moving ahead
-                let headTag = window.document.getElementsByTagName("head")[0];
-                for(let item of settings.boot.scripts) {
-                    let script = document.createElement("script");
-                    for(let key in item) { // item should have same attributes that are required for script tag
-                        if (key === 'src') {
-                            script[key] = which(item[key]);
-                        } else {
-                            script[key] = item[key];
-                        }
-                    }
-                    headTag.appendChild(script);
-                }
+                let list = [
+                ];
+                list.push(...settings.boot.scripts);
+                addHeadElements(list, 'script');
             }
         };
         const loadLinks = async () => { // links loading is supported only on client ui environment
             if (env.isClient && !env.isWorker) {
-                // add links one by one, they will end loading at different times
+                // combined links (inbuilt and configured)
+                // which() will pick as: (from src and href keys only)
+                // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                // here definition is an object having key-value pairs representing attribute and values of a link element in html header
+                // e.g., { rel: "icon", href: "/favicon.ico" type: "image/x-icon" }
+                // note: key-value pairs must match to a valid definition of link of that type
+                // it adds links one by one, they will end loading at different times
                 // but since these are added, DOMReady will eventually ensure everything is loaded
                 // before moving ahead
-                let headTag = window.document.getElementsByTagName("head")[0];
-                for(let item of settings.boot.links) {
-                    let link = document.createElement("link");
-                    for(let key in item) { // item should have same attributes that are required for link tag
-                        if (key === 'href') {
-                            link[key] = which(item[key]);
-                        } else {
-                            link[key] = item[key];
-                        }                        
-                    }
-                    headTag.appendChild(link);
-                }
+                let list = [
+                ];
+                list.push(...settings.boot.links);
+                addHeadElements(list, 'link');
             }
         };   
         const loadMeta = async () => {
             if (env.isClient && !env.isWorker) {
-                // add meta one by one,
-                let headTag = window.document.getElementsByTagName("head")[0];
-                for(let item of settings.boot.meta) {
-                    let meta = document.createElement("meta");
-                    for(let key in item) { // item should have same attributes that are required for meta tag
-                        meta[key] = item[key];
-                    }
-                    headTag.appendChild(meta);
-                }
+                // combined meta (inbuilt and configured)
+                // which() will pick as: (from src and href keys only)
+                // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                // here definition is an object having key-value pairs representing attribute and values of a meta element in html header
+                // e.g., { name: "viewport", content: "width=device-width, initial-scale=1" }
+                // note: key-value pairs must match to a valid definition of meta of that type
+                let list = [
+                    { name: 'BuiltWith', content: `${flair.info.name}` }
+                ];
+                list.push(...settings.boot.meta);
+                addHeadElements(list, 'meta');
             }
         };              
         const loadPreambles = async () => {
-            // load preambles
-            let preambleLoader = null;
-            for(let item of settings.boot.preambles) {
-                // get simple script file
-                item = which(item); // server/client specific version (although this will not be the case, generally)
-                if (item) { // in case no item is set for either server/client
+            let list = null,
+                preambleLoader = null;
+
+            // combined preambles (inbuilt and configured)
+            // which() will pick as:
+            // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+            // here definition is just the root folder of assembly group/module, where preamble.js would exists for that set of assemblies
+            list = [
+            ];
+            list.push(...settings.boot.preambles);
+            
+            for(let item of list) {
+                item = which(item);
+                if (item) {
                     // suffix preamble.js
                     if (!item.endsWith('/')) { item += '/'; }
                     item += 'preamble{.min}.js'; // as bundled preambles can be minified too
 
-                    // this loads it as a function which is called here
+                    // this loads it as a module and then call the exported function with flair instance
                     preambleLoader = await include(item);
                     await preambleLoader(flair);
                 }
             }
         };
         const loadAssemblies = async () => {
-            const loadAssembly = async (item) => {
-                // item can be:
-                //      "path/fileName.js"
-                //      "path/fileName.js | path/fileName.js" <-- server/client
-                //      "envProp: path/fileName.js"
-                //      "envProp: path/fileName.js | envProp: path/fileName.js" <-- server/client
-                item = which(item); // server/client specific version (although this will not be the case, generally)
-                if (item.indexOf(':') !== -1) {
-                    let items = item.split(':'),
-                        envProp = items[0].trim();
-                    item = items[1].trim();
-                    if (env[envProp] || env.x()[envProp]) { // if envProp is defined either at root env or at extended env, and true
-                        await AppDomain.context.loadAssembly(item);
-                    }
-                } else { // no condition
-                    await AppDomain.context.loadAssembly(item);
-                }
-            };
+            // combined assemblies (inbuilt and configured)
+            // which() will pick as:
+            // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+            // here definition is just the file and path name of the assembly to be loaded
+            let list = [
+                "./flair.app{.min}.js",
+                "./flair.server{.min}.js | ./flair.client{.min}.js",
+                "isExpress: ./flair.server.express{.min}.js | isVue: ./flair.client.vue{.min}.js",
+                "isFirebase: ./flair.server.firebase{.min}.js | x"
+            ];
+            list.push(...settings.boot.assemblies);
 
-            // load core assemblies first
-            for(let item of settings.boot.coreAssemblies) { 
-                await loadAssembly(item);
-            }
-
-            // load other defined assemblies
-            for(let item of settings.boot.assemblies) { 
-                await loadAssembly(item);
+            for(let item of list) {
+                item = which(item);
+                if (item) { await AppDomain.context.loadAssembly(item); }
             }
         };
         const loadPortHandlers = async () => {
-            // load custom port-handlers
-            let portHandler = null,
-                portHandlerType = '';
-            for(let item in settings.boot.ports) {
-                // get port handler (qualified type-nane of a type that complies to IPortHandler (having .factory function))
-                portHandlerType = which(settings.boot.ports[item]); // server/client specific version (although this will not be the case, generally)
-                if (portHandlerType) { // in case no item is set for either server/client
-                    portHandler = new (await include(portHandlerType))(); 
-                    Port.connect(item, portHandler.factory);
+            let list = null,
+                phType = null,
+                ph = null;
+
+            // combined port handlers (inbuilt and configured)
+            // which() will pick as:
+            // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+            // here definition is just the qualified type name which implements IPortHandler
+            // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
+            // all inbuilt settings can be overwritten if need be 
+
+            list = [
+            ];
+            list.push(...settings.boot.ports);
+
+            for(let item of list) {
+                item = which(item);
+                if (item) {
+                    phType = await include(phType);
+                    ph = as(new phType(), IPortHandler);
+                    if (ph) { Port.connect(ph.port, ph.factory); }
                 }
             }
         };
         const loadBootwares = async () => {
-            // load bootwares
-            let Item = null,
-                Bw = null,
+            let list = null,
+                bwType = null,
                 bw = null;
-            for(let item of settings.boot.bootwares) {
-                // get bootware
-                item = which(item); // server/client specific version
-                if (item) { // in case no item is set for either server/client
-                    Item = await include(item);
-                    if (Item && typeof Item !== 'boolean') {
-                        Bw = as(Item, Bootware);
-                        if (Bw) { // if boot
-                            bw = new Bw(); 
-                            allBootwares.push(bw); // push in array, so boot and ready would be called for them
-                            if (bw.info.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
-                                mountSpecificBootwares.push(bw);
-                            }
-                        } // else ignore, this was something else, like a module which was just loaded, for no reason (either by mistake or to take advantage of this load cycle)
-                    } // else ignore, as it could just be a file loaded which does not return anything, for no reason (either by mistake or to take advantage of this load cycle)
+                
+
+            // combined bootwares (inbuilt and configured)
+            // which() will pick as:
+            // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+            // here definition is just the qualified type name which is derived from Bootware type
+            list = [
+                "flair.boot.NodeEnv ~ x | x",
+                "isExpress: flair.boot.Middlewares ~ x | x",
+                "flair.boot.ResHeaders ~ x | x",
+                "flair.boot.DIContainer",
+                "x | isVue: flair.boot.VueSetup ~ x",
+                "flair.boot.ServerRouter ~ x | flair.boot.ClientRouter | x"
+            ];
+            list.push(...settings.boot.bootwares);
+
+            for(let item of list) {
+                item = which(item);
+                if (item) {
+                    bwType = as(await include(item), Bootware);
+                    if (bwType) {
+                        bw = new bwType(); 
+                        allBootwares.push(bw); // push in array, so boot and ready would be called for them
+                        if (bw.info.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
+                            mountSpecificBootwares.push(bw);
+                        }
+                    }
                 }
             }
         };
