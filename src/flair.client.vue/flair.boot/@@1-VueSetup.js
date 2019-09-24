@@ -26,7 +26,7 @@ Class('', Bootware, function() {
 
         // combined extensions (inbuilt and configured)
         // which() will pick as:
-        // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+        // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
         // here definition is { "name": "name", "type": "ns.typeName", "options": {} }
         list = [
         ];
