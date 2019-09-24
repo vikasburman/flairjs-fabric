@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.7
- *  Tue, 24 Sep 2019 05:41:20 GMT
+ *  Version: 0.60.8
+ *  Tue, 24 Sep 2019 05:55:30 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -534,7 +534,7 @@
                     if (env.isClient && !env.isWorker) {
                         // combined scripts (inbuilt and configured)
                         // which() will pick as: (from src and href keys only)
-                        // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                        // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                         // here definition is an object having key-value pairs representing attribute and values of a script element in html header
                         // e.g., { async: true, src: "./something" }
                         // note: key-value pairs must match to a valid definition of script type element
@@ -551,7 +551,7 @@
                     if (env.isClient && !env.isWorker) {
                         // combined links (inbuilt and configured)
                         // which() will pick as: (from src and href keys only)
-                        // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                        // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                         // here definition is an object having key-value pairs representing attribute and values of a link element in html header
                         // e.g., { rel: "icon", href: "/favicon.ico" type: "image/x-icon" }
                         // note: key-value pairs must match to a valid definition of link of that type
@@ -568,7 +568,7 @@
                     if (env.isClient && !env.isWorker) {
                         // combined meta (inbuilt and configured)
                         // which() will pick as: (from src and href keys only)
-                        // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                        // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                         // here definition is an object having key-value pairs representing attribute and values of a meta element in html header
                         // e.g., { name: "viewport", content: "width=device-width, initial-scale=1" }
                         // note: key-value pairs must match to a valid definition of meta of that type
@@ -585,7 +585,7 @@
         
                     // combined preambles (inbuilt and configured)
                     // which() will pick as:
-                    // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                     // here definition is just the root folder of assembly group/module, where preamble.js would exists for that set of assemblies
                     list = [
                     ];
@@ -607,13 +607,13 @@
                 const loadAssemblies = async () => {
                     // combined assemblies (inbuilt and configured)
                     // which() will pick as:
-                    // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                     // here definition is just the file and path name of the assembly to be loaded
                     let list = [
                         "./flair.app{.min}.js",
                         "./flair.server{.min}.js | ./flair.client{.min}.js",
-                        "isExpress: ./flair.server.express{.min}.js | isVue: ./flair.client.vue{.min}.js",
-                        "isFirebase: ./flair.server.firebase{.min}.js | x"
+                        "isExpress::./flair.server.express{.min}.js | isVue::./flair.client.vue{.min}.js",
+                        "isFirebase::./flair.server.firebase{.min}.js | x"
                     ];
                     list.push(...settings.boot.assemblies);
         
@@ -629,7 +629,7 @@
         
                     // combined port handlers (inbuilt and configured)
                     // which() will pick as:
-                    // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                     // here definition is just the qualified type name which implements IPortHandler
                     // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
                     // all inbuilt settings can be overwritten if need be 
@@ -655,14 +655,14 @@
         
                     // combined bootwares (inbuilt and configured)
                     // which() will pick as:
-                    // envProp: mainThreadOnServer{.min}.xyz ~ envProp: workerThreadOnServer{.min}.xyz | envProp: mainThreadOnClient{.min}.xyz ~ envProp: workerThreadOnClient{.min}.xyz
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                     // here definition is just the qualified type name which is derived from Bootware type
                     list = [
                         "flair.boot.NodeEnv ~ x | x",
-                        "isExpress: flair.boot.Middlewares ~ x | x",
+                        "isExpress::flair.boot.Middlewares ~ x | x",
                         "flair.boot.ResHeaders ~ x | x",
                         "flair.boot.DIContainer",
-                        "x | isVue: flair.boot.VueSetup ~ x",
+                        "x | isVue::flair.boot.VueSetup ~ x",
                         "flair.boot.ServerRouter ~ x | flair.boot.ClientRouter | x"
                     ];
                     list.push(...settings.boot.bootwares);
@@ -904,7 +904,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.7","lupdate":"Tue, 24 Sep 2019 05:41:20 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.8","lupdate":"Tue, 24 Sep 2019 05:55:30 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.BootEngine","flair.app.IPortHandler","flair.app.attr.Cache","flair.boot.DIContainer"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
