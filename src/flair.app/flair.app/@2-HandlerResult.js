@@ -80,12 +80,18 @@ Class('', function() {
     $$('readonly');
     this.resHeaders = [];
 
-    this.value = () => {
-        return Object.freeze({
-            isError: this.isError,
-            status: this.status,
-            message: this.message,
-            data: (this.isExtendedPayload ? this.data.data : this.data)
-        });
+    this.value = (isMinimal) => {
+        if (isMinimal && !this.isError) {
+            return Object.freeze({
+                data: (this.isExtendedPayload ? this.data.data : this.data)
+            });
+        } else { // either not minimal or there is an error
+            return Object.freeze({
+                isError: this.isError,
+                status: this.status,
+                message: this.message,
+                data: (this.isExtendedPayload ? this.data.data : this.data)
+            });
+        }
     };
 });

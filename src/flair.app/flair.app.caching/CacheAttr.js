@@ -16,7 +16,7 @@ Class('', Attribute, function() {
         this.cacheHandler = Port('cacheHandler');
 
         // constraints
-        this.constraints = '(class || struct) && (func && async) && !(timer || on || @fetch || @cache)';
+        this.constraints = '(class || struct) && (func && async) && !(timer || on || @cache)';
     };
 
     $$('readonly');

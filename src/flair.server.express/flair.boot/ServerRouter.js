@@ -63,14 +63,14 @@ Class('', Bootware, function() {
                         res.end(result.data.buffer, result.data.encoding, result.data.cb);
                     } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
                         isCompleted = true;
-                        res.status(result.status).jsonp(result.value()).end();    
+                        res.status(result.status).jsonp(result.value(true)).end(); // since there is no error, send minimal packet
                     }
                 }
                 if (result.isError || !isCompleted) { // error or normal payload or plain but extended payload cases 
                     if (ctx.isAjaxReq) {
-                        res.status(result.status).json(result.value()).end(); 
+                        res.status(result.status).json(result.value(!result.isError)).end(); // get minimal data, when there is no error
                     } else {
-                        res.status(result.status).send(result.value()).end();
+                        res.status(result.status).send(result.value(!result.isError)).end(); // get minimal data, when there is no error
                     }
                 }
             }

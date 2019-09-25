@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.60.21
- *  Wed, 25 Sep 2019 01:50:34 GMT
+ *  Version: 0.60.22
+ *  Wed, 25 Sep 2019 04:57:45 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -524,14 +524,14 @@
                                 res.end(result.data.buffer, result.data.encoding, result.data.cb);
                             } else if (is(result.data, JSONPayload)) { // https://expressjs.com/en/api.html#res.jsonp
                                 isCompleted = true;
-                                res.status(result.status).jsonp(result.value()).end();    
+                                res.status(result.status).jsonp(result.value(true)).end(); // since there is no error, send minimal packet
                             }
                         }
                         if (result.isError || !isCompleted) { // error or normal payload or plain but extended payload cases 
                             if (ctx.isAjaxReq) {
-                                res.status(result.status).json(result.value()).end(); 
+                                res.status(result.status).json(result.value(!result.isError)).end(); // get minimal data, when there is no error
                             } else {
-                                res.status(result.status).send(result.value()).end();
+                                res.status(result.status).send(result.value(!result.isError)).end(); // get minimal data, when there is no error
                             }
                         }
                     }
@@ -650,7 +650,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.21","lupdate":"Wed, 25 Sep 2019 01:50:34 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.22","lupdate":"Wed, 25 Sep 2019 04:57:45 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

@@ -30,6 +30,9 @@ Class('', Attribute, function() {
     $$('readonly');
     this.path = null;
 
+    $$('readonly');
+    this.dataType = null;    
+
     $$('private');
     this.fetchHandler = null;
 

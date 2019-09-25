@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.21
- *  Wed, 25 Sep 2019 01:50:32 GMT
+ *  Version: 0.60.22
+ *  Wed, 25 Sep 2019 04:57:42 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -66,9 +66,7 @@
     // assembly closure: init (end)
     
     // assembly closure: global functions (start)
-    // assembly globals
-    const onLoadComplete = (asm) => { // eslint-disable-line no-unused-vars
-    }; 
+    // (not defined)
     // assembly closure: global functions (end)
     
     // set assembly being loaded
@@ -447,13 +445,19 @@
             $$('readonly');
             this.resHeaders = [];
         
-            this.value = () => {
-                return Object.freeze({
-                    isError: this.isError,
-                    status: this.status,
-                    message: this.message,
-                    data: (this.isExtendedPayload ? this.data.data : this.data)
-                });
+            this.value = (isMinimal) => {
+                if (isMinimal && !this.isError) {
+                    return Object.freeze({
+                        data: (this.isExtendedPayload ? this.data.data : this.data)
+                    });
+                } else { // either not minimal or there is an error
+                    return Object.freeze({
+                        isError: this.isError,
+                        status: this.status,
+                        message: this.message,
+                        data: (this.isExtendedPayload ? this.data.data : this.data)
+                    });
+                }
             };
         });
         
@@ -561,6 +565,9 @@
             
             $$('readonly');
             this.path = null;
+        
+            $$('readonly');
+            this.dataType = null;    
         
             $$('private');
             this.fetchHandler = null;
@@ -794,7 +801,7 @@
                 this.cacheHandler = Port('cacheHandler');
         
                 // constraints
-                this.constraints = '(class || struct) && (func && async) && !(timer || on || @fetch || @cache)';
+                this.constraints = '(class || struct) && (func && async) && !(timer || on || @cache)';
             };
         
             $$('readonly');
@@ -1248,7 +1255,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.21","lupdate":"Wed, 25 Sep 2019 01:50:32 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.boot.DIContainer","flair.app.IPortHandler","flair.app.ajax.FetchAttr","flair.app.ajax.FetchPort","flair.app.caching.CacheAttr","flair.app.caching.CachePort","flair.app.BootEngine"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.22","lupdate":"Wed, 25 Sep 2019 04:57:42 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.boot.DIContainer","flair.app.IPortHandler","flair.app.ajax.FetchAttr","flair.app.ajax.FetchPort","flair.app.caching.CacheAttr","flair.app.caching.CachePort","flair.app.BootEngine"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
