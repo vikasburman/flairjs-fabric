@@ -124,7 +124,7 @@ Class('', Attribute, function() {
 
         // decorated function
         return async function(...args) {
-            let _api = (apiArgs) => { // eslint-disable-line no-unused-vars
+            let api = (apiArgs) => { // eslint-disable-line no-unused-vars
                 // returns a promise with an abort() if abortable is set 
                 // apiArgs can be:
                 // {
@@ -167,11 +167,11 @@ Class('', Attribute, function() {
             };
 
             // inject configured api caller in args as first arg
-            // TODO - how to identify where to inject api function
-  
+            let mergedArgs = [new InjectedArg(api)];
+            if (args) { mergedArgs.push(...args); }
 
             // call member
-            return await member(...args);
+            return await member(...mergedArgs);
         };
     };
 });

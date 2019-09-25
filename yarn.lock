@@ -177,9 +177,9 @@
   integrity sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA==
 
 "@types/node@*":
-  version "12.7.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.5.tgz#e19436e7f8e9b4601005d73673b6dc4784ffcc2f"
-  integrity sha512-9fq4jZVhPNW8r+UYKnxF1e2HkDWOWKM5bC2/7c9wPV835I0aOrVbS/Hw/pWPk2uKrNXQqg9Z959Kz+IYDd5p3w==
+  version "12.7.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.7.tgz#f9bd8c00fa9e1a8129af910fc829f6139c397d6c"
+  integrity sha512-4jUncNe2tj1nmrO/34PsRpZqYVnRV1svbU78cKhuQKkMntKB/AmdLyGgswcZKjFHEHGpiY8pVD8CuVI55nP54w==
 
 "@types/unist@*", "@types/unist@^2.0.0":
   version "2.0.3"
@@ -209,9 +209,9 @@ acorn-jsx@^5.0.2:
   integrity sha512-tiNTrP1MP0QrChmD2DdupCr6HWSFeKVw5d/dHTu4Y7rkAkRhU/Dt7dphAfIUyxtHpl/eBVip5uTNSpQJHylpAw==
 
 acorn@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.0.0.tgz#26b8d1cd9a9b700350b71c0905546f64d1284e7a"
-  integrity sha512-PaF/MduxijYYt7unVGRuds1vBC9bFxbNf+VWqhOClfdgy7RlVkQqt610ig1/yxTgsDIfW1cWDel5EBbOy3jdtQ==
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.1.0.tgz#949d36f2c292535da602283586c2477c57eb2d6c"
+  integrity sha512-kL5CuoXA/dgxlBbVrflsflzQ3PAas7RYZB52NOm/6839iVYJgKMJ3cQJD+t2i5+qFa8h3MDpEOJiS64E8JLnSQ==
 
 aggregate-error@^3.0.0:
   version "3.0.0"
@@ -1033,9 +1033,9 @@ emoji-regex@^8.0.0:
   integrity sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==
 
 end-of-stream@^1.0.0:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.4.2.tgz#080bf028edce8312b665ff18ea03cae0c3ac0ecb"
-  integrity sha512-gUSUszrsxlDnUbUwEI9Oygyrk4ZEWtVaHQc+uZHphVeNxl+qeqMV/jDWoTkjN1RmGlZ5QWAP7o458p/JMlikQg==
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.4.3.tgz#9db9861620e47283cd49513be9c344f339ec5153"
+  integrity sha512-cbNhPFS6MlYlWTGncSiDYbdqKhwWFy7kNeb1YSOG6K65i/wPTkLVCJQj0hXA4j0m5Da+hBWnqopEnu1FFelisQ==
   dependencies:
     once "^1.4.0"
 
@@ -1375,10 +1375,10 @@ find-up@^2.0.0:
   dependencies:
     locate-path "^2.0.0"
 
-flairjs-cli@^0.62.2:
-  version "0.62.2"
-  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.62.2.tgz#4a09704a40bfb4f3aec7fc2781867dbbcd29d59e"
-  integrity sha512-NRTEbAOlG1roJFfGdFAdDXS3sO+a4Km736BlT0Cb3Zy6PBoutxVD8X32qyzytVFybqveP5zcfHZFNc3X9IpWbg==
+flairjs-cli@^0.62.5:
+  version "0.62.5"
+  resolved "https://registry.yarnpkg.com/flairjs-cli/-/flairjs-cli-0.62.5.tgz#9487060c6bbbd75773e073072502a2c1ac8460b2"
+  integrity sha512-5szPT2bJcub8OHU2+boIU+kcgNFgVAVDt9JbraqxLiYBqs8IE4uuS9smQU+9mxnmx61BMx/8ajqsKiL/UM0BcA==
   dependencies:
     clean-css "^4.2.1"
     copy-dir "^1.2.0"
@@ -1397,10 +1397,10 @@ flairjs-cli@^0.62.2:
     stylelint "^10.1.0"
     uglify-es "^3.3.9"
 
-flairjs@^0.59.66:
-  version "0.59.66"
-  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.59.66.tgz#bbb7b0ce63545654f9ca7f954b57442014f48205"
-  integrity sha512-1JFNo2ly5jjaBTPC11/rAKtrRCJxNx/eGIKFpRjomp82BWqAiqVr9Yg6+HeMAJwuW6QTdzGfT0YO0cud3ZXU2g==
+flairjs@^0.59.71:
+  version "0.59.71"
+  resolved "https://registry.yarnpkg.com/flairjs/-/flairjs-0.59.71.tgz#6d0244153b32f231d8c41f93c8d0255bdfa26142"
+  integrity sha512-/uDPDkB1UowuPwATNeKlbHE86ucz179u42v6ZQlxQim8k6PZdRdp0vLJpM5MzkSqhWyI127LmhkdtgT3gxoSoQ==
 
 flat-cache@^2.0.1:
   version "2.0.1"

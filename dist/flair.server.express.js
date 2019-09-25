@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server.express
  *     File: ./flair.server.express.js
- *  Version: 0.60.18
- *  Wed, 25 Sep 2019 00:20:55 GMT
+ *  Version: 0.60.20
+ *  Wed, 25 Sep 2019 01:13:38 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -31,7 +31,7 @@
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
-    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, attr, bring, Container, include, Port, on, post, telemetry,
+    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, attr, InjectedArg, bring, Container, include, Port, on, post, telemetry,
             Reflector, Serializer, Tasks, as, is, isDefined, isComplies, isDerivedFrom, isAbstract, isSealed, isStatic, isSingleton, isDeprecated,
             isImplements, isInstanceOf, isMixed, getAssembly, getAttr, getContext, getResource, getRoute, getType, ns, getTypeOf,
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
@@ -650,7 +650,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.18","lupdate":"Wed, 25 Sep 2019 00:20:55 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server.express","file":"./flair.server.express{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.20","lupdate":"Wed, 25 Sep 2019 01:13:38 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerHost","flair.boot.Middlewares","flair.boot.ResHeaders","flair.boot.ServerRouter"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
