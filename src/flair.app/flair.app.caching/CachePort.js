@@ -9,7 +9,7 @@ Class('', [IPortHandler], function() {
     this.construct = () => {
         this.port = 'cacheHandler';
         this.interface = ['get', 'set', 'remove'];
-        Port.define(this.port, this.interface, this.cacheHandler);
+        Port.define(this.port, this.interface, this.factory);
     };
 
     $$('readonly');

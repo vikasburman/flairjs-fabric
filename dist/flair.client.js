@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.60.20
- *  Wed, 25 Sep 2019 01:13:37 GMT
+ *  Version: 0.60.21
+ *  Wed, 25 Sep 2019 01:50:33 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -346,7 +346,7 @@
                     
                     // 3: pick namespaces asset file, if need
                     if (!value) {
-                        _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                        _value = which(`./${config.assetRoots[type]}/${$type.getName()}{.min}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>{.min}.<ext>
                         if ($type.getAssembly().hasAsset(_value)) {
                             value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                         }
@@ -358,7 +358,7 @@
                         // possibilities are:
                         //  res:<qualifiedResourceName> -- embedded resource
                         //  ast:<fileName> -- asset file name and path
-                        //  './file.<type>{.min}.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file.<ext>
+                        //  './file.<type>{.min}.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file{.min}.<ext>
                         //  './path/file{.min}.<ext>' --> -- (first as: asset file name and path, then if not found in context of root)
         
                         // 3.1: resource
@@ -381,7 +381,11 @@
         
                         // 3.3: namespaced asset <ext> file
                         if (value.startsWith('./') && (value.endsWith(`.${type}.${ext}`) || value.endsWith(`.${type}{.min}.${ext}`))) {
-                            _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                            if (value.indexOf('{.min}') !== -1) {
+                                _value = which(`./${config.assetRoots[type]}/${$type.getName()}{.min}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                            } else {
+                                _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                            }
                             if ($type.getAssembly().hasAsset(_value)) {
                                 value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                             } else {
@@ -414,7 +418,7 @@
         
                     // 2: pick from settings default value, if not defined
                     if (!value) { 
-                        value = settings.view.layout;
+                        value = which(settings.view.layout);
                     }
         
                    await autoWire3('html');
@@ -2008,7 +2012,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.20","lupdate":"Wed, 25 Sep 2019 01:13:37 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.21","lupdate":"Wed, 25 Sep 2019 01:50:33 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

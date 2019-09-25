@@ -8,7 +8,6 @@ $$('sealed');
 Class('', [IPortHandler], function() {
     this.construct = () => {
         this.port = which('serverFetch | clientFetch');
-        this.factory = (env.isServer ? this.serverFetch : this.clientFetch);
         Port.define(this.port, this.factory);
     };
 

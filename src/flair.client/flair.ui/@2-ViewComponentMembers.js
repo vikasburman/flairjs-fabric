@@ -268,7 +268,7 @@ Mixin('', function() {
             
             // 3: pick namespaces asset file, if need
             if (!value) {
-                _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                _value = which(`./${config.assetRoots[type]}/${$type.getName()}{.min}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>{.min}.<ext>
                 if ($type.getAssembly().hasAsset(_value)) {
                     value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                 }
@@ -280,7 +280,7 @@ Mixin('', function() {
                 // possibilities are:
                 //  res:<qualifiedResourceName> -- embedded resource
                 //  ast:<fileName> -- asset file name and path
-                //  './file.<type>{.min}.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file.<ext>
+                //  './file.<type>{.min}.<ext>' --> ./<assemblyFolder>/<typeFolder>/<namespace>.file{.min}.<ext>
                 //  './path/file{.min}.<ext>' --> -- (first as: asset file name and path, then if not found in context of root)
 
                 // 3.1: resource
@@ -303,7 +303,11 @@ Mixin('', function() {
 
                 // 3.3: namespaced asset <ext> file
                 if (value.startsWith('./') && (value.endsWith(`.${type}.${ext}`) || value.endsWith(`.${type}{.min}.${ext}`))) {
-                    _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                    if (value.indexOf('{.min}') !== -1) {
+                        _value = which(`./${config.assetRoots[type]}/${$type.getName()}{.min}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                    } else {
+                        _value = which(`./${config.assetRoots[type]}/${$type.getName()}.${ext}`); // ./<knownAssetFolderType>/<namespace>.<type>.<ext>
+                    }
                     if ($type.getAssembly().hasAsset(_value)) {
                         value = $type.getAssembly().getAsset(_value); // gives all resolved asset file path 
                     } else {
@@ -336,7 +340,7 @@ Mixin('', function() {
 
             // 2: pick from settings default value, if not defined
             if (!value) { 
-                value = settings.view.layout;
+                value = which(settings.view.layout);
             }
 
            await autoWire3('html');
