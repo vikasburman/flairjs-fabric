@@ -1,4 +1,5 @@
 const { Bootware, IPortHandler } = await ns('flair.app');
+const { Attribute } = await ns();
 
 /**
  * @name BootEngine
@@ -141,20 +142,44 @@ Class('', function() {
             // here definition is just the qualified type name which implements IPortHandler
             // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
             // all inbuilt settings can be overwritten if need be 
-
             list = [
+                'flair.app.ajax.FetchPort',
+                'flair.app.caching.CachePort'
             ];
             list.push(...settings.boot.ports);
 
             for(let item of list) {
                 item = which(item);
                 if (item) {
-                    phType = await include(phType);
+                    phType = await include(item);
                     ph = as(new phType(), IPortHandler);
                     if (ph) { Port.connect(ph.port, ph.factory); }
                 }
             }
         };
+        const loadCustomAttributes = async () => {
+            let list = null,
+                caType = null;
+
+            // combined custom attributes (inbuilt and configured)
+            // which() will pick as:
+            // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+            // here definition is { name: "", type: "" } name and the qualified type name which is derived from Attribute
+            // note: it will ignore if a custom attribute with same name is already registered
+            list = [
+                { name: 'fetch', type: 'flair.app.ajax.FetchAttr' },
+                { name: 'cache', type: 'flair.app.caching.CacheAttr' }
+            ];
+            list.push(...settings.boot.attributes);
+
+            for(let item of list) {
+                item.type = which(item.type);
+                if (item.name && item.type && !Container.isRegistered(item.name)) {
+                    caType = as(await include(item.type), Attribute);
+                    if (caType) { Container.register(item.name, caType); }
+                }
+            }
+        };        
         const loadBootwares = async () => {
             let list = null,
                 bwType = null,
@@ -289,6 +314,7 @@ Class('', function() {
         await loadPreambles();
         await loadAssemblies();
         await loadPortHandlers();
+        await loadCustomAttributes();
         await loadBootwares();
         await boot();
         await start();

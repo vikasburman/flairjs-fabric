@@ -1,8 +1,8 @@
 const { Attribute } = await ns();
 
 /**
- * @name Cache
- * @description Caching custom attribute
+ * @name CacheAttr
+ * @description Cache custom attribute
  * $$('cache', { 'duration': 10000 }) OR $$('cache', 10000)
  */
 Class('', Attribute, function() {
