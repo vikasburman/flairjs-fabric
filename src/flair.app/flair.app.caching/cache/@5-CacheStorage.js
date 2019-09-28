@@ -2,7 +2,7 @@
 const { IPortHandler } = await ns();
 
 /**
- * @name CachePort
+ * @name CacheStorage
  * @description Default server/client caching definition
  */
 Class('', [IPortHandler], function() {
@@ -12,30 +12,28 @@ Class('', [IPortHandler], function() {
             // any external cache-storage can be applied by providing a custom cache-storage handler
             // in both server/client cases values are available across node process (if supported) (server) OR across browser tabs/windows (client)
 
-            let handler = null,
-                options = {};
+            let handler = null;
 
-            const CacheItem = function(value, ttl = options.stdTTL) {
-                let _value = value,
-                    _created = Date.now(),
-                    _expiry = _created + ttl;
+            const CacheItem = function(value, ttl, sliding) {
+                let _created = Date.now();
     
                 this.value = () => { return value || null; };
                 this.ttl = () => { return ttl; };
                 this.created = () => { return _created; };
-                this.isExpired = () => { return Date.now() > _expiry; };
-                this.toJSONString = () => { return JSON.stringify({ v: _value, t: ttl, c: _created }); };
+                this.isSliding = () => { return sliding; };
+                this.isExpired = () => { return Date.now() > (_created + ttl); };
+                this.toJSONString = () => { return JSON.stringify({ v: value, t: ttl, s: sliding, c: _created }); };
             };
             CacheItem.fromJSONString = (json) => {
                 if (!json) { return null; }
                 let _json = JSON.parse(json);
-                return new CacheItem(_json.value(), _json.created(), _json.ttl());
+                return new CacheItem(_json.value(), _json.created(), _json.ttl(), _json.isSliding());
             }; 
 
             if (env.isServer) {
                 // define handler and options
                 const NodeCache = require('node-cache');
-                options = {
+                let options = {
                     stdTTL: settings.boot.cache.TTL, // seconds
                     errorOnMissing: false,
                     checkperiod: 0, // no automatic deletion
@@ -53,12 +51,12 @@ Class('', [IPortHandler], function() {
                     let item = CacheItem.fromJSONString(handler.get(key));
                     if (!item) { return null; }
                     if (item.isExpired()) { await this.removeItem(key); return null; }
-                    if (settings.boot.cache.slidingTTL) { await this.setItem(key, item.value(), item.ttl()); }
+                    if (item.isSliding()) { await this.setItem(key, item.value(), item.ttl(), item.isSliding()); }
                     return item.value();
                 };
-                this.setItem = async (key, value, ttl = options.stdTTL) => {
+                this.setItem = async (key, value, ttl = settings.boot.cache.TTL, sliding = settings.boot.cache.slidingTTL) => {
                     if (!key) { return false; }
-                    let item = new CacheItem(value, ttl);
+                    let item = new CacheItem(value, ttl, sliding);
                     return handler.set(key, item.toJSONString());
                 };
                 this.removeItem = async (key) => {
@@ -69,10 +67,7 @@ Class('', [IPortHandler], function() {
                     return handler.keys();
                 };
             } else { // client
-                // define handler and options
-                options = {
-                    stdTTL: settings.boot.cache.TTL
-                };
+                // define handler
                 handler = window.localStorage;
 
                 // define calls
@@ -84,12 +79,12 @@ Class('', [IPortHandler], function() {
                     let item = CacheItem.fromJSONString(handler.getItem(key));
                     if (!item) { return null; }
                     if (item.isExpired()) { await this.removeItem(key); return null; }
-                    if (settings.boot.cache.slidingTTL) { await this.setItem(key, item.value(), item.ttl()); }
+                    if (item.isSliding()) { await this.setItem(key, item.value(), item.ttl(), item.isSliding()); }
                     return item.value();
                 };
-                this.setItem = async (key, value, ttl = options.stdTTL) => {
+                this.setItem = async (key, value, ttl = settings.boot.cache.TTL, sliding = settings.boot.cache.slidingTTL) => {
                     if(!key) { return false; }
-                    let item = new CacheItem(value, ttl);
+                    let item = new CacheItem(value, ttl, sliding);
                     return handler.setItem(key, item.toJSONString());
                 };
                 this.removeItem = async (key) => {

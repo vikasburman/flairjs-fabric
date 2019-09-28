@@ -220,7 +220,7 @@ Class('', function() {
             // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
             // here definition is just the qualified type name which is derived from Bootware type
             list = [
-                "flair.app.bw.SessionStorage | x"
+                "flair.app.bw.SessionStorage | x",
                 "flair.app.bw.NodeEnv ~ x | x",
                 "flair.app.bw.Middlewares ~ x | x",
                 "flair.app.bw.DIContainer",
