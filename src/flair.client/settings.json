@@ -29,13 +29,13 @@
                     { "name": "hashbang", "value": false },
                     { "name": "sensitive", "value": false }
                 ],
-                "interceptors": [
+                "middlewares": [
                 ]        
             },
             "after": {
                 "settings": [
                 ],
-                "interceptors": [
+                "middlewares": [
                 ]        
             }
         }

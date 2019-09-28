@@ -1,44 +1,34 @@
-const { Attribute } = await ns();
+const { IAttribute } = await ns();
 
 /**
  * @name FetchAttr
  * @description Fetch custom attribute
- * $$('fetch', 'api-connection-name', 'fetch-options-name', 'res-data-type', 'fetch-path');
+ * $$('fetch', 'connName', 'optsName', 'dataType', 'path');
+ * connName: name of settings structure inside settings.api.connections.<connectionName>
+ * optsName: name inside chosen connection inside settings.api.connections.<connectionName>.options.<optsName>
+ * dataType: response data type: 'text', 'json', 'buffer', 'form', 'blob'
+ * path: partial path of the resource where fetch call will go as per connection settings
  */
-Class('', Attribute, function() {
-    $$('override');
-    this.construct = (base, connectionName, optionName, dataType, path) => {
-        base(connectionName, optionName, path);
-
-        // config
-        this.connection = settings.api.connections[connectionName] || { options: {} };
-        this.options = this.connection.options[optionName] || {};
-        this.dataType = dataType || 'text';
-        this.path = path || '';
-        this.fetchHandler = Port(which('serverFetch | clientFetch'));
-
-        // constraints
-        this.constraints = '(class || struct) && (func && async) && !($inject || $on || @fetch)';
+$$('sealed');
+Class('', [IAttribute], function() {
+    this.construct = () => {
+        this.port = Port('fetchHandler');
     };
 
-    $$('readonly');
-    this.connection = null;
-
-    $$('readonly');
-    this.options = null;
-    
-    $$('readonly');
-    this.path = null;
-
-    $$('readonly');
-    this.dataType = null;    
-
     $$('private');
-    this.fetchHandler = null;
+    this.port = null;
 
-    $$('override');
-    this.decorateFunction = (base, typeName, memberName, member) => { // eslint-disable-line no-unused-vars
-        let _this = this;
+    $$('readonly');
+    this.name = 'fetch';
+
+    $$('readonly');
+    this.constraints = '(class || struct) && (func && async) && !($inject || $on || @fetch)';
+
+    this.decorateFunction = (typeName, memberName, member, connName, optsName, dataType, path) => {
+        let _this = this,
+            connection = settings.api.connections[connName] || { options: {} },
+            opts = connection.options[optsName] || {},
+            url = connection.url || '';
 
         let replaceIt = (url, key, value) => {
             if (url.indexOf(key) !== -1) {
@@ -46,9 +36,9 @@ Class('', Attribute, function() {
                 let _key = `/:${key}?`;
                 if (url.indexOf(_key) !== -1) { 
                     if (value) {
-                        url = replaceAll(url, key, `/${encodeURIComponent(value.toString())}`); 
+                        url = replaceAll(url, _key, `/${encodeURIComponent(value.toString())}`); 
                     } else {
-                        url = replaceAll(url, key, ''); // replace with empty, so even '/' is removed - collapsing the whole section
+                        url = replaceAll(url, _key, ''); // replace with empty, so even '/' is removed - collapsing the whole section
                     }
                 }
 
@@ -56,7 +46,7 @@ Class('', Attribute, function() {
                 _key = `/:${key}`;
                 if (url.indexOf(_key) !== -1) { 
                     if (value) {
-                        url = replaceAll(url, key, `/${encodeURIComponent(value.toString())}`); 
+                        url = replaceAll(url, _key, `/${encodeURIComponent(value.toString())}`); 
                     } else {
                         throw Exception.InvalidDefinition(key);
                     }
@@ -64,9 +54,7 @@ Class('', Attribute, function() {
             }
             return url;
         };       
-        let buildApiUrl = (apiArgs) => {
-            let url = _this.connection.url.trim(),
-                path = _this.path;
+        let composeApiUrl = (apiArgs) => {
             if (url) {
                 if (!url.endsWith('/')) { url += '/'; }
                 if (path) {
@@ -94,7 +82,7 @@ Class('', Attribute, function() {
                     // replace all values in apiArgs, leaving special keys: query, abortable and options
                     for(let key in apiArgs) {
                         if (apiArgs.hasOwnProperty(key) && ['query', 'abortable', 'options'].indexOf(key) === -1) {
-                            url = replaceAll(url, key, apiArgs[key]);
+                            url = replaceIt(url, key, apiArgs[key]);
                         }
                     }
 
@@ -142,20 +130,18 @@ Class('', Attribute, function() {
                 let apiPromise = new Promise((resolve, reject) => {
                     apiReject = reject;
 
-                    // build url
-                    let url = buildApiUrl(apiArgs);
+                    // compose api url
+                    composeApiUrl(apiArgs);
                     if (!url) { reject(Exception.InvalidDefinition(`${typeName}::${memberName}::fetch`)); return; }
 
                     // merge options with provided options
-                    let fetchOptions = deepMerge([_this.options, apiArgs.options || {}], true);
+                    let fetchOptions = deepMerge([opts, apiArgs.options || {}], true);
 
                     // set abort signal
                     if (apiAborter) { fetchOptions.signal = apiAborter.signal; }
 
                     // initiate fetch
-                    _this.fetchHandler(url, _this.dataType, fetchOptions).then((res) => {
-                        resolve(res);
-                    }).catch(reject);
+                    _this.port.fetch(url, dataType, fetchOptions).then(resolve).catch(reject);
                 });
 
                 // add abort method to promise for initiating the abort and rejection of promise

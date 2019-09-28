@@ -4,25 +4,9 @@
  */
 $$('abstract');
 Class('', function() {
-    /**  
-     * @name construct
-     * @arguments
-     *  name: string - name of the bootware
-     *  version: string - version number of the bootware
-    */
     $$('virtual');
-    this.construct = (name, version, isMountSpecific) => {
-        let args = Args('name: string, version: string',
-                        'name: string, version: string, isMountSpecific: boolean',
-                        'name: string, isMountSpecific: boolean',
-                        'name: string')(name, version, isMountSpecific); args.throwOnError(this.construct);
-
-        // set info
-        this.info = Object.freeze({
-            name: args.values.name || '',
-            version: args.values.version || '',
-            isMountSpecific: args.values.isMountSpecific || false
-        });
+    this.construct = (isMountSpecific) => {
+        this.isMountSpecific = isMountSpecific || false;
     };
 
     /**  
@@ -35,7 +19,7 @@ Class('', function() {
     this.boot = noop;
 
     $$('readonly');
-    this.info = null;
+    this.isMountSpecific = false;
 
     /**  
      * @name ready

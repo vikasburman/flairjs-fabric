@@ -7,11 +7,6 @@ const { Bootware } = await ns('flair.app');
 $$('sealed');
 Class('', Bootware, function() {
     $$('override');
-    this.construct = (base) => {
-        base('Node Server Environment');
-    };
-
-    $$('override');
     this.boot = async (base) => {
         base();
 

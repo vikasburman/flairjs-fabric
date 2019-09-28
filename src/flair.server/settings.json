@@ -5,5 +5,40 @@
         "options": {
             "overwrite": true
         }
-    }
+    },
+
+    "express": {
+        "server-http": {
+            "enable": false,
+            "port": 80,
+            "timeout": -1
+        },
+        "server-https": {
+            "enable": false,
+            "port": 443,
+            "timeout": -1,
+            "privateKey": "",
+            "publicCert": ""
+        }
+    },  
+    
+    "routing": {
+        "mounts": {
+            "main": "/"
+        },
+        "all": {
+            "before": {
+                "settings": [
+                ],
+                "middlewares": [
+                ]
+            },
+            "after": {
+                "settings": [
+                ],
+                "middlewares": [
+                ]
+            }
+        }
+    }    
 }

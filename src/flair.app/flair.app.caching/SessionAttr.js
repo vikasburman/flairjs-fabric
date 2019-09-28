@@ -1,27 +1,29 @@
 const { IAttribute } = await ns();
 
 /**
- * @name CacheAttr
- * @description Cache custom attribute
- * $$('cache')
- * $$('cache', ttl)
- * ttl: integer - time to live in seconds
+ * @name SessionAttr
+ * @description Session custom attribute
+ * $$('session')
  */
 $$('sealed');
 Class('', [IAttribute], function() {
     this.construct = () => {
-        this.port = Port('cacheStorage');
+        this.port = Port('sessionStorage');
     };
 
     $$('private');
     this.port = null;
 
     $$('readonly');
-    this.name = 'cache';
+    this.name = 'session';
 
     $$('readonly');
-    this.constraints = '(class || struct) && (func && async) && !(timer || on || @cache)';
+    this.constraints = '(class && prop) && !($static || $state || $readonly || $abstract || $virtual)';
 
+
+    // TODO: here onwards - think how session and etate will come out of builder
+    // considering addDisposal -- is that needed - because on dispose it is removed 
+    // and no point of session and state availability then
     this.decorateFunction = (typeName, memberName, member, ttl) => {
         let _this = this,
             cacheId = `${typeName}___${memberName}`;

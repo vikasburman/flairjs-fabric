@@ -1,5 +1,5 @@
-const { Bootware, IPortHandler } = await ns('flair.app');
-const { Attribute } = await ns();
+const { IPortHandler, IAttribute } = await ns();
+const { Bootware } = await ns('flair.app');
 
 /**
  * @name BootEngine
@@ -113,37 +113,21 @@ Class('', function() {
                 }
             }
         };
-        const loadAssemblies = async () => {
-            // combined assemblies (inbuilt and configured)
-            // which() will pick as:
-            // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
-            // here definition is just the file and path name of the assembly to be loaded
-            let list = [
-                "./flair.app{.min}.js",
-                "./flair.server{.min}.js | ./flair.client{.min}.js",
-                "isExpress::./flair.server.express{.min}.js | isVue::./flair.client.vue{.min}.js",
-                "isFirebase::./flair.server.firebase{.min}.js | x"
-            ];
-            list.push(...settings.boot.assemblies);
-
-            for(let item of list) {
-                item = which(item);
-                if (item) { await AppDomain.context.loadAssembly(item); }
-            }
-        };
         const loadPortHandlers = async () => {
             let list = null,
-                phType = null,
-                ph = null;
+                phType = null;
 
             // combined port handlers (inbuilt and configured)
             // which() will pick as:
             // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
             // here definition is just the qualified type name which implements IPortHandler
             // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
-            // all inbuilt settings can be overwritten if need be 
+            //       all inbuilt port definitions can be overwritten if need be 
             list = [
+                'flair.app.logging.LogPort',
                 'flair.app.ajax.FetchPort',
+                'flair.app.caching.SessionPort',
+                'flair.app.caching.StatePort',
                 'flair.app.caching.CachePort'
             ];
             list.push(...settings.boot.ports);
@@ -151,16 +135,44 @@ Class('', function() {
             for(let item of list) {
                 item = which(item);
                 if (item) {
-                    phType = await include(item);
-                    ph = as(new phType(), IPortHandler);
-                    if (ph) { Port.connect(ph.port, ph.factory); }
+                    phType = as(await include(item), IPortHandler);
+                    Port.connect(new phType());
                 }
             }
         };
-        const loadCustomAttributes = async () => {
+        const loadCustomAttributes = async () => { // TODO: change the way new Attribute structure works 
+            let list = null,
+                caType = null,
+                ca = null;
+
+            // combined custom attributes (inbuilt and configured)
+            // which() will pick as:
+            // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+            // here definition is just the qualified type name which implements IAttribute
+            // note: it will throw error if a custom attribute with same name is already registered
+            list = [
+                'flair.app.ajax.FetchAttr',
+                'flair.app.caching.SessionAttr',
+                'flair.app.caching.StateAttr',
+                'flair.app.caching.CacheAttr'
+            ];
+            list.push(...settings.boot.attributes);
+
+            for(let item of list) {
+                item = which(item);
+                if (item) {
+                    caType = as(await include(item), IAttribute);
+                    if (caType) {
+                        $$.register(new caType());
+                    }
+                }
+            }
+        };      
+        const loadAspects = async () => { // TODO: create this methid
             let list = null,
                 caType = null;
 
+                // TODO
             // combined custom attributes (inbuilt and configured)
             // which() will pick as:
             // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
@@ -179,7 +191,25 @@ Class('', function() {
                     if (caType) { Container.register(item.name, caType); }
                 }
             }
-        };        
+        };            
+        const loadAssemblies = async () => {
+            // combined assemblies (inbuilt and configured)
+            // which() will pick as:
+            // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+            // here definition is just the file and path name of the assembly to be loaded
+            let list = [
+                "./flair.app{.min}.js",
+                "./flair.server{.min}.js | ./flair.client{.min}.js",
+                "x | isVue::./flair.client.vue{.min}.js",
+                "isFirebase::./flair.server.firebase{.min}.js | x"
+            ];
+            list.push(...settings.boot.assemblies);
+
+            for(let item of list) {
+                item = which(item);
+                if (item) { await AppDomain.context.loadAssembly(item); }
+            }
+        };
         const loadBootwares = async () => {
             let list = null,
                 bwType = null,
@@ -191,12 +221,11 @@ Class('', function() {
             // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
             // here definition is just the qualified type name which is derived from Bootware type
             list = [
-                "flair.boot.NodeEnv ~ x | x",
-                "isExpress::flair.boot.Middlewares ~ x | x",
-                "flair.boot.ResHeaders ~ x | x",
-                "flair.boot.DIContainer",
-                "x | isVue::flair.boot.VueSetup ~ x",
-                "flair.boot.ServerRouter ~ x | flair.boot.ClientRouter | x"
+                "flair.app.bw.NodeEnv ~ x | x",
+                "flair.app.bw.Middlewares ~ x | x",
+                "flair.app.bw.DIContainer",
+                "x | isVue::flair.app.bw.VueSetup ~ x",
+                "flair.app.bw.ServerRouter ~ x | flair.app.bw.ClientRouter | x"
             ];
             list.push(...settings.boot.bootwares);
 
@@ -207,7 +236,7 @@ Class('', function() {
                     if (bwType) {
                         bw = new bwType(); 
                         allBootwares.push(bw); // push in array, so boot and ready would be called for them
-                        if (bw.info.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
+                        if (bw.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
                             mountSpecificBootwares.push(bw);
                         }
                     }
@@ -244,7 +273,7 @@ Class('', function() {
 
                 // run all for once (ignoring the mountspecific ones)
                 for(let bw of allBootwares) {
-                    if (!bw.info.isMountSpecific) {
+                    if (!bw.isMountSpecific) {
                         await bw[method]();
                     }
                 }
@@ -312,9 +341,10 @@ Class('', function() {
         await loadLinks();
         await loadScripts();
         await loadPreambles();
-        await loadAssemblies();
         await loadPortHandlers();
         await loadCustomAttributes();
+        await loadAspects();
+        await loadAssemblies();
         await loadBootwares();
         await boot();
         await start();

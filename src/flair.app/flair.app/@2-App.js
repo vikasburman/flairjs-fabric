@@ -9,7 +9,7 @@ Class('', Bootware, [IDisposable], function() {
     $$('override');
     this.construct = (base) => {
         // set info
-        let asm = getAssembly(this);
+        let asm = getAssembly(this.$Type);
         base(asm.title, asm.version);
     };
     

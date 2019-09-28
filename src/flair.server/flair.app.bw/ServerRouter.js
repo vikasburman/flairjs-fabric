@@ -1,5 +1,5 @@
-const { Bootware, Payload } = await ns('flair.app');
-const { RestInterceptor, RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload } = await ns('flair.api');
+const { Bootware, ServerMiddleware, Payload } = await ns('flair.app');
+const { RestHandler, RestHandlerResult, RestHandlerContext, AttachmentPayload, BinaryPayload, JSONPayload } = await ns('flair.api');
 
 /**
  * @name ServerRouter
@@ -11,7 +11,7 @@ Class('', Bootware, function() {
     
     $$('override');
     this.construct = (base) => {
-        base('Server Router', true); // mount specific 
+        base(true); // mount specific 
     };
 
     $$('override');
@@ -32,7 +32,7 @@ Class('', Bootware, function() {
             });
         }
 
-        const onDone = (result, ctx) => {
+        const onDone = (result, ctx, next) => {
             let req = ctx.req, res = ctx.res; // eslint-disable-line no-unused-vars
 
             // complete the call
@@ -74,22 +74,90 @@ Class('', Bootware, function() {
                     }
                 }
             }
-        };
-        const runInterceptors = async (req, res) => {
-            // run mount specific interceptors
-            // each interceptor is derived from RestInterceptor and
-            // run method of it takes req, can update it, also takes res method and can generate response, in case request is being stopped
-            // each item is: "InterceptorTypeQualifiedName"
-            let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
-            for (let ic of mountInterceptors) {
-                let ICType = as(await include(ic), RestInterceptor);
-                if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                await new ICType().run(req, res); // it can throw error that will be passed in response and response cycle will stop here
+            
+            // call next, if defined
+            // TODO: check for scenario, if res is already ended and somehow a next() has come
+            if (typeof next === 'function') {
+                next();
             }
         };
+        const onError = (err, next) => {
+            let result = new RestHandlerResult(err);
+            if (result.status === 100) { // continue
+                next(); // continue to next
+            } else {
+                onDone(result, ctx);
+            }
+        };      
+        const processMwArgs = (args = []) => {
+            let mwArgs = [],
+                argValue = null;
+            for (let arg of args) {
+                if (typeof arg === 'string' && arg.startsWith('return ')) { // note a space after return
+                    argValue = new Function(arg)();
+                } else if (typeof arg === 'object') {
+                    for(let prop in arg) {
+                        if (arg.hasOwnProperty(prop)) {
+                            argValue = arg[prop];
+                            if (typeof argValue === 'string' && argValue.startsWith('return ')) { // note a space after return
+                                argValue = new Function(arg)();
+                                arg[prop] = argValue;
+                            }
+                        }
+                    }
+                    argValue = arg;
+                } else {
+                    argValue = arg;
+                }
+                mwArgs.push(argValue);
+            }
+            return mwArgs;
+        };        
+        const runMW = async (mw, ctx) => {
+            try {
+                // process args
+                let mwArgs = processMwArgs(mw.args);
+
+                // get module
+                // it could be 'express' itself for inbuilt middlewares
+                // it could be a type name as well which is inherited from 
+                let MWType = null,
+                    mwObj = null,
+                    mod = null,
+                    func = null;
+
+                // run module
+                mod = await include(mw.name);
+                if (is(mod, 'flairtype') && as(mod, ServerMiddleware)) { // custom Middleware
+                    MWType = mod;
+                    mwObj = new MWType();
+                    // it can throw error that will be passed in response and response cycle will stop here
+                    // or it can pass err in given next handler where it will be thrown
+                    // the idea is to stop on error
+                    mwObj.run(ctx.req, ctx.res, (err) => { throw err; }, ...mwArgs);
+                } else {
+                    if (mw.func) {
+                        func = mod[mw.func];
+                    } else {
+                        func = mod;
+                    }
+                    func = func(...mwArgs); // to get wrapped func that takes req, res and next params
+                    func(ctx.req, ctx.res, (err) => { throw err; });
+                }
+            } catch (err) {
+                throw Exception.OperationFailed(`Middleware ${mw.name} failed.`, err);                                
+            }
+        };          
         const runHandler = async (route, routeHandler, verb, ctx) => {
             let RouteHandler = as(await include(routeHandler), RestHandler);
             if (RouteHandler) {
+                // run route-specific middlewares, if defined
+                if (route.mw && route.mw.length > 0) {
+                    for(let mw of route.mw) {
+                        await runMW(mw, ctx);
+                    }
+                }
+
                 let rh = new RouteHandler(route);
                 return await rh.run(verb, ctx);
             } else {
@@ -100,40 +168,30 @@ Class('', Bootware, function() {
             if (typeof route.handler === 'string') { return route.handler; }
             return route.handler[AppDomain.app().getRoutingContext(route.name)] || route.handler.default || ''; // will pick current context handler OR default handler OR error situation
         };
+        const handleRoute = async (route, verb, ctx) => {
+            // route.handler can be defined as:
+            // string: qualified type name of the handler
+            // object: { "routingContext": "handler", ...}
+            //      routingContext can be any value that represents a routing context for whatever situation 
+            //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+            //      basis it will pick required handler from here some examples of handlers can be:
+            //          free | freemium | full  - if some routing is to be based on license model
+            //          anything else
+            //      'default' must be defined to handle a catch-anything-else scenario 
+            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
+            let routeHandler = chooseRouteHandler(route);
+            if (!routeHandler) { throw Exception.NotDefined(route.handler); }
+            return await runHandler(route, routeHandler, verb, ctx); // it can throw any error including 100 (to continue to next handler)
+        };        
         const getHandler = (route, verb) => {
-            return (req, res, next) => { 
+            return function(req, res, next) { 
                 let ctx = new RestHandlerContext(req, res);
 
-                const onError = (err) => {
-                    let result = new RestHandlerResult(err);
-                    if (result.status === 100) { // continue
-                        next(); // continue to next
-                    } else {
-                        onDone(result, ctx);
-                    }
-                };
-                const handleRoute = async () => {
-                    // route.handler can be defined as:
-                    // string: qualified type name of the handler
-                    // object: { "routingContext": "handler", ...}
-                    //      routingContext can be any value that represents a routing context for whatever situation 
-                    //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                    //      basis it will pick required handler from here some examples of handlers can be:
-                    //          free | freemium | full  - if some routing is to be based on license model
-                    //          anything else
-                    //      'default' must be defined to handle a catch-anything-else scenario 
-                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined
-                    let routeHandler = chooseRouteHandler(route);
-                    if (!routeHandler) { throw Exception.NotDefined(route); }
-                    return await runHandler(route, routeHandler, verb, ctx); // it can throw any error including 100 (to continue to next handler)
-                };
-
-                // run interceptors
-                runInterceptors(req, res).then(() => {
-                    handleRoute().then((result) => {
-                        onDone(result, ctx);
-                    }).catch(onError);
-                }).catch(onError);
+                handleRoute(route, verb, ctx).then((result) => {
+                    onDone(result, ctx, next);
+                }).catch((err) => {
+                    onError(err, next);
+                });
             };
         };
         const addHandler = (verb, route) => {
@@ -172,7 +230,6 @@ Class('', Bootware, function() {
 
         // error handler
         mount.app.use((err, req, res) => {
-            // note: 404 handler does not run interceptors
             let result = new RestHandlerResult(err);
             onDone(result, req, res);
         });

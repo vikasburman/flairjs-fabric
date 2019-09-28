@@ -8,11 +8,6 @@ const Vue = await include('vue/vue{.min}.js');
  */
 Class('', Bootware, function() {
     $$('override');
-    this.construct = (base) => {
-        base('Vue Setup');
-    };
-
-    $$('override');
     this.boot = async (base) => {
         base();
 

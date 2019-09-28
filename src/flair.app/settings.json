@@ -4,8 +4,7 @@
 
     "boot": {
         "env": {
-            "isVue": false,
-            "isExpress": false,
+            "isVue": true,
             "isServerless": false,
             "isFirebase": false
         },
@@ -17,23 +16,30 @@
         ],        
         "preambles": [
         ],
+        "assemblies": [
+        ],
         "ports": [
+        ],
+        "attributes": [
+        ],
+        "aspects": [
         ],
         "bootwares": [
         ],
-        "assemblies": [
-        ],
-        "attributes": [
-        ]
-    },
 
-    "di": {
-        "container": {
+        "di": {
+            "container": {
+            }
+        },
+
+        "cache": {
+            "TTL": 0,
+            "slidingTTL": true
         }
     },
 
     "api": {
         "connections": {
         }
-    }    
+    }
 }
