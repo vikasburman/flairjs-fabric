@@ -81,7 +81,7 @@ Class('', Bootware, function() {
                 next();
             }
         };
-        const onError = (err, next) => {
+        const onError = (err, ctx, next) => {
             let result = new RestHandlerResult(err);
             if (result.status === 100) { // continue
                 next(); // continue to next
@@ -190,7 +190,7 @@ Class('', Bootware, function() {
                 handleRoute(route, verb, ctx).then((result) => {
                     onDone(result, ctx, next);
                 }).catch((err) => {
-                    onError(err, next);
+                    onError(err, ctx, next);
                 });
             };
         };

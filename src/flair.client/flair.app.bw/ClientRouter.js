@@ -43,7 +43,7 @@ Class('', Bootware, function() {
                 setTimeout(() => { AppDomain.host().redirect(redirectRoute, redirectParams, redirectQuery) }, 0);
             } // navigate to view already happened, nothing else is needed
         };      
-        const onError = (err) => {
+        const onError = (err, ctx) => {
             // note: using HandlerResult and no ViewHandlerResult is created, because 
             // there are no results for views - but since HandlerResult gives an easy way to manage
             // status - it is being used for that functionality only
@@ -61,7 +61,7 @@ Class('', Bootware, function() {
                 let mwArgs = mw.args || [];
                 await new MWType().run(ctx, ...mwArgs); // it can throw error that will be passed in response and response cycle will stop here
             } catch (err) {
-                throw Exception.OperationFailed(`Middleware ${middleware.name} failed.`, err);                
+                throw Exception.OperationFailed(`Middleware ${mw.name} failed.`, err);                
             }
         };
         const runMiddlewares = async (ctx) => {
@@ -132,7 +132,7 @@ Class('', Bootware, function() {
                     let result = HandlerResult(null, true); // since all is OK - use true as result value
                     onDone(result, ctx);
                 } catch (err) {
-                    onError(err);
+                    onError(err, ctx);
                 }
             };
         };
@@ -173,7 +173,7 @@ Class('', Bootware, function() {
                 let result = HandlerResult(err);
                 onDone(result, ctx);
             } catch (err) {
-                onError(err);
+                onError(err, ctx);
             }
         });
     };

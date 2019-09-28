@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client
  *     File: ./flair.client.js
- *  Version: 0.60.22
- *  Wed, 25 Sep 2019 04:57:43 GMT
+ *  Version: 0.60.32
+ *  Sat, 28 Sep 2019 02:07:51 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -31,7 +31,7 @@
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
-    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, attr, InjectedArg, bring, Container, include, Port, on, post, telemetry,
+    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, InjectedArg, bring, Container, include, Port, on, post, telemetry,
             Reflector, Serializer, Tasks, as, is, isDefined, isComplies, isDerivedFrom, isAbstract, isSealed, isStatic, isSingleton, isDeprecated,
             isImplements, isInstanceOf, isMixed, getAssembly, getAttr, getContext, getResource, getRoute, getType, ns, getTypeOf,
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
@@ -50,7 +50,7 @@
     AppDomain.loadPathOf('flair.client', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"view":{"mainEl":"main","viewEl":"view","transition":"","layout":"","routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"interceptors":[]},"after":{"settings":[],"interceptors":[]}}}}');
+    let settings = JSON.parse('{"view":{"mainEl":"main","viewEl":"view","transition":"","layout":"","routes":{"home":"","notfound":""}},"i18n":{"lang":{"default":"en","locales":[{"code":"en","name":"English","native":"English"}]}},"routing":{"mounts":{"main":"/"},"all":{"before":{"settings":[{"name":"hashbang","value":false},{"name":"sensitive","value":false}],"middlewares":[]},"after":{"settings":[],"middlewares":[]}}}}');
     let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.client');
@@ -74,6 +74,26 @@
     
     // assembly closure: types (start)
         
+    await (async () => { // type: ./src/flair.client/flair.app/@1-ClientMiddleware.js
+        const { Middleware } = await ns('flair.app');
+        
+        /**
+         * @name Client Middleware
+         * @description Client middleware, where code executes on route where it is attached
+         */
+        $$('ns', 'flair.app');
+		Class('ClientMiddleware', Middleware, function() {
+            $$('override');
+            this.run = async (ctx, ...mwArgs) => {
+                await this.onRun(ctx, ...mwArgs);
+            };
+            
+            $$('virtual');
+            $$('async');
+            this.onRun = nim;
+        });
+        
+    })();    
     await (async () => { // type: ./src/flair.client/flair.ui/@2-ViewComponentMembers.js
         /**
          * @name ViewComponentMembers
@@ -1524,22 +1544,22 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.client/flair.boot/ClientRouter.js
-        const { Bootware, HandlerResult } = await ns('flair.app');
-        const { ViewInterceptor, ViewHandler, ViewHandlerContext } = await ns('flair.ui');
+    await (async () => { // type: ./src/flair.client/flair.app.bw/ClientRouter.js
+        const { Bootware, ClientMiddleware, HandlerResult } = await ns('flair.app');
+        const { ViewHandler, ViewHandlerContext } = await ns('flair.ui');
         
         /**
          * @name ClientRouter
          * @description Client Router Configuration Setup
          */
         $$('sealed');
-        $$('ns', 'flair.boot');
+        $$('ns', 'flair.app.bw');
 		Class('ClientRouter', Bootware, function() {
             let routes = null;
             
             $$('override');
             this.construct = (base) => {
-                base('Client Router', true); // mount specific 
+                base(true); // mount specific 
             };
         
             $$('override');
@@ -1570,23 +1590,50 @@
                         // perform redirect
                         setTimeout(() => { AppDomain.host().redirect(redirectRoute, redirectParams, redirectQuery) }, 0);
                     } // navigate to view already happened, nothing else is needed
-                };        
-                const runInterceptors = async (ctx) => {
-                    // run mount specific interceptors
-                    // each interceptor is derived from ViewInterceptor and
-                    // async run method of it takes ctx, can update it
-                    // each item is: "InterceptorTypeQualifiedName"
-                    let mountInterceptors = this.getMountSpecificSettings('interceptors', settings.routing, mount.name);
-                    for(let ic of mountInterceptors) {
-                        let ICType = as(await include(ic), ViewInterceptor);
-                        if (!ICType) { throw Exception.InvalidDefinition(`Invalid interceptor type. (${ic})`); }
-                        await new ICType().run(ctx); // it can throw error that will be passed in response and response cycle will stop here
+                };      
+                const onError = (err, ctx) => {
+                    // note: using HandlerResult and no ViewHandlerResult is created, because 
+                    // there are no results for views - but since HandlerResult gives an easy way to manage
+                    // status - it is being used for that functionality only
+                    let result = new HandlerResult(err);
+        
+                    // unlike server router handling status 100 (continue) is not supported here
+                    
+                    onDone(result, ctx);
+                };    
+                const runMW = async (mw, ctx) => {
+                    try {
+                        let MWType = as(await include(mw.name), ClientMiddleware);
+                        if (!MWType) { throw Exception.InvalidDefinition(`Invalid middleware type. (${mw.name})`); }
+                        
+                        let mwArgs = mw.args || [];
+                        await new MWType().run(ctx, ...mwArgs); // it can throw error that will be passed in response and response cycle will stop here
+                    } catch (err) {
+                        throw Exception.OperationFailed(`Middleware ${mw.name} failed.`, err);                
+                    }
+                };
+                const runMiddlewares = async (ctx) => {
+                    // run mount specific middlewares
+                    // each middleware is derived from ClientMiddleware and
+                    // async run method of it takes ctx, which can update it also
+                    // each item is: { name: "ClientMiddlewareTypeQualifiedName", args: [] }
+                    let mountMiddlewares = this.getMountSpecificSettings('middlewares', settings.routing, mount.name);
+                    for(let mw of mountMiddlewares) {
+                        await runMW(mw, ctx);
                     }
                 };
                 const runHandler = async (route, routeHandler, ctx) => {
                     // get route handler
                     let RouteHandler = as(await include(routeHandler), ViewHandler);
                     if (RouteHandler) {
+                        // run route-specific middlewares, if defined
+                        if (route.mw && route.mw.length > 0) {
+                            for(let mw of route.mw) {
+                                await runMW(mw, ctx);
+                            }
+                        }
+        
+                        // run route haadler
                         let rh = new RouteHandler(route);
                         await rh.run(ctx);
                     } else {
@@ -1597,6 +1644,28 @@
                     if (typeof route.handler === 'string') { return route.handler; }
                     return route.handler[AppDomain.app().getRoutingContext(route.name)] || route.handler.default || '';  // will pick current context handler OR default handler OR error situation
                 };
+                const handleRoute = async (route, ctx) => {
+                    // route.handler can be defined as:
+                    // string: 
+                    //      qualified type name of the handler (e.g., abc.xyz)
+                    //          one limitation is that the name of the type cannot ends with '.xml' (or configured fileExt)
+                    //      OR
+                    //      static view name - ends with '.xml' (or configured fileExt) (e.g., ./about.xml or ./path/contact.xml)
+                    //          this XML file must be present in on specified path under configured 'static' root folder
+                    // object: { "routingContext": "handler", ...}
+                    //      routingContext can be any value that represents a routing context for whatever situation 
+                    //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
+                    //      basis it will pick required handler from here some examples of handlers can be:
+                    //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
+                    //          free | freemium | full  - if some routing is to be based on license model
+                    //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
+                    //          anything else
+                    //      'default' must be defined to handle a catch-anything-else scenario 
+                    //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined                    let routeHandler = chooseRouteHandler(route);
+                    let routeHandler = chooseRouteHandler(route);
+                    if (!routeHandler) { throw Exception.NotDefined(route.handler); }
+                    await runHandler(route, routeHandler, ctx);
+                };
                 const getHandler = (route) => {
                     return async (routerCtx) => {
                         let ctx = new ViewHandlerContext(routerCtx);
@@ -1605,45 +1674,14 @@
                         // have "ctx.params: { "userId": "34", "bookId": "8989" }"
                         // it supports everything in here: https://www.npmjs.com/package/path-to-regexp
         
-                        // note: using HandlerResult and no ViewHandlerResult is created, because 
-                        // there are no results for views - but since HandlerResult gives an easy way to manage
-                        // status - it is being used for that functionality only
-                        const onError = (err) => {
-                            let result = new HandlerResult(err);
-        
-                            // unlike server router handling status 100 (continue) is not supported here
-                            
+                        try {
+                            await runMiddlewares(ctx);
+                            await handleRoute(route, ctx);
+                            let result = HandlerResult(null, true); // since all is OK - use true as result value
                             onDone(result, ctx);
-                        };
-                        const handleRoute = async () => {
-                            // route.handler can be defined as:
-                            // string: 
-                            //      qualified type name of the handler (e.g., abc.xyz)
-                            //          one limitation is that the name of the type cannot ends with '.xml' (or configured fileExt)
-                            //      OR
-                            //      static view name - ends with '.xml' (or configured fileExt) (e.g., ./about.xml or ./path/contact.xml)
-                            //          this XML file must be present in on specified path under configured 'static' root folder
-                            // object: { "routingContext": "handler", ...}
-                            //      routingContext can be any value that represents a routing context for whatever situation 
-                            //      this is read from App.getRoutingContext(routeName) - where some context string can be provided - 
-                            //      basis it will pick required handler from here some examples of handlers can be:
-                            //          mobile | tablet | tv  etc.  - if some routing is to be based on device type
-                            //          free | freemium | full  - if some routing is to be based on license model
-                            //          guest | auth - if different view is to be loaded for when its guest user or an authorized user
-                            //          anything else
-                            //      'default' must be defined to handle a catch-anything-else scenario 
-                            //  this gives a handy way of diverting some specific routes while rest can be as is - statically defined                    let routeHandler = chooseRouteHandler(route);
-                            let routeHandler = chooseRouteHandler(route);
-                            if (!routeHandler) { throw Exception.NotDefined(route); }
-                            await runHandler(route, routeHandler, ctx);
-                        };                
-        
-                        runInterceptors(ctx).then(() => {
-                            handleRoute().then(() => {
-                                let result = HandlerResult(null, true); // since all is OK - use true as result value
-                                onDone(result, ctx);
-                            }).catch(onError);
-                        }).catch(onError);
+                        } catch (err) {
+                            onError(err, ctx);
+                        }
                     };
                 };
                 const addHandler = (app, route) => {
@@ -1665,8 +1703,6 @@
                 app.add404(async (routerCtx) => {
                     let ctx = new ViewHandlerContext(routerCtx);
         
-                    // note: 404 handler does not run interceptors
-                    
                     // instead of running the route (for which this ctx was setup)
                     // it will pick the handler of notfound route and show that view with this ctx
                     let route404 = settings.view.routes.notfound;
@@ -1677,9 +1713,16 @@
                         return;
                     }
         
-                    // use route404 handler
-                    let routeHandler = chooseRouteHandler(route404);
-                    await runHandler(route404, routeHandler, ctx);
+                    try {
+                        let routeHandler = chooseRouteHandler(route404);  // use route404 handler
+                        await runMiddlewares(ctx);
+                        await runHandler(route404, routeHandler, ctx);
+                        let err = Exception.NotFound(ctx.originalUrl);
+                        let result = HandlerResult(err);
+                        onDone(result, ctx);
+                    } catch (err) {
+                        onError(err, ctx);
+                    }
                 });
             };
         });
@@ -1961,19 +2004,6 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.client/flair.ui/ViewInterceptor.js
-        /**
-         * @name ViewInterceptor
-         * @description GUI View Interceptor
-         */
-        $$('ns', 'flair.ui');
-		Class('ViewInterceptor', function() {
-            $$('virtual');
-            $$('async');
-            this.run = noop;
-        });
-        
-    })();    
     await (async () => { // type: ./src/flair.client/flair.ui/ViewState.js
         /**
          * @name ViewState
@@ -2012,7 +2042,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.22","lupdate":"Wed, 25 Sep 2019 04:57:43 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.boot.ClientRouter","flair.app.ClientHost","flair.ui.ViewInterceptor","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client","file":"./flair.client{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.32","lupdate":"Sat, 28 Sep 2019 02:07:51 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ClientMiddleware","flair.ui.ViewComponentMembers","flair.ui.ViewHandlerContext","flair.ui.ViewTransition","flair.ui.ViewHandler","flair.ui.View","flair.ui.ViewComponent","flair.ui.Page","flair.app.bw.ClientRouter","flair.app.ClientHost","flair.ui.ViewState"],"resources":[],"assets":["index.html","index.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

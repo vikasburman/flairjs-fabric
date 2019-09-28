@@ -9,17 +9,17 @@ const { Bootware } = await ns('flair.app');
 $$('sealed');
 Class('', Bootware, function() {
     $$('override');
-    this.boot = async (base, mount) => {
+    this.boot = async (base) => {
         base();
         
         if (!global.sessionStorage) { 
             const NodeSessionStorage = function() {
                 let keys = {};
                 this.key = (key) => { 
-                    return (keys.key ? true : false); 
+                    return (keys[key] ? true : false); 
                 };
                 this.getItem = (key) => { 
-                    return keys.key || null;
+                    return keys[key] || null;
                 };
                 this.setItem = (key, value) => {
                     keys[key] = value || null;

@@ -16,7 +16,7 @@ Class('', [IPortHandler], function() {
                 options = {};
 
             const CacheItem = function(value, ttl = options.stdTTL) {
-                let _value = value
+                let _value = value,
                     _created = Date.now(),
                     _expiry = _created + ttl;
     
@@ -121,7 +121,7 @@ Class('', [IPortHandler], function() {
     this.removeItem = async (key) => { return await this.handler.removeItem(this.itemNamePrefix + key); }
     this.clear = async () => { 
         let cacheKeys = await this.handler.keys();
-        for(key of cacheKeys) {
+        for(let key of cacheKeys) {
             if (key.startsWith(this.itemNamePrefix)) {
                 await this.handler.removeItem(key);
             }

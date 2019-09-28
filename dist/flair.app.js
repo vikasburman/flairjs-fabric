@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.22
- *  Wed, 25 Sep 2019 04:57:42 GMT
+ *  Version: 0.60.32
+ *  Sat, 28 Sep 2019 02:07:49 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -31,7 +31,7 @@
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
-    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, attr, InjectedArg, bring, Container, include, Port, on, post, telemetry,
+    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, InjectedArg, bring, Container, include, Port, on, post, telemetry,
             Reflector, Serializer, Tasks, as, is, isDefined, isComplies, isDerivedFrom, isAbstract, isSealed, isStatic, isSingleton, isDeprecated,
             isImplements, isInstanceOf, isMixed, getAssembly, getAttr, getContext, getResource, getRoute, getType, ns, getTypeOf,
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
@@ -50,7 +50,7 @@
     AppDomain.loadPathOf('flair.app', __currentPath);
     
     // settings of this assembly
-    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":false,"isExpress":false,"isServerless":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"ports":[],"bootwares":[],"assemblies":[],"attributes":[]},"di":{"container":{}},"api":{"connections":{}}}');
+    let settings = JSON.parse('{"host":"flair.app.ServerHost | flair.app.ClientHost","app":"flair.app.App","boot":{"env":{"isVue":true,"isServerless":false,"isFirebase":false},"links":[],"scripts":[],"meta":[],"preambles":[],"assemblies":[],"ports":[],"attributes":[],"aspects":[],"bootwares":[],"di":{"container":{}},"cache":{"TTL":0,"slidingTTL":true}},"api":{"connections":{}}}');
     let settingsReader = Port('settingsReader');
     if (typeof settingsReader === 'function') {
         let externalSettings = settingsReader('flair.app');
@@ -66,7 +66,55 @@
     // assembly closure: init (end)
     
     // assembly closure: global functions (start)
-    // (not defined)
+    // assembly globals
+    const onLoadComplete = (asm) => { // eslint-disable-line no-unused-vars
+        // ports definition - start
+    
+        //  sessionStorage {
+        //      key: (key)
+        //      getItem: (key)
+        //      setItem: (key, value)
+        //      removeItem: (key)
+        //      clear: ()
+        //  }
+        //  key: unique key of the session-item
+        //  value: data to put in session
+        Port.define('sessionStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
+    
+        //  stateStorage {
+        //      key: (key)
+        //      getItem: (key)
+        //      setItem: (key, value)
+        //      removeItem: (key)
+        //      clear: ()
+        //  }
+        //  key: unique key of the state-item
+        //  value: data to put in state
+        Port.define('stateStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
+    
+        //  cacheStorage {
+        //      key: (key)
+        //      getItem: (key)
+        //      setItem: (key, value)
+        //      removeItem: (key)
+        //      clear: ()
+        //  }
+        //  key: unique key of the state-item
+        //  value: data to put in state
+        Port.define('cacheStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);     
+    
+        //  fetchHandler {
+        //      fetch: async (url, dataType, opts)
+        //  }
+        //  url: url to send fetch request
+        //  dataType: response data type: 'text', 'json', 'buffer', 'form', 'blob' <-- based on this, it pre-process response data before return
+        //  opts: fetch call configuration options 
+        //      client (fetch): https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Syntax
+        //      server (node-fetch): https://www.npmjs.com/package/node-fetch#options
+        Port.define('fetchHandler', ['fetch']);
+    
+        // ports definition - end
+    }; 
     // assembly closure: global functions (end)
     
     // set assembly being loaded
@@ -82,25 +130,9 @@
         $$('abstract');
         $$('ns', 'flair.app');
 		Class('Bootware', function() {
-            /**  
-             * @name construct
-             * @arguments
-             *  name: string - name of the bootware
-             *  version: string - version number of the bootware
-            */
             $$('virtual');
-            this.construct = (name, version, isMountSpecific) => {
-                let args = Args('name: string, version: string',
-                                'name: string, version: string, isMountSpecific: boolean',
-                                'name: string, isMountSpecific: boolean',
-                                'name: string')(name, version, isMountSpecific); args.throwOnError(this.construct);
-        
-                // set info
-                this.info = Object.freeze({
-                    name: args.values.name || '',
-                    version: args.values.version || '',
-                    isMountSpecific: args.values.isMountSpecific || false
-                });
+            this.construct = (isMountSpecific) => {
+                this.isMountSpecific = isMountSpecific || false;
             };
         
             /**  
@@ -113,7 +145,7 @@
             this.boot = noop;
         
             $$('readonly');
-            this.info = null;
+            this.isMountSpecific = false;
         
             /**  
              * @name ready
@@ -202,24 +234,6 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app/@1-HandlerContext.js
-        /**
-         * @name HandlerContext
-         * @description HandlerContext data
-         */
-        $$('ns', 'flair.app');
-		Class('HandlerContext', function() {
-            $$('virtual');
-            this.construct = () => { };
-        
-            $$('private');
-            this.items = {};
-        
-            this.getData = (key, defaultValue) => { return this.items[key] || defaultValue; };
-            this.setData = (key, value) => { this.items[key] = value; };
-        });
-        
-    })();    
     await (async () => { // type: ./src/flair.app/flair.app/@1-Payload.js
         /**
          * @name Payload
@@ -244,6 +258,24 @@
         
             $$('readonly');
             this.resHeaders = [];
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app/@1-HandlerContext.js
+        /**
+         * @name HandlerContext
+         * @description HandlerContext data
+         */
+        $$('ns', 'flair.app');
+		Class('HandlerContext', function() {
+            $$('virtual');
+            this.construct = () => { };
+        
+            $$('private');
+            this.items = {};
+        
+            this.getData = (key, defaultValue) => { return this.items[key] || defaultValue; };
+            this.setData = (key, value) => { this.items[key] = value; };
         });
         
     })();    
@@ -287,7 +319,7 @@
             $$('override');
             this.construct = (base) => {
                 // set info
-                let asm = getAssembly(this);
+                let asm = getAssembly(this.$Type);
                 base(asm.title, asm.version);
             };
             
@@ -490,91 +522,329 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.boot/DIContainer.js
-        const { Bootware } = await ns('flair.app');
+    await (async () => { // type: ./src/flair.app/flair.app/@3-Middleware.js
+        /**
+         * @name Middleware
+         * @description Server/Client middleware, where code executes on route where it is attached
+         */
+        $$('ns', 'flair.app');
+		Class('Middleware', function() {
+            $$('virtual');
+            $$('async');
+            this.run = noop;
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.ajax/@5-FetchPort.js
+        const { IPortHandler } = await ns();
         
         /**
-         * @name DIContainer
-         * @description Initialize DI Container
+         * @name FetchPort
+         * @description Default server/client fetch implementation
          */
-        $$('sealed');
-        $$('ns', 'flair.boot');
-		Class('DIContainer', Bootware, function() {
-            $$('override');
-            this.construct = (base) => {
-                base('DI Container');
+        $$('ns', 'flair.app.ajax');
+		Class('FetchPort', [IPortHandler], function() {
+            this.construct = () => {
+                if (env.isServer) {
+                    this.handler = require('node-fetch'); // node specific fetch clone
+                } else {
+                    this.handler = fetch; // inbuilt javascript function
+                }
             };
         
-            $$('override');
-            this.boot = async (base) => {
-                base();
-                
-                let containerItems = settings.di.container;
-                for(let alias in containerItems) {
-                    if (containerItems.hasOwnProperty(alias)) {
-                        Container.register(alias, containerItems[alias]);
+            $$('private');
+            this.handler = null;
+        
+            $$('readonly');
+            this.name = 'fetchHandler';
+        
+            this.fetch = async (url, dataType, opts) => {
+                if (typeof url !== 'string') { throw Exception.InvalidArgument('url'); }
+                if (typeof dataType !== 'string' || ['text', 'json', 'buffer', 'form', 'blob'].indexOf(dataType) === -1) { throw Exception.InvalidArgument('dataType'); }
+                if (!opts) { throw Exception.InvalidArgument('opts'); }
+        
+                let response = await this.handler(url, opts);
+                if (!response.ok) { throw Exception.OperationFailed(url, response.status); }
+        
+                let resMethod = '';
+                switch(dataType) {
+                    case 'text': resMethod = 'text'; break;
+                    case 'json': resMethod = 'json'; break;
+                    case 'buffer': resMethod = 'arrayBuffer'; break;
+                    case 'form': resMethod = 'formData'; break;
+                    case 'blob': resMethod = 'blob'; break;
+                }
+                return await response[resMethod]();
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@5-CachePort.js
+        
+        const { IPortHandler } = await ns();
+        
+        /**
+         * @name CachePort
+         * @description Default server/client caching definition
+         */
+        $$('ns', 'flair.app.caching');
+		Class('CachePort', [IPortHandler], function() {
+            this.construct = () => {
+                const CacheStorage = function () {
+                    // this inbuilt cache-storage works over node-cache (on server) and window.localStorage + custom (on client)
+                    // any external cache-storage can be applied by providing a custom cache-storage handler
+                    // in both server/client cases values are available across node process (if supported) (server) OR across browser tabs/windows (client)
+        
+                    let handler = null,
+                        options = {};
+        
+                    const CacheItem = function(value, ttl = options.stdTTL) {
+                        let _value = value,
+                            _created = Date.now(),
+                            _expiry = _created + ttl;
+            
+                        this.value = () => { return value || null; };
+                        this.ttl = () => { return ttl; };
+                        this.created = () => { return _created; };
+                        this.isExpired = () => { return Date.now() > _expiry; };
+                        this.toJSONString = () => { return JSON.stringify({ v: _value, t: ttl, c: _created }); };
+                    };
+                    CacheItem.fromJSONString = (json) => {
+                        if (!json) { return null; }
+                        let _json = JSON.parse(json);
+                        return new CacheItem(_json.value(), _json.created(), _json.ttl());
+                    }; 
+        
+                    if (env.isServer) {
+                        // define handler and options
+                        const NodeCache = require('node-cache');
+                        options = {
+                            stdTTL: settings.boot.cache.TTL, // seconds
+                            errorOnMissing: false,
+                            checkperiod: 0, // no automatic deletion
+                            useClones: true,
+                            deleteOnExpire: false
+                        };
+                        handler = new NodeCache(options);
+        
+                        // define calls
+                        this.key = async (key) => {
+                            return (await this.getItem(key) ? true : false);
+                        };
+                        this.getItem = async (key) => {
+                            if (!key) { return null; }
+                            let item = CacheItem.fromJSONString(handler.get(key));
+                            if (!item) { return null; }
+                            if (item.isExpired()) { await this.removeItem(key); return null; }
+                            if (settings.boot.cache.slidingTTL) { await this.setItem(key, item.value(), item.ttl()); }
+                            return item.value();
+                        };
+                        this.setItem = async (key, value, ttl = options.stdTTL) => {
+                            if (!key) { return false; }
+                            let item = new CacheItem(value, ttl);
+                            return handler.set(key, item.toJSONString());
+                        };
+                        this.removeItem = async (key) => {
+                            if (!key) { return false; }
+                            return (handler.del(key) > 0 ? true : false);
+                        };
+                        this.keys = async () => {
+                            return handler.keys();
+                        };
+                    } else { // client
+                        // define handler and options
+                        options = {
+                            stdTTL: settings.boot.cache.TTL
+                        };
+                        handler = window.localStorage;
+        
+                        // define calls
+                        this.key = async (key) => {
+                            return (await this.getItem(key) ? true : false);
+                        };
+                        this.getItem = async (key) => {
+                            if(!key) { return null; }
+                            let item = CacheItem.fromJSONString(handler.getItem(key));
+                            if (!item) { return null; }
+                            if (item.isExpired()) { await this.removeItem(key); return null; }
+                            if (settings.boot.cache.slidingTTL) { await this.setItem(key, item.value(), item.ttl()); }
+                            return item.value();
+                        };
+                        this.setItem = async (key, value, ttl = options.stdTTL) => {
+                            if(!key) { return false; }
+                            let item = new CacheItem(value, ttl);
+                            return handler.setItem(key, item.toJSONString());
+                        };
+                        this.removeItem = async (key) => {
+                            if (!key) { return false; }
+                            if (!handler[key]) { return false; }
+                            handler.removeItem(key);
+                            return true;
+                        };
+                        this.keys = async () => {
+                            return Object.keys(handler);
+                        };                
+                    }
+                };
+                this.handler = new CacheStorage();
+            };
+        
+            $$('private');
+            this.handler = null;
+        
+            $$('private');
+            this.itemNamePrefix = '__cache_';      
+        
+            $$('readonly');
+            this.name = 'cacheStorage';
+        
+            this.key = async (key) => { return await this.handler.key(this.itemNamePrefix + key); }
+            this.getItem = async (key) => { return await this.handler.getItem(this.itemNamePrefix + key); }
+            this.setItem = async (key, value) => { return await this.handler.setItem(this.itemNamePrefix + key, value); }
+            this.removeItem = async (key) => { return await this.handler.removeItem(this.itemNamePrefix + key); }
+            this.clear = async () => { 
+                let cacheKeys = await this.handler.keys();
+                for(let key of cacheKeys) {
+                    if (key.startsWith(this.itemNamePrefix)) {
+                        await this.handler.removeItem(key);
                     }
                 }
             };
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app/IPortHandler.js
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@5-SessionPort.js
+        
+        const { IPortHandler } = await ns();
+        
         /**
-         * @name IPortHandler
-         * @description IPortHandler interface
+         * @name SessionPort
+         * @description Default server/client session caching definition
          */
-        $$('ns', 'flair.app');
-		Interface('IPortHandler', function() {
-            this.port = nip;
-            this.interface = nip;
-            this.factory = nim;
+        $$('ns', 'flair.app.caching');
+		Class('SessionPort', [IPortHandler], function() {
+            this.construct = () => {
+                // this inbuilt session-cache works over global.sessionStorage (on server) and window.sessionStorage (on client)
+                // any external session-cache can be applied by providing a custom session-cache handler
+                // in both server/client cases values are available in current node process (server) OR current browser page (client)
+                this.handler = (env.isServer ? global.sessionStorage : window.sessionStorage);
+            };
+        
+            $$('private');
+            this.handler = null;
+        
+            $$('private');
+            this.itemNamePrefix = '__session_';    
+        
+            $$('readonly');
+            this.name = 'sessionStorage';
+        
+            this.key = async (key) => { return this.handler.key(this.itemNamePrefix + key); }
+            this.getItem = async (key) => { return this.handler.getItem(this.itemNamePrefix + key); }
+            this.setItem = async (key, value) => { return this.handler.setItem(this.itemNamePrefix + key, value); }
+            this.removeItem = async (key) => { return this.handler.removeItem(this.itemNamePrefix + key); }
+            this.clear = async () => { 
+                let sessionKeys = Object.keys(this.handler);
+                for(let key of sessionKeys) {
+                    if (key.startsWith(this.itemNamePrefix)) {
+                        this.handler.removeItem(key);
+                    }
+                }
+            };
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.ajax/FetchAttr.js
-        const { Attribute } = await ns();
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@5-StatePort.js
+        
+        const { IPortHandler } = await ns();
+        
+        /**
+         * @name StatePort
+         * @description Default server/client persisted state caching definition
+         */
+        $$('ns', 'flair.app.caching');
+		Class('StatePort', [IPortHandler], function() {
+            this.construct = () => {
+                // this inbuilt state-cache works over node-localstorage (on server) and window.localStorage (on client)
+                // any external state-cache can be applied by providing a custom state-cache handler
+                this.handler = (env.isServer ? require('node-localstorage') : window.localStorage);
+            };
+        
+            $$('private');
+            this.handler = null;
+        
+            $$('private');
+            this.itemNamePrefix = '__state_';
+        
+            $$('readonly');
+            this.name = 'stateStorage';
+        
+            this.key = async (key) => { return this.handler.key(this.itemNamePrefix + key); }
+            this.getItem = async (key) => { return this.handler.getItem(this.itemNamePrefix + key); }
+            this.setItem = async (key, value) => { return this.handler.setItem(this.itemNamePrefix + key, value); }
+            this.removeItem = async (key) => { return this.handler.removeItem(this.itemNamePrefix + key); }
+            this.clear = async () => { 
+                if (env.isServer) {
+                    this.handler.clear(); 
+                } else {
+                    let stateKeys = Object.keys(window.localStorage);
+                    for(let key of stateKeys) {
+                        if (key.startsWith(this.itemNamePrefix)) {
+                            this.handler.removeItem(key);
+                        }
+                    }
+                }
+            }
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@6-Session.js
+        
+        const { SessionPort } = await ns('flair.app.caching');
+        
+        /**
+         * @name Session
+         * @description Session manager
+         */
+        $$('singleton');
+        $$('ns', 'flair.app.caching');
+		Class('Session', [SessionPort], function() {
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.ajax/@6-FetchAttr.js
+        const { IAttribute } = await ns();
         
         /**
          * @name FetchAttr
          * @description Fetch custom attribute
-         * $$('fetch', 'api-connection-name', 'fetch-options-name', 'res-data-type', 'fetch-path');
+         * $$('fetch', 'connName', 'optsName', 'dataType', 'path');
+         * connName: name of settings structure inside settings.api.connections.<connectionName>
+         * optsName: name inside chosen connection inside settings.api.connections.<connectionName>.options.<optsName>
+         * dataType: response data type: 'text', 'json', 'buffer', 'form', 'blob'
+         * path: partial path of the resource where fetch call will go as per connection settings
          */
+        $$('sealed');
         $$('ns', 'flair.app.ajax');
-		Class('FetchAttr', Attribute, function() {
-            $$('override');
-            this.construct = (base, connectionName, optionName, dataType, path) => {
-                base(connectionName, optionName, path);
-        
-                // config
-                this.connection = settings.api.connections[connectionName] || { options: {} };
-                this.options = this.connection.options[optionName] || {};
-                this.dataType = dataType || 'text';
-                this.path = path || '';
-                this.fetchHandler = Port(which('serverFetch | clientFetch'));
-        
-                // constraints
-                this.constraints = '(class || struct) && (func && async) && !($inject || $on || @fetch)';
+		Class('FetchAttr', [IAttribute], function() {
+            this.construct = () => {
+                this.port = Port('fetchHandler');
             };
         
-            $$('readonly');
-            this.connection = null;
-        
-            $$('readonly');
-            this.options = null;
-            
-            $$('readonly');
-            this.path = null;
-        
-            $$('readonly');
-            this.dataType = null;    
-        
             $$('private');
-            this.fetchHandler = null;
+            this.port = null;
         
-            $$('override');
-            this.decorateFunction = (base, typeName, memberName, member) => { // eslint-disable-line no-unused-vars
-                let _this = this;
+            $$('readonly');
+            this.name = 'fetch';
+        
+            $$('readonly');
+            this.constraints = '(class || struct) && (func && async) && !($inject || $on || @fetch)';
+        
+            this.decorateFunction = (typeName, memberName, member, connName, optsName, dataType, path) => {
+                let _this = this,
+                    connection = settings.api.connections[connName] || { options: {} },
+                    opts = connection.options[optsName] || {},
+                    url = connection.url || '';
         
                 let replaceIt = (url, key, value) => {
                     if (url.indexOf(key) !== -1) {
@@ -582,9 +852,9 @@
                         let _key = `/:${key}?`;
                         if (url.indexOf(_key) !== -1) { 
                             if (value) {
-                                url = replaceAll(url, key, `/${encodeURIComponent(value.toString())}`); 
+                                url = replaceAll(url, _key, `/${encodeURIComponent(value.toString())}`); 
                             } else {
-                                url = replaceAll(url, key, ''); // replace with empty, so even '/' is removed - collapsing the whole section
+                                url = replaceAll(url, _key, ''); // replace with empty, so even '/' is removed - collapsing the whole section
                             }
                         }
         
@@ -592,7 +862,7 @@
                         _key = `/:${key}`;
                         if (url.indexOf(_key) !== -1) { 
                             if (value) {
-                                url = replaceAll(url, key, `/${encodeURIComponent(value.toString())}`); 
+                                url = replaceAll(url, _key, `/${encodeURIComponent(value.toString())}`); 
                             } else {
                                 throw Exception.InvalidDefinition(key);
                             }
@@ -600,9 +870,7 @@
                     }
                     return url;
                 };       
-                let buildApiUrl = (apiArgs) => {
-                    let url = _this.connection.url.trim(),
-                        path = _this.path;
+                let composeApiUrl = (apiArgs) => {
                     if (url) {
                         if (!url.endsWith('/')) { url += '/'; }
                         if (path) {
@@ -630,7 +898,7 @@
                             // replace all values in apiArgs, leaving special keys: query, abortable and options
                             for(let key in apiArgs) {
                                 if (apiArgs.hasOwnProperty(key) && ['query', 'abortable', 'options'].indexOf(key) === -1) {
-                                    url = replaceAll(url, key, apiArgs[key]);
+                                    url = replaceIt(url, key, apiArgs[key]);
                                 }
                             }
         
@@ -678,20 +946,18 @@
                         let apiPromise = new Promise((resolve, reject) => {
                             apiReject = reject;
         
-                            // build url
-                            let url = buildApiUrl(apiArgs);
+                            // compose api url
+                            composeApiUrl(apiArgs);
                             if (!url) { reject(Exception.InvalidDefinition(`${typeName}::${memberName}::fetch`)); return; }
         
                             // merge options with provided options
-                            let fetchOptions = deepMerge([_this.options, apiArgs.options || {}], true);
+                            let fetchOptions = deepMerge([opts, apiArgs.options || {}], true);
         
                             // set abort signal
                             if (apiAborter) { fetchOptions.signal = apiAborter.signal; }
         
                             // initiate fetch
-                            _this.fetchHandler(url, _this.dataType, fetchOptions).then((res) => {
-                                resolve(res);
-                            }).catch(reject);
+                            _this.port.fetch(url, dataType, fetchOptions).then(resolve).catch(reject);
                         });
         
                         // add abort method to promise for initiating the abort and rejection of promise
@@ -716,207 +982,75 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.ajax/FetchPort.js
-        const { IPortHandler } = await ns('flair.app');
+    await (async () => { // type: ./src/flair.app/flair.app.ajax/@6-Fetch.js
+        
+        const { FetchPort } = await ns('flair.app.ajax');
         
         /**
-         * @name FetchPort
-         * @description FetchPort and default implementation
+         * @name Fetch
+         * @description Fetch manager
          */
-        $$('sealed');
+        $$('singleton');
         $$('ns', 'flair.app.ajax');
-		Class('FetchPort', [IPortHandler], function() {
-            this.construct = () => {
-                this.port = which('serverFetch | clientFetch');
-                Port.define(this.port, this.factory);
-            };
-        
-            $$('readonly');
-            this.port = null;
-        
-            $$('readonly');
-            this.interface = null;
-        
-            $$('private');
-            this.fetcher = async (fetchFunc, url, resDataType, reqData) => {
-                if (typeof url !== 'string') { throw Exception.InvalidArgument('url'); }
-                if (typeof resDataType !== 'string' || ['text', 'json', 'buffer', 'form', 'blob'].indexOf(resDataType) === -1) { throw Exception.InvalidArgument('resDataType'); }
-                if (!reqData) { throw Exception.InvalidArgument('reqData'); }
-        
-                let response = await fetchFunc(url, reqData);
-                if (!response.ok) { throw Exception.OperationFailed(url, response.status); }
-        
-                let resMethod = '';
-                switch(resDataType) {
-                    case 'text': resMethod = 'text'; break;
-                    case 'json': resMethod = 'json'; break;
-                    case 'buffer': resMethod = 'arrayBuffer'; break;
-                    case 'form': resMethod = 'formData'; break;
-                    case 'blob': resMethod = 'blob'; break;
-                }
-                return await response[resMethod]();
-            };
-        
-            $$('private');
-            this.serverFetchFactory = (e) => { // eslint-disable-line no-unused-vars
-                return (url, resDataType, reqData) => {
-                    return this.fetcher(require('node-fetch'), url, resDataType, reqData);
-                };
-            };
-        
-            $$('private');
-            this.clientFetchFactory = (e) => { // eslint-disable-line no-unused-vars
-                return (url, resDataType, reqData) => {
-                    return this.fetcher(fetch, url, resDataType, reqData);
-                };
-            };
-        
-            this.factory = (e) => {
-                if (env.isServer) {
-                    return this.serverFetchFactory(e);
-                } else {
-                    return this.clientFetchFactory(e);
-                }
-            };
+		Class('Fetch', [FetchPort], function() {
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.caching/CacheAttr.js
-        const { Attribute } = await ns();
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@6-State.js
+        
+        const { StatePort } = await ns('flair.app.caching');
         
         /**
-         * @name CacheAttr
-         * @description Cache custom attribute
-         * $$('cache', { 'duration': 10000 }) OR $$('cache', 10000)
+         * @name State
+         * @description State manager
          */
+        $$('singleton');
         $$('ns', 'flair.app.caching');
-		Class('CacheAttr', Attribute, function() {
-            $$('override');
-            this.construct = (base, cacheConfig) => {
-                base(cacheConfig);
-        
-                // config
-                this.cacheConfig = (typeof cacheConfig === 'number' ? { duration: cacheConfig } : cacheConfig)
-                this.enabled = (this.cacheConfig && this.cacheConfig.duration);
-                this.cacheHandler = Port('cacheHandler');
-        
-                // constraints
-                this.constraints = '(class || struct) && (func && async) && !(timer || on || @cache)';
-            };
-        
-            $$('readonly');
-            this.cacheConfig = null;
-        
-            $$('private');
-            this.cacheHandler = null;
-        
-            $$('private');
-            this.enabled = false;
-        
-            $$('override');
-            this.decorateFunction = (base, typeName, memberName, member) => { // eslint-disable-line no-unused-vars
-                let _this = this,
-                    cacheId = `${typeName}___${memberName}`;
-        
-                let callMember = async (...args) => {
-                    let resultData = await member(...args);
-                    if (_this.enabled) { // save for later
-                        await _this.cacheHandler.set(cacheId, _this.cacheConfig, resultData);
-                    }
-                    return resultData;
-                };
-        
-                // decorated function
-                return async function(...args) {
-                    if (_this.enabled) {
-                        try {
-                            return await _this.cacheHandler.get(cacheId, _this.cacheConfig);
-                        } catch (err) { // eslint-disable-line no-unused-vars
-                            // ignore and move forward by calling callMember below
-                        }
-                    }
-                    return await callMember(...args);
-                };
-            };
+		Class('State', [StatePort], function() {
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.caching/CachePort.js
-        const { IPortHandler } = await ns('flair.app');
+    await (async () => { // type: ./src/flair.app/flair.app.caching/@6-Cache.js
+        
+        const { CachePort } = await ns('flair.app.caching');
         
         /**
-         * @name CachePort
-         * @description CacheHandlerPort and default implementation
+         * @name Cache
+         * @description Cache manager
+         */
+        $$('singleton');
+        $$('ns', 'flair.app.caching');
+		Class('Cache', [CachePort], function() {
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.bw/DIContainer.js
+        const { Bootware } = await ns('flair.app');
+        
+        /**
+         * @name DIContainer
+         * @description Initialize DI Container
          */
         $$('sealed');
-        $$('ns', 'flair.app.caching');
-		Class('CachePort', [IPortHandler], function() {
-            this.construct = () => {
-                this.port = 'cacheHandler';
-                this.interface = ['get', 'set', 'remove'];
-                Port.define(this.port, this.interface, this.factory);
-            };
-        
-            $$('readonly');
-            this.port = null;
-        
-            $$('readonly');
-            this.interface = null;
-        
-            this.factory = (e) => { // eslint-disable-line no-unused-vars
-                // this inbuilt caching works over localstorage 
-                // any external caching can be applied by providing a custom cache handler
-                let cacheStorage = Port('localStorage'),
-                    cacheItemNamePrefix = '__cache_',
-                    cachedItemSavedAtNameSuffix = '__savedAt_';
-            
-                let funcs = {
-                    get: async (cacheId, cacheConfig) => {
-                        if (typeof cacheId !== 'string') { throw Exception.InvalidArgument('cacheId'); }
-                        if (!cacheConfig || !cacheConfig.duration) { throw Exception.InvalidArgument('cacheConfig'); }
-            
-                        let itemKey = `${cacheItemNamePrefix}${cacheId}`,
-                            savedAtItemKey = `${itemKey}${cachedItemSavedAtNameSuffix}`,
-                            fetchedData = JSON.parse(cacheStorage.getItem(itemKey)).value,
-                            dataSavedAt = parseInt(cacheStorage.getItem(savedAtItemKey));
-                        if ((Date.now() - dataSavedAt) <= cacheConfig.duration) { // cache is still hot
-                            return fetchedData;
-                        } else { // cache is stale, delete it
-                            cacheStorage.removeItem(itemKey);
-                            cacheStorage.removeItem(savedAtItemKey);
-                            throw Exception.NotFound(cacheId);
-                        }
-                    },
-                    set: async (cacheId, cacheConfig, fetchedData) => {
-                        if (typeof cacheId !== 'string') { throw Exception.InvalidArgument('cacheId'); }
-                        if (!cacheConfig) { throw Exception.InvalidArgument('cacheConfig'); }
-                        if (typeof fetchedData === 'undefined') { throw Exception.InvalidArgument('fetchedData'); }
-            
-                        let itemKey = `${cacheItemNamePrefix}${cacheId}`,
-                            savedAtItemKey = `${itemKey}${cachedItemSavedAtNameSuffix}`,
-                            jsonFetchedData = JSON.stringify({value: fetchedData}),
-                            dataSavedAt = Date.now().toString();
-                        cacheStorage.setItem(itemKey, jsonFetchedData);
-                        cacheStorage.setItem(savedAtItemKey, dataSavedAt);
-                    },
-                    remove: async (cacheId, cacheConfig) => { 
-                        if (typeof cacheId !== 'string') { throw Exception.InvalidArgument('cacheId'); }
-                        if (!cacheConfig) { throw Exception.InvalidArgument('cacheConfig'); }
-                    
-                        let itemKey = `${cacheItemNamePrefix}${cacheId}`,
-                            savedAtItemKey = `${itemKey}${cachedItemSavedAtNameSuffix}`;
-                        cacheStorage.removeItem(itemKey);
-                        cacheStorage.removeItem(savedAtItemKey);
+        $$('ns', 'flair.app.bw');
+		Class('DIContainer', Bootware, function() {
+            $$('override');
+            this.boot = async (base) => {
+                base();
+                
+                let containerItems = settings.boot.di.container;
+                for(let alias in containerItems) {
+                    if (containerItems.hasOwnProperty(alias)) {
+                        Container.register(alias, containerItems[alias]);
                     }
-                };
-                return funcs;
+                }
             };
         });
         
     })();    
     await (async () => { // type: ./src/flair.app/flair.app/BootEngine.js
-        const { Bootware, IPortHandler } = await ns('flair.app');
-        const { Attribute } = await ns();
+        const { IPortHandler, IAttribute } = await ns();
+        const { Bootware } = await ns('flair.app');
         
         /**
          * @name BootEngine
@@ -1031,6 +1165,84 @@
                         }
                     }
                 };
+                const loadPortHandlers = async () => {
+                    let list = null,
+                        phType = null;
+        
+                    // combined port handlers (inbuilt and configured)
+                    // which() will pick as:
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+                    // here definition is just the qualified type name which implements IPortHandler
+                    // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
+                    //       all inbuilt port definitions can be overwritten if need be 
+                    list = [
+                        'flair.app.logging.LogPort',
+                        'flair.app.ajax.FetchPort',
+                        'flair.app.caching.SessionPort',
+                        'flair.app.caching.StatePort',
+                        'flair.app.caching.CachePort'
+                    ];
+                    list.push(...settings.boot.ports);
+        
+                    for(let item of list) {
+                        item = which(item);
+                        if (item) {
+                            phType = as(await include(item), IPortHandler);
+                            Port.connect(new phType());
+                        }
+                    }
+                };
+                const loadCustomAttributes = async () => { 
+                    let list = null,
+                        caType = null;
+        
+                    // combined custom attributes (inbuilt and configured)
+                    // which() will pick as:
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+                    // here definition is just the qualified type name which implements IAttribute
+                    // note: it will throw error if a custom attribute with same name is already registered
+                    list = [
+                        'flair.app.ajax.FetchAttr',
+                        'flair.app.caching.SessionAttr',
+                        'flair.app.caching.StateAttr',
+                        'flair.app.caching.CacheAttr'
+                    ];
+                    list.push(...settings.boot.attributes);
+        
+                    for(let item of list) {
+                        item = which(item);
+                        if (item) {
+                            caType = as(await include(item), IAttribute);
+                            if (caType) {
+                                $$.register(new caType());
+                            }
+                        }
+                    }
+                };      
+                const loadAspects = async () => { // TODO: create this method
+                    // let list = null,
+                    //     caType = null;
+        
+                    //     // TODO
+                    // // combined custom attributes (inbuilt and configured)
+                    // // which() will pick as:
+                    // // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+                    // // here definition is { name: "", type: "" } name and the qualified type name which is derived from Attribute
+                    // // note: it will ignore if a custom attribute with same name is already registered
+                    // list = [
+                    //     { name: 'fetch', type: 'flair.app.ajax.FetchAttr' },
+                    //     { name: 'cache', type: 'flair.app.caching.CacheAttr' }
+                    // ];
+                    // list.push(...settings.boot.attributes);
+        
+                    // for(let item of list) {
+                    //     item.type = which(item.type);
+                    //     if (item.name && item.type && !Container.isRegistered(item.name)) {
+                    //         caType = as(await include(item.type), Attribute);
+                    //         if (caType) { Container.register(item.name, caType); }
+                    //     }
+                    // }
+                };            
                 const loadAssemblies = async () => {
                     // combined assemblies (inbuilt and configured)
                     // which() will pick as:
@@ -1039,7 +1251,7 @@
                     let list = [
                         "./flair.app{.min}.js",
                         "./flair.server{.min}.js | ./flair.client{.min}.js",
-                        "isExpress::./flair.server.express{.min}.js | isVue::./flair.client.vue{.min}.js",
+                        "x | isVue::./flair.client.vue{.min}.js",
                         "isFirebase::./flair.server.firebase{.min}.js | x"
                     ];
                     list.push(...settings.boot.assemblies);
@@ -1049,55 +1261,6 @@
                         if (item) { await AppDomain.context.loadAssembly(item); }
                     }
                 };
-                const loadPortHandlers = async () => {
-                    let list = null,
-                        phType = null,
-                        ph = null;
-        
-                    // combined port handlers (inbuilt and configured)
-                    // which() will pick as:
-                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
-                    // here definition is just the qualified type name which implements IPortHandler
-                    // note: ports of same type will be overwritten if defined multiple times, this is beneficial too, as
-                    // all inbuilt settings can be overwritten if need be 
-                    list = [
-                        'flair.app.ajax.FetchPort',
-                        'flair.app.caching.CachePort'
-                    ];
-                    list.push(...settings.boot.ports);
-        
-                    for(let item of list) {
-                        item = which(item);
-                        if (item) {
-                            phType = await include(item);
-                            ph = as(new phType(), IPortHandler);
-                            if (ph) { Port.connect(ph.port, ph.factory); }
-                        }
-                    }
-                };
-                const loadCustomAttributes = async () => {
-                    let list = null,
-                        caType = null;
-        
-                    // combined custom attributes (inbuilt and configured)
-                    // which() will pick as:
-                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
-                    // here definition is { name: "", type: "" } name and the qualified type name which is derived from Attribute
-                    // note: it will ignore if a custom attribute with same name is already registered
-                    list = [
-                        { name: 'fetch', type: 'flair.app.ajax.FetchAttr' },
-                        { name: 'cache', type: 'flair.app.caching.CacheAttr' }
-                    ];
-                    list.push(...settings.boot.attributes);
-        
-                    for(let item of list) {
-                        item.type = which(item.type);
-                        if (item.name && item.type && !Container.isRegistered(item.name)) {
-                            caType = as(await include(item.type), Attribute);
-                            if (caType) { Container.register(item.name, caType); }
-                        }
-                    }
-                };        
                 const loadBootwares = async () => {
                     let list = null,
                         bwType = null,
@@ -1109,12 +1272,11 @@
                     // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
                     // here definition is just the qualified type name which is derived from Bootware type
                     list = [
-                        "flair.boot.NodeEnv ~ x | x",
-                        "isExpress::flair.boot.Middlewares ~ x | x",
-                        "flair.boot.ResHeaders ~ x | x",
-                        "flair.boot.DIContainer",
-                        "x | isVue::flair.boot.VueSetup ~ x",
-                        "flair.boot.ServerRouter ~ x | flair.boot.ClientRouter | x"
+                        "flair.app.bw.NodeEnv ~ x | x",
+                        "flair.app.bw.Middlewares ~ x | x",
+                        "flair.app.bw.DIContainer",
+                        "x | isVue::flair.app.bw.VueSetup ~ x",
+                        "flair.app.bw.ServerRouter ~ x | flair.app.bw.ClientRouter | x"
                     ];
                     list.push(...settings.boot.bootwares);
         
@@ -1125,7 +1287,7 @@
                             if (bwType) {
                                 bw = new bwType(); 
                                 allBootwares.push(bw); // push in array, so boot and ready would be called for them
-                                if (bw.info.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
+                                if (bw.isMountSpecific) { // if bootware is mount specific bootware - means can run once for each mount
                                     mountSpecificBootwares.push(bw);
                                 }
                             }
@@ -1162,7 +1324,7 @@
         
                         // run all for once (ignoring the mountspecific ones)
                         for(let bw of allBootwares) {
-                            if (!bw.info.isMountSpecific) {
+                            if (!bw.isMountSpecific) {
                                 await bw[method]();
                             }
                         }
@@ -1230,9 +1392,10 @@
                 await loadLinks();
                 await loadScripts();
                 await loadPreambles();
-                await loadAssemblies();
                 await loadPortHandlers();
                 await loadCustomAttributes();
+                await loadAspects();
+                await loadAssemblies();
                 await loadBootwares();
                 await boot();
                 await start();
@@ -1242,6 +1405,152 @@
                 // return success
                 return true;
             };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.caching/CacheAttr.js
+        const { IAttribute } = await ns();
+        
+        /**
+         * @name CacheAttr
+         * @description Cache custom attribute
+         * $$('cache')
+         * $$('cache', ttl)
+         * ttl: integer - time to live in seconds
+         */
+        $$('sealed');
+        $$('ns', 'flair.app.caching');
+		Class('CacheAttr', [IAttribute], function() {
+            this.construct = () => {
+                this.port = Port('cacheStorage');
+            };
+        
+            $$('private');
+            this.port = null;
+        
+            $$('readonly');
+            this.name = 'cache';
+        
+            $$('readonly');
+            this.constraints = '(class || struct) && (func && async) && !(timer || on || @cache)';
+        
+            this.decorateFunction = (typeName, memberName, member, ttl) => {
+                let _this = this,
+                    cacheId = `${typeName}___${memberName}`;
+        
+                let callMember = async (...args) => {
+                    let resultData = await member(...args);
+                    await _this.port.setItem(cacheId, resultData, ttl);
+                    return resultData;
+                };
+        
+                // decorated function
+                return async function(...args) {
+                    let fetchedData = await _this.port.getItem(cacheId);
+                    return (fetchedData !== null) ? fetchedData : await callMember(...args);
+                };
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.caching/SessionAttr.js
+        const { IAttribute } = await ns();
+        
+        /**
+         * @name SessionAttr
+         * @description Session custom attribute
+         * $$('session')
+         */
+        $$('sealed');
+        $$('ns', 'flair.app.caching');
+		Class('SessionAttr', [IAttribute], function() {
+            this.construct = () => {
+                this.port = Port('sessionStorage');
+            };
+        
+            $$('private');
+            this.port = null;
+        
+            $$('readonly');
+            this.name = 'session';
+        
+            $$('readonly');
+            this.constraints = '(class && prop) && !($static || $state || $readonly || $abstract || $virtual)';
+        
+        
+            // TODO: here onwards - think how session and etate will come out of builder
+            // considering addDisposal -- is that needed - because on dispose it is removed 
+            // and no point of session and state availability then
+            this.decorateFunction = (typeName, memberName, member, ttl) => {
+                let _this = this,
+                    cacheId = `${typeName}___${memberName}`;
+        
+                let callMember = async (...args) => {
+                    let resultData = await member(...args);
+                    await _this.port.setItem(cacheId, resultData, ttl);
+                    return resultData;
+                };
+        
+                // decorated function
+                return async function(...args) {
+                    let fetchedData = await _this.port.getItem(cacheId);
+                    return (fetchedData !== null) ? fetchedData : await callMember(...args);
+                };
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.caching/StateAttr.js
+        const { IAttribute } = await ns();
+        const { State } = await ns('flair.app.caching');
+        
+        /**
+         * @name StateAttr
+         * @description State custom attribute
+         * $$('state')
+         */
+        $$('sealed');
+        $$('ns', 'flair.app.caching');
+		Class('StateAttr', [IAttribute], function() {
+            $$('readonly');
+            this.name = 'state';
+        
+            $$('readonly');
+            this.constraints = '(class && prop) && !($static || $session || $readonly || $abstract || $virtual)';
+        
+        
+            // TODO: here onwards - think how session and etate will come out of builder
+            // considering addDisposal -- is that needed - because on dispose it is removed 
+            // and no point of session and state availability then
+            this.decorateFunction = (typeName, memberName, member, ttl) => {
+                let cacheId = `${typeName}___${memberName}`;
+        
+                let callMember = async (...args) => {
+                    let resultData = await member(...args);
+                    await State.setItem(cacheId, resultData, ttl);
+                    return resultData;
+                };
+        
+                // decorated function
+                return async function(...args) {
+                    let fetchedData = await State.getItem(cacheId);
+                    return (fetchedData !== null) ? fetchedData : await callMember(...args);
+                };
+            };
+        });
+        
+    })();    
+    await (async () => { // type: ./src/flair.app/flair.app.logging/LogPort.js
+        
+        const { IPortHandler } = await ns();
+        
+        /**
+         * @name LogPort
+         * @description Default server/client logging definition
+         */
+        $$('ns', 'flair.app.logging');
+		Class('LogPort', [IPortHandler], function() {
+            // TODO
         });
         
     })();
@@ -1255,7 +1564,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.22","lupdate":"Wed, 25 Sep 2019 04:57:42 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.boot.DIContainer","flair.app.IPortHandler","flair.app.ajax.FetchAttr","flair.app.ajax.FetchPort","flair.app.caching.CacheAttr","flair.app.caching.CachePort","flair.app.BootEngine"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.32","lupdate":"Sat, 28 Sep 2019 02:07:49 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.Payload","flair.app.HandlerContext","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.Middleware","flair.app.ajax.FetchPort","flair.app.caching.CachePort","flair.app.caching.SessionPort","flair.app.caching.StatePort","flair.app.caching.Session","flair.app.ajax.FetchAttr","flair.app.ajax.Fetch","flair.app.caching.State","flair.app.caching.Cache","flair.app.bw.DIContainer","flair.app.BootEngine","flair.app.caching.CacheAttr","flair.app.caching.SessionAttr","flair.app.caching.StateAttr","flair.app.logging.LogPort"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

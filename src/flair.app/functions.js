@@ -1,5 +1,5 @@
 // assembly globals
-const onLoadComplete = (asm) => {
+const onLoadComplete = (asm) => { // eslint-disable-line no-unused-vars
     // ports definition - start
 
     //  sessionStorage {
@@ -11,7 +11,7 @@ const onLoadComplete = (asm) => {
     //  }
     //  key: unique key of the session-item
     //  value: data to put in session
-    _Port.define('sessionStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
+    Port.define('sessionStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
 
     //  stateStorage {
     //      key: (key)
@@ -22,7 +22,7 @@ const onLoadComplete = (asm) => {
     //  }
     //  key: unique key of the state-item
     //  value: data to put in state
-    _Port.define('stateStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
+    Port.define('stateStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);    
 
     //  cacheStorage {
     //      key: (key)
@@ -33,7 +33,7 @@ const onLoadComplete = (asm) => {
     //  }
     //  key: unique key of the state-item
     //  value: data to put in state
-    _Port.define('cacheStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);     
+    Port.define('cacheStorage', ['key', 'getItem', 'setItem', 'removeItem', 'clear']);     
 
     //  fetchHandler {
     //      fetch: async (url, dataType, opts)

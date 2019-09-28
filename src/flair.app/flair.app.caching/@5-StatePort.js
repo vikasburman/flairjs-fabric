@@ -30,7 +30,7 @@ Class('', [IPortHandler], function() {
             this.handler.clear(); 
         } else {
             let stateKeys = Object.keys(window.localStorage);
-            for(key of stateKeys) {
+            for(let key of stateKeys) {
                 if (key.startsWith(this.itemNamePrefix)) {
                     this.handler.removeItem(key);
                 }

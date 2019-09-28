@@ -28,49 +28,10 @@ Class('', [IPortHandler], function() {
     this.removeItem = async (key) => { return this.handler.removeItem(this.itemNamePrefix + key); }
     this.clear = async () => { 
         let sessionKeys = Object.keys(this.handler);
-        for(key of sessionKeys) {
+        for(let key of sessionKeys) {
             if (key.startsWith(this.itemNamePrefix)) {
                 this.handler.removeItem(key);
             }
         }
     };
 });
-
-
-
-
-
-
-
-//     if (env.isServer) {
-//         if (!global.sessionStorage) { 
-//             // the way, on browser sessionStorage is different for each tab, 
-//             // here 'sessionStorage' property on global is different for each node instance in a cluster
-//             const nodeSessionStorage = function() {
-//                 let keys = {};
-//                 this.key = (key) => { 
-//                     if (!key) { throw _Exception.InvalidArgument('key', this.key); }
-//                     return (keys.key ? true : false); 
-//                 };
-//                 this.getItem = (key) => { 
-//                     if (!key) { throw _Exception.InvalidArgument('key', this.getItem); }
-//                     return keys.key || null;
-//                 };
-//                 this.setItem = (key, value) => {
-//                     if (!key) { throw _Exception.InvalidArgument('key', this.setItem); }
-//                     if (typeof value === 'undefined') { throw _Exception.InvalidArgument('value', this.setItem); }
-//                     keys[key] = value;
-//                 };
-//                 this.removeItem = (key) => { 
-//                     if (!key) { throw _Exception.InvalidArgument('key', this.removeItem); }
-//                     delete keys[key];
-//                 };
-//                 this.clear = () => { 
-//                     keys = {};
-//                 };                        
-//             };
-//             global.sessionStorage = new nodeSessionStorage();
-//         }
-// 
-// };
-/

@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.client.vue
  *     File: ./flair.client.vue.js
- *  Version: 0.60.22
- *  Wed, 25 Sep 2019 04:57:44 GMT
+ *  Version: 0.60.32
+ *  Sat, 28 Sep 2019 02:07:52 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -31,7 +31,7 @@
     /* eslint-disable no-unused-vars */
     
     // flair types, variables and functions
-    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, attr, InjectedArg, bring, Container, include, Port, on, post, telemetry,
+    const { Class, Struct, Enum, Interface, Mixin, Aspects, AppDomain, $$, InjectedArg, bring, Container, include, Port, on, post, telemetry,
             Reflector, Serializer, Tasks, as, is, isDefined, isComplies, isDerivedFrom, isAbstract, isSealed, isStatic, isSingleton, isDeprecated,
             isImplements, isInstanceOf, isMixed, getAssembly, getAttr, getContext, getResource, getRoute, getType, ns, getTypeOf,
             getTypeName, typeOf, dispose, using, Args, Exception, noop, nip, nim, nie, event } = flair;
@@ -598,7 +598,7 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.client.vue/flair.boot/@@1-VueSetup.js
+    await (async () => { // type: ./src/flair.client.vue/flair.app.bw/@@1-VueSetup.js
         const { Bootware } = await ns('flair.app');
         const { VueComponent, VueDirective, VueFilter, VueMixin, VuePlugin } = await ns('flair.ui');
         const Vue = await include('vue/vue{.min}.js');
@@ -607,13 +607,8 @@
          * @name VueSetup
          * @description Vue initializer
          */
-        $$('ns', 'flair.boot');
+        $$('ns', 'flair.app.bw');
 		Class('VueSetup', Bootware, function() {
-            $$('override');
-            this.construct = (base) => {
-                base('Vue Setup');
-            };
-        
             $$('override');
             this.boot = async (base) => {
                 base();
@@ -677,7 +672,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.22","lupdate":"Wed, 25 Sep 2019 04:57:44 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueMixin","flair.ui.VuePlugin","flair.boot.VueSetup"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.client.vue","file":"./flair.client.vue{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.32","lupdate":"Sat, 28 Sep 2019 02:07:52 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.ui.VueComponentMembers","flair.ui.VueView","flair.ui.VueComponent","flair.ui.VueDirective","flair.ui.VueFilter","flair.ui.VueMixin","flair.ui.VuePlugin","flair.app.bw.VueSetup"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({
