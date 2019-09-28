@@ -2,7 +2,7 @@
 const { IPortHandler } = await ns();
 
 /**
- * @name CacheStorage
+ * @name CacheStoragePort
  * @description Default server/client caching definition
  */
 Class('', [IPortHandler], function() {

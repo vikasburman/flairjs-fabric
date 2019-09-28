@@ -1,7 +1,7 @@
 const { IPortHandler } = await ns();
 
 /**
- * @name FetchPort
+ * @name FetchHandlerPort
  * @description Default server/client fetch implementation
  */
 Class('', [IPortHandler], function() {

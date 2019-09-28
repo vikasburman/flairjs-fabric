@@ -2,7 +2,7 @@
 const { IPortHandler } = await ns();
 
 /**
- * @name StatePort
+ * @name StateStoragePort
  * @description Default server/client persisted state caching definition
  */
 Class('', [IPortHandler], function() {

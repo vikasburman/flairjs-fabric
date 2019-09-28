@@ -2,7 +2,7 @@
 const { IPortHandler } = await ns();
 
 /**
- * @name SessionPort
+ * @name SessionStoragePort
  * @description Default server/client session caching definition
  */
 Class('', [IPortHandler], function() {
