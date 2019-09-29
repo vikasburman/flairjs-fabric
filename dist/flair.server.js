@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.server
  *     File: ./flair.server.js
- *  Version: 0.60.36
- *  Sat, 28 Sep 2019 15:50:59 GMT
+ *  Version: 0.60.37
+ *  Sat, 28 Sep 2019 18:53:26 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -1104,7 +1104,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.36","lupdate":"Sat, 28 Sep 2019 15:50:59 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerMiddleware","flair.api.AttachmentPayload","flair.api.JSONPayload","flair.api.BinaryPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.app.ServerHost","flair.app.bw.Middlewares","flair.app.bw.NodeEnv","flair.app.bw.ServerRouter","flair.app.bw.SessionStorage","flair.server.mw.ResHeaders"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.server","file":"./flair.server{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.37","lupdate":"Sat, 28 Sep 2019 18:53:26 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.ServerMiddleware","flair.api.AttachmentPayload","flair.api.JSONPayload","flair.api.BinaryPayload","flair.api.RestHandlerResult","flair.api.RestHandlerContext","flair.api.RestHandler","flair.app.ServerHost","flair.app.bw.Middlewares","flair.app.bw.NodeEnv","flair.app.bw.ServerRouter","flair.app.bw.SessionStorage","flair.server.mw.ResHeaders"],"resources":[],"assets":["main.js","start.js"],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

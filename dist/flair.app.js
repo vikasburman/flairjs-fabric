@@ -5,8 +5,8 @@
  * 
  * Assembly: flair.app
  *     File: ./flair.app.js
- *  Version: 0.60.36
- *  Sat, 28 Sep 2019 15:50:56 GMT
+ *  Version: 0.60.37
+ *  Sat, 28 Sep 2019 18:53:24 GMT
  * 
  * (c) 2017-2019 Vikas Burman
  * MIT
@@ -535,16 +535,16 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.caching/state/@5-StateStorage.js
+    await (async () => { // type: ./src/flair.app/flair.app.caching/state/@5-StateStoragePort.js
         
         const { IPortHandler } = await ns();
         
         /**
-         * @name StatePort
+         * @name StateStoragePort
          * @description Default server/client persisted state caching definition
          */
         $$('ns', 'flair.app.caching');
-		Class('StateStorage', [IPortHandler], function() {
+		Class('StateStoragePort', [IPortHandler], function() {
             this.construct = () => {
                 // this inbuilt state-cache works over node-localstorage (on server) and window.localStorage (on client)
                 // any external state-cache can be applied by providing a custom state-cache handler
@@ -579,15 +579,15 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.ajax/fetch/@5-FetchHandler.js
+    await (async () => { // type: ./src/flair.app/flair.app.ajax/fetch/@5-FetchHandlerPort.js
         const { IPortHandler } = await ns();
         
         /**
-         * @name FetchPort
+         * @name FetchHandlerPort
          * @description Default server/client fetch implementation
          */
         $$('ns', 'flair.app.ajax');
-		Class('FetchHandler', [IPortHandler], function() {
+		Class('FetchHandlerPort', [IPortHandler], function() {
             this.construct = () => {
                 if (env.isServer) {
                     this.handler = require('node-fetch'); // node specific fetch clone
@@ -623,16 +623,16 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.caching/session/@5-SessionStorage.js
+    await (async () => { // type: ./src/flair.app/flair.app.caching/session/@5-SessionStoragePort.js
         
         const { IPortHandler } = await ns();
         
         /**
-         * @name SessionPort
+         * @name SessionStoragePort
          * @description Default server/client session caching definition
          */
         $$('ns', 'flair.app.caching');
-		Class('SessionStorage', [IPortHandler], function() {
+		Class('SessionStoragePort', [IPortHandler], function() {
             this.construct = () => {
                 // this inbuilt session-cache works over global.sessionStorage (on server) and window.sessionStorage (on client)
                 // any external session-cache can be applied by providing a custom session-cache handler
@@ -664,16 +664,16 @@
         });
         
     })();    
-    await (async () => { // type: ./src/flair.app/flair.app.caching/cache/@5-CacheStorage.js
+    await (async () => { // type: ./src/flair.app/flair.app.caching/cache/@5-CacheStoragePort.js
         
         const { IPortHandler } = await ns();
         
         /**
-         * @name CacheStorage
+         * @name CacheStoragePort
          * @description Default server/client caching definition
          */
         $$('ns', 'flair.app.caching');
-		Class('CacheStorage', [IPortHandler], function() {
+		Class('CacheStoragePort', [IPortHandler], function() {
             this.construct = () => {
                 const CacheStorage = function () {
                     // this inbuilt cache-storage works over node-cache (on server) and window.localStorage + custom (on client)
@@ -1080,7 +1080,7 @@
         
     })();    
     await (async () => { // type: ./src/flair.app/flair.app/BootEngine.js
-        const { IPortHandler, IAttribute } = await ns();
+        const { IPortHandler, IAttribute, IAspect } = await ns();
         const { Bootware } = await ns('flair.app');
         
         /**
@@ -1250,29 +1250,27 @@
                         }
                     }
                 };      
-                const loadAspects = async () => { // TODO: create this method
-                    // let list = null,
-                    //     caType = null;
+                const loadAspects = async () => {
+                    let list = null,
+                        aType = null;
         
-                    //     // TODO
-                    // // combined custom attributes (inbuilt and configured)
-                    // // which() will pick as:
-                    // // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
-                    // // here definition is { name: "", type: "" } name and the qualified type name which is derived from Attribute
-                    // // note: it will ignore if a custom attribute with same name is already registered
-                    // list = [
-                    //     { name: 'fetch', type: 'flair.app.ajax.FetchAttr' },
-                    //     { name: 'cache', type: 'flair.app.caching.CacheAttr' }
-                    // ];
-                    // list.push(...settings.boot.attributes);
+                    // combined aspects (inbuilt and configured)
+                    // which() will pick as:
+                    // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+                    // here definition is { pointcut: 'pointcut', aspect: 'aspectType' }
+                    list = [
+                    ];
+                    list.push(...settings.boot.aspects);
         
-                    // for(let item of list) {
-                    //     item.type = which(item.type);
-                    //     if (item.name && item.type && !Container.isRegistered(item.name)) {
-                    //         caType = as(await include(item.type), Attribute);
-                    //         if (caType) { Container.register(item.name, caType); }
-                    //     }
-                    // }
+                    for(let item of list) {
+                        item = which(item);
+                        if (item) {
+                            aType = as(await include(item), IAspect);
+                            if (aType) {
+                                Aspects.register(item.pointcut, aType);
+                            }
+                        }
+                    }
                 };            
                 const loadAssemblies = async () => {
                     // combined assemblies (inbuilt and configured)
@@ -1504,7 +1502,7 @@
     AppDomain.context.current().currentAssemblyBeingLoaded('', (typeof onLoadComplete === 'function' ? onLoadComplete : null)); // eslint-disable-line no-undef
     
     // register assembly definition object
-    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.36","lupdate":"Sat, 28 Sep 2019 15:50:56 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.Middleware","flair.app.caching.StateStorage","flair.app.ajax.FetchHandler","flair.app.caching.SessionStorage","flair.app.caching.CacheStorage","flair.app.ajax.FetchAttr","flair.app.bw.DIContainer","flair.app.caching.CacheAttr","flair.app.caching.SessionAttr","flair.app.BootEngine","flair.app.caching.StateAttr","flair.app.logging.LogPort"],"resources":[],"assets":[],"routes":[]}');
+    AppDomain.registerAdo('{"name":"flair.app","file":"./flair.app{.min}.js","package":"flairjs-fabric","desc":"Foundation for True Object Oriented JavaScript Apps","title":"Flair.js Fabric","version":"0.60.37","lupdate":"Sat, 28 Sep 2019 18:53:24 GMT","builder":{"name":"flairBuild","version":"1","format":"fasm","formatVersion":"1","contains":["init","func","type","vars","reso","asst","rout","sreg"]},"copyright":"(c) 2017-2019 Vikas Burman","license":"MIT","types":["flair.app.Bootware","flair.app.HandlerContext","flair.app.Payload","flair.app.Handler","flair.app.App","flair.app.HandlerResult","flair.app.Host","flair.app.Middleware","flair.app.caching.StateStoragePort","flair.app.ajax.FetchHandlerPort","flair.app.caching.SessionStoragePort","flair.app.caching.CacheStoragePort","flair.app.ajax.FetchAttr","flair.app.bw.DIContainer","flair.app.caching.CacheAttr","flair.app.caching.SessionAttr","flair.app.BootEngine","flair.app.caching.StateAttr","flair.app.logging.LogPort"],"resources":[],"assets":[],"routes":[]}');
     
     // return settings and config
     return Object.freeze({

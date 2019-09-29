@@ -1,4 +1,4 @@
-const { IPortHandler, IAttribute } = await ns();
+const { IPortHandler, IAttribute, IAspect } = await ns();
 const { Bootware } = await ns('flair.app');
 
 /**
@@ -167,29 +167,27 @@ Class('', function() {
                 }
             }
         };      
-        const loadAspects = async () => { // TODO: create this method
-            // let list = null,
-            //     caType = null;
+        const loadAspects = async () => {
+            let list = null,
+                aType = null;
 
-            //     // TODO
-            // // combined custom attributes (inbuilt and configured)
-            // // which() will pick as:
-            // // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
-            // // here definition is { name: "", type: "" } name and the qualified type name which is derived from Attribute
-            // // note: it will ignore if a custom attribute with same name is already registered
-            // list = [
-            //     { name: 'fetch', type: 'flair.app.ajax.FetchAttr' },
-            //     { name: 'cache', type: 'flair.app.caching.CacheAttr' }
-            // ];
-            // list.push(...settings.boot.attributes);
+            // combined aspects (inbuilt and configured)
+            // which() will pick as:
+            // envProp::mainThreadOnServer{.min}.xyz ~ envProp::workerThreadOnServer{.min}.xyz | envProp::mainThreadOnClient{.min}.xyz ~ envProp::workerThreadOnClient{.min}.xyz
+            // here definition is { pointcut: 'pointcut', aspect: 'aspectType' }
+            list = [
+            ];
+            list.push(...settings.boot.aspects);
 
-            // for(let item of list) {
-            //     item.type = which(item.type);
-            //     if (item.name && item.type && !Container.isRegistered(item.name)) {
-            //         caType = as(await include(item.type), Attribute);
-            //         if (caType) { Container.register(item.name, caType); }
-            //     }
-            // }
+            for(let item of list) {
+                item = which(item);
+                if (item) {
+                    aType = as(await include(item), IAspect);
+                    if (aType) {
+                        Aspects.register(item.pointcut, aType);
+                    }
+                }
+            }
         };            
         const loadAssemblies = async () => {
             // combined assemblies (inbuilt and configured)
